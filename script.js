@@ -1731,12 +1731,13 @@ function renderStudentSubmissionsSection() {
           const isDeletable = !isSubmissionScored(record.status);
           
           if (record.canEditByStudent) {
-            editAction = "<div class=\"button-row\" style=\"display:flex;gap:4px;\"><button type=\"button\" class=\"btn ghost\" data-student-edit-submission=\"" + record.id + "\">Edit</button>" +
-              "<button type=\"button\" class=\"btn danger\" data-student-delete-submission=\"" + record.id + "\">Delete</button></div>";
+            editAction = "<div class=\"button-row\" style=\"display:flex;gap:4px;flex-wrap:nowrap;align-items:center;\"><button type=\"button\" class=\"btn ghost\" aria-label=\"Edit submission\" data-student-edit-submission=\"" + record.id + "\"><span aria-hidden=\"true\">&#9998;</span></button>" +
+              "<button type=\"button\" class=\"btn danger\" aria-label=\"Delete submission\" data-student-delete-submission=\"" + record.id + "\"><span aria-hidden=\"true\">&#128465;</span></button></div>";
           } else if (isDeletable) {
-            editAction = "<div class=\"button-row\"><button type=\"button\" class=\"btn danger\" data-student-delete-submission=\"" + record.id + "\">Delete</button></div>";
+            editAction = "<div class=\"button-row\" style=\"display:flex;gap:4px;flex-wrap:nowrap;align-items:center;\"><button type=\"button\" class=\"btn ghost\" aria-label=\"Edit submission\" disabled><span aria-hidden=\"true\">&#9998;</span></button>" +
+              "<button type=\"button\" class=\"btn danger\" aria-label=\"Delete submission\" data-student-delete-submission=\"" + record.id + "\"><span aria-hidden=\"true\">&#128465;</span></button></div>";
           } else {
-            editAction = "<span class=\"muted\">Locked</span>";
+            editAction = "<div class=\"button-row\" style=\"display:flex;gap:4px;flex-wrap:nowrap;align-items:center;\"><button type=\"button\" class=\"btn ghost\" aria-label=\"Edit submission\" disabled><span aria-hidden=\"true\">&#9998;</span></button><span class=\"muted\">Locked</span></div>";
           }
 
           return (
