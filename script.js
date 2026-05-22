@@ -2724,37 +2724,110 @@ function renderHodClassDetails() {
     return student && student.className === className;
   });
 
+  const viewState = state.listViews.hodSubmissions || createDefaultListViewState();
+  const searchQuery = normalizeFilterText(viewState.search);
+  const filterStatus = viewState.status;
+  const filterStudentId = viewState.studentId;
+
   const submissionRecords = classSubmissions
     .sort((a, b) => b.id - a.id)
     .map((item) => createSubmissionViewRecord(item));
-  const viewState = state.listViews.hodSubmissions || createDefaultListViewState();
   const statusOptions = buildUniqueOptions(submissionRecords, (record) => record.status);
   const studentOptions = buildStudentOptions(submissionRecords);
 
-  if (!hasFilterOption(viewState.status, statusOptions)) {
+  if (!hasFilterOption(filterStatus, statusOptions)) {
     viewState.status = allFilterValue;
   }
-  if (!hasFilterOption(viewState.studentId, studentOptions)) {
+  if (!hasFilterOption(filterStudentId, studentOptions)) {
     viewState.studentId = allFilterValue;
   }
 
-  const filteredRecords = filterSubmissionViewRecords(submissionRecords, viewState, true);
-  const pageInfo = paginateListItems(filteredRecords, viewState.currentPage, listPageSize);
-  viewState.currentPage = pageInfo.currentPage;
+  // Group submissions by student
+  const studentMap = new Map();
+  classStudents.forEach((student) => {
+    studentMap.set(student.id, { student: student, submissions: [] });
+  });
+  submissionRecords.forEach((record) => {
+    const entry = studentMap.get(record.studentId);
+    if (entry) {
+      entry.submissions.push(record);
+    }
+  });
 
-  const submissionRows = pageInfo.items.length
-    ? pageInfo.items.map((record) => {
-        return (
-          "<tr>" +
-          "<td>" + escapeHtml(record.studentName) + "</td>" +
-          "<td>" + escapeHtml(record.itemTitle) + "</td>" +
-          "<td>" + escapeHtml(record.evidenceSummary) + "</td>" +
-          "<td><span class=\"status-pill " + getStatusClass(record.status) + "\">" + escapeHtml(record.status) + "</span></td>" +
-          "<td><button type=\"button\" class=\"btn ghost\" data-view-doc=\"" + escapeAttribute(record.proof) + "\">View</button></td>" +
-          "</tr>"
-        );
-      }).join("")
-    : "<tr><td colspan=\"5\" class=\"empty-row\">No submissions found.</td></tr>";
+  // Build student accordion list
+  const studentRows = [];
+  studentMap.forEach((entry) => {
+    const student = entry.student;
+    const subs = entry.submissions;
+
+    // Apply filters
+    if (filterStudentId !== allFilterValue && String(student.id) !== String(filterStudentId)) {
+      return;
+    }
+
+    const filteredSubs = subs.filter((record) => {
+      if (searchQuery && record.searchText.indexOf(searchQuery) === -1) {
+        return false;
+      }
+      if (filterStatus !== allFilterValue && !valuesMatch(record.status, filterStatus)) {
+        return false;
+      }
+      return true;
+    });
+
+    // Skip student if search is active and no subs match
+    if (searchQuery && filteredSubs.length === 0) {
+      return;
+    }
+
+    const scoredCount = filteredSubs.filter((r) => isSubmissionScored(r.status)).length;
+    const totalCount = filteredSubs.length || 0;
+    const progressPercent = totalCount > 0 ? Math.round((scoredCount / totalCount) * 100) : 0;
+
+    const submissionItems = filteredSubs.length
+      ? filteredSubs.map((record) => {
+          return (
+            "<div class=\"hod-student-sub-item\">" +
+            "<div class=\"hod-sub-item-header\">" +
+            "<span class=\"hod-sub-item-title\">" + escapeHtml(record.itemTitle) + "</span>" +
+            "<span class=\"status-pill " + getStatusClass(record.status) + "\">" + escapeHtml(record.status) + "</span>" +
+            "</div>" +
+            "<p class=\"hod-sub-item-evidence muted\">" + escapeHtml(record.evidenceSummary) + "</p>" +
+            "<div class=\"hod-sub-item-footer\">" +
+            "<span class=\"muted\" style=\"font-size:0.78rem;\">" + escapeHtml(record.category) + "</span>" +
+            "<button type=\"button\" class=\"btn ghost\" style=\"padding:2px 8px; font-size:0.78rem;\" data-view-doc=\"" + escapeAttribute(record.proof) + "\">View Doc</button>" +
+            "</div>" +
+            "</div>"
+          );
+        }).join("")
+      : "<p class=\"empty-state\" style=\"font-size:0.85rem; padding:12px 0;\">No submissions match filters.</p>";
+
+    const initials = student.name.split(" ").map((n) => n.charAt(0).toUpperCase()).join("").substring(0, 2);
+
+    studentRows.push(
+      "<div class=\"hod-student-accordion\" data-hod-student-accordion=\"" + student.id + "\">" +
+      "<div class=\"hod-student-row\" data-hod-student-toggle=\"" + student.id + "\">" +
+      "<div class=\"hod-student-avatar\">" + escapeHtml(initials) + "</div>" +
+      "<div class=\"hod-student-info\">" +
+      "<h4 class=\"hod-student-name\">" + escapeHtml(student.name) + "</h4>" +
+      "<p class=\"muted\" style=\"font-size:0.8rem;\">" + totalCount + " submission" + (totalCount !== 1 ? "s" : "") + " · " + scoredCount + " scored</p>" +
+      "</div>" +
+      "<div class=\"hod-student-row-progress\">" +
+      "<div class=\"progress-info\"><span>" + progressPercent + "%</span></div>" +
+      "<div class=\"progress-track\"><div class=\"progress-fill\" style=\"width:" + progressPercent + "%\"></div></div>" +
+      "</div>" +
+      "<div class=\"hod-student-row-arrow\">›</div>" +
+      "</div>" +
+      "<div class=\"hod-student-expand-content\">" +
+      "<div class=\"hod-student-sub-list\">" + submissionItems + "</div>" +
+      "</div>" +
+      "</div>"
+    );
+  });
+
+  const listHtml = studentRows.length
+    ? "<div class=\"hod-student-accordion-list\">" + studentRows.join("") + "</div>"
+    : "<p class=\"empty-state\">No students match your filters.</p>";
 
   const feedbackStudentOptions = classStudents
     .map((student) => "<option value=\"" + student.id + "\">" + escapeHtml(student.name) + "</option>")
@@ -2787,9 +2860,7 @@ function renderHodClassDetails() {
     "<div class=\"field\"><label for=\"hod-submission-student\">Student</label><select id=\"hod-submission-student\" data-list-target=\"hod-submissions\" data-list-filter=\"studentId\">" + renderFilterOptions(studentOptions, viewState.studentId, "All Students") + "</select></div>" +
     "<div class=\"field\"><label for=\"hod-submission-status\">Status</label><select id=\"hod-submission-status\" data-list-target=\"hod-submissions\" data-list-filter=\"status\">" + renderFilterOptions(statusOptions, viewState.status, "All Statuses") + "</select></div>" +
     "</div>" +
-    renderListSummary(pageInfo) +
-    "<div class=\"table-wrap\"><table><thead><tr><th>Student</th><th>Item</th><th>Evidence</th><th>Status</th><th>Document</th></tr></thead><tbody>" + submissionRows + "</tbody></table></div>" +
-    renderPaginationControls("hod-submissions-list", pageInfo) +
+    listHtml +
     "</section>" +
     "<section class=\"panel\">" +
     "<h3>Student Feedback</h3>" +
@@ -3362,6 +3433,16 @@ function handlePageClick(event) {
   if (hodBackBtn && state.currentRole === "hod") {
     state.hodSelectedClass = null;
     renderPage();
+    return;
+  }
+
+  // HOD: Handle student accordion toggle
+  const hodStudentToggle = event.target.closest("[data-hod-student-toggle]");
+  if (hodStudentToggle && state.currentRole === "hod") {
+    const accordion = hodStudentToggle.closest(".hod-student-accordion");
+    if (accordion) {
+      accordion.classList.toggle("open");
+    }
     return;
   }
 
