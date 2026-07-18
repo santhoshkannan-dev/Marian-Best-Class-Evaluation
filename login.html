@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Best Class Evaluation System - Marian College Kuttikkanam. Select role to login.">
+  <title>Login — Marian Best Class</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #4f46e5; /* Indigo */
+      --primary-hover: #3730a3;
+      --secondary: #db2777; /* Pink */
+      --secondary-hover: #be185d;
+      --bg-dark: #f8fafc; /* Clean off-white background */
+      --bg-light: #f1f5f9;
+      --text-main: #0f172a; /* Slate-900 */
+      --text-muted: #64748b; /* Slate-500 */
+      --glass-card: rgba(255, 255, 255, 0.8);
+      --glass-border: rgba(15, 23, 42, 0.08);
+      --glass-input: #ffffff;
+      --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.08);
+      --radius: 24px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Outfit', 'Segoe UI', Tahoma, sans-serif;
+      min-height: 100vh;
+      color: var(--text-main);
+      background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.03) 0%, transparent 40%),
+                  linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 50%, var(--bg-dark) 100%);
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: relative;
+      padding: 40px 24px 80px;
+    }
+
+    /* Top-Left Navigation Sidebar (Always visible & prominent) */
+    .nav-sidebar {
+      position: fixed;
+      top: 40px;
+      left: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      z-index: 1000;
+      padding: 14px 10px;
+      border-radius: 35px;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid var(--glass-border);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+
+    .nav-line {
+      position: absolute;
+      top: 40px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), var(--secondary));
+      z-index: -1;
+      height: 150px;
+      opacity: 0.65;
+    }
+
+    /* Regular icon buttons (Login, About) */
+    .nav-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1.5px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s, border-color 0.3s;
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+      overflow: hidden;
+      position: relative;
+      text-decoration: none;
+    }
+
+    /* Home button — larger, image fills it like an avatar */
+    #btn-nav-home {
+      width: 68px;
+      height: 68px;
+      padding: 0;
+      background: transparent;
+      border: 2.5px solid rgba(139, 35, 35, 0.25);
+      box-shadow: 0 6px 20px rgba(139, 35, 35, 0.15);
+    }
+
+    #btn-nav-home img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    #btn-nav-home:hover {
+      transform: scale(1.08) !important;
+      border-color: rgba(139, 35, 35, 0.6);
+      box-shadow: 0 8px 28px rgba(139, 35, 35, 0.25);
+    }
+
+    #btn-nav-home.active {
+      border-color: rgba(139, 35, 35, 0.8);
+      box-shadow: 0 0 22px rgba(139, 35, 35, 0.3);
+    }
+
+    .nav-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--text-muted);
+      stroke-width: 2.5;
+      fill: none;
+      transition: stroke var(--transition);
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.1) !important;
+      border-color: var(--primary);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+    }
+
+    .nav-btn:hover svg {
+      stroke: var(--primary);
+    }
+
+    .nav-btn.active {
+      border-color: var(--primary);
+      border-width: 2.5px;
+      box-shadow: 0 0 18px rgba(99, 102, 241, 0.25);
+      background: #ffffff;
+    }
+
+    .nav-btn.active svg {
+      stroke: var(--primary);
+    }
+
+    /* Premium tooltips on hover */
+    .nav-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 76px;
+      top: 50%;
+      transform: translateY(-50%) translateX(-8px);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      z-index: 1001;
+    }
+
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      left: 70px;
+      top: 50%;
+      transform: translateY(-50%) translateX(-4px);
+      border-width: 5px 6px 5px 0;
+      border-style: solid;
+      border-color: transparent rgba(15, 23, 42, 0.95) transparent transparent;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      z-index: 1001;
+    }
+
+    .nav-btn:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) translateX(0);
+    }
+
+    .nav-btn:hover::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) translateX(0);
+    }
+
+    /* View Routing Structure */
+    .content-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 20px auto;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      min-height: 80vh;
+    }
+
+    /* ------------------------------ */
+    /* LOGIN VIEW STYLES              */
+    /* ------------------------------ */
+    .login-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      background: var(--glass-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      width: 100%;
+      max-width: 1000px;
+      min-height: 520px;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.04);
+      animation: pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-visual {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.06), rgba(219, 39, 119, 0.03)),
+                  url("Assets/Images/Login Page Design.png") no-repeat center center;
+      background-size: cover;
+      padding: 48px;
+      display: flex;
+      align-items: flex-end;
+      position: relative;
+    }
+
+    .login-visual::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(15, 23, 42, 0.3) 0%, transparent 80%);
+      z-index: 1;
+    }
+
+    .visual-copy {
+      position: relative;
+      z-index: 2;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(15, 23, 42, 0.2);
+    }
+
+    .visual-kicker {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 8px;
+    }
+
+    .visual-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .visual-lead {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+      opacity: 0.95;
+    }
+
+    .visual-desc {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      opacity: 0.85;
+      max-width: 420px;
+    }
+
+    .visual-tagline {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 24px;
+      color: var(--secondary);
+    }
+
+    .login-panel {
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: #ffffff;
+    }
+
+    .card-logo {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 28px;
+      align-self: flex-start;
+    }
+
+    .card-heading {
+      margin-bottom: 32px;
+    }
+
+    .card-heading p {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper::after {
+      content: '';
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-width: 5px 5px 0;
+      border-style: solid;
+      border-color: var(--text-muted) transparent transparent;
+      pointer-events: none;
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 18px;
+      font-family: inherit;
+      font-size: 0.94rem;
+      font-weight: 500;
+      color: var(--text-main);
+      background-color: var(--bg-dark);
+      border: 1.5px solid var(--glass-border);
+      border-radius: 12px;
+      appearance: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      background-color: #ffffff;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+    }
+
+    select.placeholder-active {
+      color: var(--text-muted);
+    }
+
+    select option {
+      color: var(--text-main);
+      font-weight: 500;
+      background: #ffffff;
+    }
+
+    .btn-continue {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.96rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15);
+      transition: var(--transition);
+    }
+
+    .btn-continue:hover {
+      box-shadow: 0 12px 28px rgba(99, 102, 241, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .btn-continue:active {
+      transform: translateY(1px);
+    }
+
+    .btn-continue svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      transition: transform 0.2s;
+    }
+
+    .btn-continue:hover svg {
+      transform: translateX(4px);
+    }
+
+    .login-alert {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      border-radius: 10px;
+      color: #ef4444;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      animation: shake 0.4s ease-in-out;
+    }
+
+    .login-alert.show {
+      display: flex;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+
+    .card-accent {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .accent-line {
+      display: inline-block;
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--glass-border), transparent);
+    }
+
+    .accent-diamond {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--secondary);
+      transform: rotate(45deg);
+      opacity: 0.6;
+    }
+
+    .login-footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 40px;
+      line-height: 1.5;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 980px) {
+      .nav-sidebar {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        width: auto;
+        padding: 10px 14px;
+        border-radius: 35px;
+        gap: 20px;
+        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+      }
+      
+      .nav-line {
+        position: absolute;
+        top: 50%;
+        left: 36px;
+        right: 36px;
+        height: 2px;
+        width: auto;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        z-index: -1;
+      }
+
+      .content-container {
+        margin-top: 100px;
+      }
+
+      .login-layout {
+        grid-template-columns: 1fr;
+        min-height: unset;
+      }
+
+      .login-visual {
+        text-align: center;
+        padding: 40px 28px 32px;
+      }
+
+      .visual-kicker, .visual-lead, .visual-desc, .visual-tagline {
+        display: none;
+      }
+
+      .login-panel {
+        padding: 36px 28px 40px;
+      }
+
+      .nav-btn::after {
+        left: 50%;
+        top: 68px;
+        transform: translateX(-50%) translateY(-8px);
+      }
+      .nav-btn::before {
+        left: 50%;
+        top: 62px;
+        transform: translateX(-50%) translateY(-4px);
+        border-width: 0 5px 6px 5px;
+        border-color: transparent transparent rgba(15, 23, 42, 0.95) transparent;
+      }
+      .nav-btn:hover::after {
+        transform: translateX(-50%) translateY(0);
+      }
+      .nav-btn:hover::before {
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Floating Navigation Sidebar -->
+  <nav class="nav-sidebar" id="nav-sidebar">
+    <div class="nav-line"></div>
+    <a class="nav-btn" id="btn-nav-home" href="index.html" data-tooltip="Home">
+      <img src="Assets/Images/hands_logo.png" alt="Marian Logo">
+    </a>
+    <a class="nav-btn active" id="btn-nav-login" href="login.html" data-tooltip="Logout">
+      <svg viewBox="0 0 24 24">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
+      </svg>
+    </a>
+    <a class="nav-btn" id="btn-nav-about" href="policy.html" data-tooltip="Policy">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+    </a>
+  </nav>
+
+  <!-- Content Container -->
+  <div class="content-container">
+    
+    <!-- LOGIN PANEL -->
+    <main class="login-layout" id="login-wrapper">
+      <section class="login-visual">
+        <div class="visual-copy">
+          <p class="visual-kicker">Marian College, Kuttikkanam</p>
+          <h1 class="visual-title">Marian Best Class</h1>
+          <p class="visual-lead">Recognize. Evaluate. Excel together.</p>
+          <p class="visual-desc">A smart way to track, verify and celebrate class achievements across Marian College Kuttikkanam.</p>
+          <p class="visual-tagline">Simple. Smart. Effective.</p>
+        </div>
+      </section>
+
+      <section class="login-panel">
+        <div class="login-card" id="login-card">
+          <img class="card-logo" src="Assets/Images/College-logo.png" alt="Marian College Logo">
+          <div class="card-heading">
+            <p>Select your role to continue</p>
+          </div>
+
+          <div id="error-alert" class="login-alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Please select a role to continue.
+          </div>
+
+          <form id="login-form">
+            <div class="form-group">
+              <label for="role-select">Select Role</label>
+              <div class="select-wrapper">
+                <select id="role-select" required class="placeholder-active">
+                  <option value="" disabled selected>Select your role</option>
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="evaluator">Evaluator</option>
+                  <option value="admin">Admin</option>
+                  <option value="hod">HOD</option>
+                  <option value="iqac">IQAC</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-continue" id="btn-continue">
+              Continue
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </form>
+
+          <div class="card-accent">
+            <span class="accent-line"></span>
+            <span class="accent-diamond"></span>
+            <span class="accent-line accent-line-right"></span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <footer class="login-footer">
+    Made by MCA 2025<br>
+    Santhosh Kannan, Amal Thomas
+  </footer>
+
+  <!-- Include Data Scripts -->
+  <script src="data.js"></script>
+  <script src="page-bootstrap.js"></script>
+
+  <!-- Login Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginForm = document.getElementById('login-form');
+      const roleSelect = document.getElementById('role-select');
+      const errorAlert = document.getElementById('error-alert');
+
+      roleSelect.addEventListener('change', () => {
+        if (roleSelect.value) {
+          roleSelect.classList.remove('placeholder-active');
+          errorAlert.classList.remove('show');
+        } else {
+          roleSelect.classList.add('placeholder-active');
+        }
+      });
+
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const role = roleSelect.value;
+
+        if (!role) {
+          errorAlert.classList.add('show');
+          return;
+        }
+
+        errorAlert.classList.remove('show');
+
+        // Store role in localStorage
+        localStorage.setItem('role', role);
+
+        // Define routes to the actual role-specific HTML entry points
+        const routes = {
+          student: 'roles/student/student-dashboard.html',
+          teacher: 'roles/teacher/teacher-dashboard.html',
+          evaluator: 'roles/evaluator/evaluation-dashboard.html',
+          admin: 'roles/admin/admin-dashboard.html',
+          hod: 'roles/hod/hod-dashboard.html',
+          iqac: 'roles/iqac/iqac-dashboard.html'
+        };
+
+        // Redirect to the appropriate dashboard
+        if (routes[role]) {
+          window.location.href = routes[role];
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

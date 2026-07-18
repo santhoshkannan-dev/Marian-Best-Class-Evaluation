@@ -3,54 +3,60 @@ const roleConfig = {
     label: "Student",
     heading: "Student Workspace",
     menu: [
-      { page: "dashboard", label: "Dashboard", icon: "📊" },
-      { page: "submit", label: "Submit Activity", icon: "📝" },
-      { page: "submissions", label: "My Submissions", icon: "📁" }
+      { page: "dashboard", label: "Dashboard", icon: "DB" },
+      { page: "submit", label: "Submit Activity", icon: "+ " },
+      { page: "submissions", label: "My Submissions", icon: "LS" },
+      { page: "best-class", label: "Best Class Dashboard", icon: "BC" }
     ]
   },
   teacher: {
     label: "Class Teacher",
     heading: "Teacher Workspace",
     menu: [
-      { page: "dashboard", label: "Dashboard", icon: "📊" },
-      { page: "verification", label: "Verification", icon: "✅" },
-      { page: "students", label: "Student Management", icon: "👥" }
+      { page: "dashboard", label: "Dashboard", icon: "DB" },
+      { page: "verification", label: "Verification", icon: "VF" },
+      { page: "students", label: "Student Management", icon: "ST" },
+      { page: "best-class", label: "Best Class Dashboard", icon: "BC" }
     ]
   },
   evaluator: {
     label: "Evaluator",
     heading: "Evaluation Workspace",
     menu: [
-      { page: "dashboard", label: "Dashboard", icon: "📊" },
-      { page: "evaluation", label: "Evaluation", icon: "⚖️" }
+      { page: "dashboard", label: "Dashboard", icon: "DB" },
+      { page: "evaluation", label: "Evaluation", icon: "EV" },
+      { page: "best-class", label: "Best Class Dashboard", icon: "BC" }
     ]
   },
   admin: {
     label: "Admin",
     heading: "Admin Workspace",
     menu: [
-      { page: "academic-years", label: "Academic Years", icon: "📅" },
-      { page: "criteria", label: "Criteria Management", icon: "⚙️" },
-      { page: "users", label: "User Management", icon: "👥" },
-      { page: "departments", label: "Department Management", icon: "🏛️" },
-      { page: "settings", label: "Settings", icon: "🔧" }
+      { page: "academic-years", label: "Academic Years", icon: "AY" },
+      { page: "criteria", label: "Criteria Management", icon: "CR" },
+      { page: "users", label: "User Management", icon: "US" },
+      { page: "departments", label: "Department Management", icon: "DP" },
+      { page: "settings", label: "Settings", icon: "SG" },
+      { page: "best-class", label: "Best Class Dashboard", icon: "BC" }
     ]
   },
   iqac: {
     label: "IQAC",
     heading: "Institution Monitoring",
     menu: [
-      { page: "dashboard", label: "Dashboard", icon: "📊" },
-      { page: "reports", label: "Reports", icon: "📉" },
-      { page: "remarks", label: "Remarks", icon: "📝" }
+      { page: "dashboard", label: "Dashboard", icon: "DB" },
+      { page: "reports", label: "Reports", icon: "RP" },
+      { page: "remarks", label: "Remarks", icon: "RM" },
+      { page: "best-class", label: "Best Class Dashboard", icon: "BC" }
     ]
   },
   hod: {
     label: "HOD",
     heading: "Department Monitoring",
     menu: [
-      { page: "dashboard", label: "Dashboard", icon: "📊" },
-      { page: "feedback", label: "Feedback", icon: "💬" }
+      { page: "dashboard", label: "Dashboard", icon: "DB" },
+      { page: "feedback", label: "Feedback", icon: "FB" },
+      { page: "best-class", label: "Best Class Dashboard", icon: "BC" }
     ]
   }
 };
@@ -189,7 +195,13 @@ const state = {
   hodFeedbackEntries: [],
   iqacRemarksEntries: [],
   criteriaByYear: {},
-  criteriaHistoryByYear: {}
+  criteriaHistoryByYear: {},
+  bestClassSelectedClass: null,
+  bestClassCompareClassA: "",
+  bestClassCompareClassB: "",
+  bestClassTab: "standings",
+  bestClassSearch: "",
+  bestClassDepartment: "all"
 };
 
 state.departments = buildDepartmentOptionsFromUsers(users);
@@ -1006,7 +1018,9 @@ function renderPage() {
 
   let content = "";
 
-  if (state.currentRole === "student") {
+  if (state.activePage === "best-class") {
+    content = renderBestClassDashboard();
+  } else if (state.currentRole === "student") {
     if (state.activePage === "submit") {
       content = renderStudentSubmitPage();
     } else if (state.activePage === "submissions") {
@@ -1064,12 +1078,12 @@ function renderDashboardCards(metrics) {
   const scorePercent = Math.min(100, Math.max(0, (metrics.score / safeMax) * 100));
 
   const cards = [
-    { key: "total", icon: "📊", label: "Total Submissions", value: metrics.total },
-    { key: "approved", icon: "✔", label: "Verified", value: metrics.approved },
-    { key: "pending", icon: "⏳", label: "Pending", value: metrics.pending },
+    { key: "total", icon: "#", label: "Total Submissions", value: metrics.total },
+    { key: "approved", icon: "OK", label: "Verified", value: metrics.approved },
+    { key: "pending", icon: "...", label: "Pending", value: metrics.pending },
     {
       key: "score",
-      icon: "📈",
+      icon: "Sc",
       label: "Total Score",
       value:
         "<div class=\"score-meta\"><p>Score: " + metrics.score.toFixed(1) + " / " + displayMax.toFixed(1) +
@@ -1247,8 +1261,8 @@ function renderStudentProgressSection(progress) {
     "<p class=\"muted\">Progress: " + progress.completedCount + " / " + progress.total + "</p>" +
     "<div class=\"simple-progress-track\"><div class=\"simple-progress-fill\" style=\"width:" + progress.percent.toFixed(1) + "%\"></div></div>" +
     "<div class=\"progress-pills\">" +
-    "<span class=\"progress-pill progress-pill-complete\">✔ Completed " + progress.completedCount + "</span>" +
-    "<span class=\"progress-pill progress-pill-remaining\">⏳ Remaining " + progress.remainingCount + "</span>" +
+    "<span class=\"progress-pill progress-pill-complete\">Completed " + progress.completedCount + "</span>" +
+    "<span class=\"progress-pill progress-pill-remaining\">Remaining " + progress.remainingCount + "</span>" +
     "</div>" +
     "</section>"
   );
@@ -1257,10 +1271,10 @@ function renderStudentProgressSection(progress) {
 function renderStudentChecklistSection(categories) {
   const rows = categories
     .map((item) => {
-      const icon = item.completed ? "✔" : "⏳";
+      const icon = item.completed ? "✓" : "○";
       const action = item.completed
         ? "<span class=\"check-done\">Done</span>"
-        : "<button type=\"button\" class=\"btn ghost mini-add-btn\" data-submit-category=\"" + escapeAttribute(item.id) + "\">➕</button>";
+        : "<button type=\"button\" class=\"btn ghost mini-add-btn\" data-submit-category=\"" + escapeAttribute(item.id) + "\">+ Add</button>";
 
       return (
         "<li class=\"checklist-item\">" +
@@ -1293,8 +1307,8 @@ function renderStudentDashboard() {
     "<section class=\"panel\">" +
     "<div class=\"panel-head\"><h3>Quick Actions</h3></div>" +
     "<div class=\"button-row\">" +
-    "<button type=\"button\" class=\"btn primary\" data-page-jump=\"submit\">➕ Submit New Activity</button>" +
-    "<button type=\"button\" class=\"btn ghost\" data-page-jump=\"submissions\">📁 View My Submissions</button>" +
+    "<button type=\"button\" class=\"btn primary\" data-page-jump=\"submit\">Submit New Activity</button>" +
+    "<button type=\"button\" class=\"btn ghost\" data-page-jump=\"submissions\">View My Submissions</button>" +
     "</div>" +
     "</section>"
   );
@@ -1356,7 +1370,7 @@ function renderStudentSubmitPage() {
   var windowCheck = isSubmissionWithinTimeWindow();
   var timeWindowBanner = "";
   if (!windowCheck.allowed) {
-    timeWindowBanner = "<section class=\"panel\" style=\"border-left:4px solid var(--danger);background:rgba(239,68,68,0.08)\"><p style=\"margin:0;color:var(--danger);font-weight:600\">⚠ " + escapeHtml(windowCheck.reason) + "</p></section>";
+    timeWindowBanner = "<section class=\"panel\" style=\"border-left:4px solid var(--danger);background:rgba(239,68,68,0.08)\"><p style=\"margin:0;color:var(--danger);font-weight:600\">Warning: " + escapeHtml(windowCheck.reason) + "</p></section>";
   } else {
     var startStr = state.submissionStartTime ? new Date(state.submissionStartTime).toLocaleString() : "";
     var endStr = state.submissionEndTime ? new Date(state.submissionEndTime).toLocaleString() : "";
@@ -1365,7 +1379,7 @@ function renderStudentSubmitPage() {
       if (startStr) { windowInfo += "Opens " + startStr; }
       if (startStr && endStr) { windowInfo += " — "; }
       if (endStr) { windowInfo += "Closes " + endStr; }
-      timeWindowBanner = "<section class=\"panel\" style=\"border-left:4px solid var(--accent);background:rgba(99,102,241,0.06)\"><p style=\"margin:0;color:var(--accent);font-weight:500\">🕐 " + escapeHtml(windowInfo) + "</p></section>";
+      timeWindowBanner = "<section class=\"panel\" style=\"border-left:4px solid var(--accent);background:rgba(99,102,241,0.06)\"><p style=\"margin:0;color:var(--accent);font-weight:500\">Info: " + escapeHtml(windowInfo) + "</p></section>";
     }
   }
   var formDisabledAttr = !windowCheck.allowed ? " style=\"opacity:0.5;pointer-events:none\"" : "";
@@ -1881,7 +1895,7 @@ function renderTeacherDashboard() {
     "<h3>Recent Student Progress</h3>" +
     "<div style='margin:15px 0;'>" + studentRows + "</div>" +
     "<div class=\"button-row\">" +
-    "<button type=\"button\" class=\"btn primary\" data-page-jump=\"verification\">✔ Open Class Verification Desk</button>" +
+    "<button type=\"button\" class=\"btn primary\" data-page-jump=\"verification\">Open Class Verification Desk</button>" +
     "</div>" +
     "</section>"
   );
@@ -1946,9 +1960,9 @@ function buildTeacherTable(records) {
   const cards = records.map(record => {
     const actionHtml = record.canTeacherAct
       ? "<div class=\"button-row\">" +
-        "<button type=\"button\" class=\"btn success\" data-teacher-action=\"" + workflowStatus.VERIFIED + "\" data-id=\"" + record.id + "\">✔ Verify</button>" +
+        "<button type=\"button\" class=\"btn success\" data-teacher-action=\"" + workflowStatus.VERIFIED + "\" data-id=\"" + record.id + "\">Verify</button>" +
         "<button type=\"button\" class=\"btn warn\" data-teacher-action=\"" + workflowStatus.CORRECTION + "\" data-id=\"" + record.id + "\">Request Correction</button>" +
-        "<button type=\"button\" class=\"btn danger\" data-teacher-action=\"" + workflowStatus.REJECTED + "\" data-id=\"" + record.id + "\">✖ Reject</button>" +
+        "<button type=\"button\" class=\"btn danger\" data-teacher-action=\"" + workflowStatus.REJECTED + "\" data-id=\"" + record.id + "\">Reject</button>" +
         "</div>"
       : "<div class=\"button-row\"><button type=\"button\" class=\"btn ghost\" data-teacher-edit-locked=\"" + record.id + "\">Edit Submission Status</button></div>";
 
@@ -1960,7 +1974,7 @@ function buildTeacherTable(records) {
       "<p><strong>Item:</strong> " + escapeHtml(record.itemTitle) + "</p>" +
       "<p><strong>Description:</strong> " + escapeHtml(record.description) + "</p>" +
       "</div>" +
-      "<div class=\"button-row\" style=\"margin-top:12px;margin-bottom:12px;\"><button type=\"button\" class=\"btn ghost full\" data-view-doc=\"" + escapeAttribute(record.proof) + "\">📄 View Document</button></div>" +
+      "<div class=\"button-row\" style=\"margin-top:12px;margin-bottom:12px;\"><button type=\"button\" class=\"btn ghost full\" data-view-doc=\"" + escapeAttribute(record.proof) + "\">View Document</button></div>" +
       "<div class=\"field\"><label>Teacher Remark</label><input type=\"text\" data-remark-input=\"" + record.id + "\" value=\"" + escapeAttribute(record.submission.remarks || "") + "\" placeholder=\"Add a remark\" /></div>" +
       actionHtml +
       "</article>"
@@ -2348,7 +2362,7 @@ function renderEvaluatorEvaluationSection() {
               "<div class=\"muted\" style=\"font-size: 0.85rem;\">" + escapeHtml(record.description) + "</div>" +
             "</div>" +
             "<div class=\"eval-sub-controls\">" +
-              "<button type=\"button\" class=\"btn ghost eval-doc-btn\" data-view-doc=\"" + escapeAttribute(record.proof) + "\">📄 View Doc</button>" +
+              "<button type=\"button\" class=\"btn ghost eval-doc-btn\" data-view-doc=\"" + escapeAttribute(record.proof) + "\">View Doc</button>" +
               marksHtml +
             "</div>" +
           "</div>"
@@ -2589,7 +2603,7 @@ function renderIqacReportsPage() {
   const leaderboardRows = ranked
     .map((entry, index) => {
       const topClass = index === 0 ? "top-1" : index === 1 ? "top-2" : index === 2 ? "top-3" : "";
-      const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "#" + (index + 1);
+      const medal = index === 0 ? "1st" : index === 1 ? "2nd" : index === 2 ? "3rd" : "#" + (index + 1);
       const width = (entry.totalScore / maxScore) * 100;
       return (
         "<article class=\"leaderboard-row " + topClass + "\">" +
@@ -3635,6 +3649,38 @@ function handlePageClick(event) {
     renderPage();
     return;
   }
+
+  // Best Class Dashboard Tab Switcher
+  const bestClassTabBtn = event.target.closest("button[data-bestclass-tab]");
+  if (bestClassTabBtn) {
+    state.bestClassTab = bestClassTabBtn.dataset.bestclassTab;
+    renderPage();
+    return;
+  }
+
+  // Best Class Selection
+  const selectClassBtn = event.target.closest("[data-bestclass-select-class]");
+  if (selectClassBtn) {
+    state.bestClassSelectedClass = selectClassBtn.dataset.bestclassSelectClass || null;
+    renderPage();
+    return;
+  }
+
+  // Best Class Back Button
+  const backToLeaderboardBtn = event.target.closest("#bestclass-back-to-leaderboard");
+  if (backToLeaderboardBtn) {
+    state.bestClassSelectedClass = null;
+    renderPage();
+    return;
+  }
+
+  // Best Class Export Button
+  const bestClassExportBtn = event.target.closest("[data-bestclass-export]");
+  if (bestClassExportBtn) {
+    const scope = bestClassExportBtn.dataset.bestclassExport;
+    showToast("Report Export Triggered: Simulating " + scope + " report generation...", "success");
+    return;
+  }
 }
 
 function handlePageSubmit(event) {
@@ -3922,6 +3968,21 @@ function handlePageSubmit(event) {
 function handlePageInput(event) {
   const target = event.target;
 
+  if (target.id === "bestclass-search-input") {
+    state.bestClassSearch = target.value;
+    const rows = document.querySelectorAll(".bestclass-leaderboard-row");
+    const query = state.bestClassSearch.toLowerCase();
+    rows.forEach(row => {
+      const className = row.dataset.className.toLowerCase();
+      if (className.indexOf(query) > -1) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
+    return;
+  }
+
   if (state.currentRole === "admin" && window.adminUserManagementModule && typeof window.adminUserManagementModule.handleInput === "function") {
     const handledAdminUserInput = window.adminUserManagementModule.handleInput(event, getAdminUserManagementContext());
     if (handledAdminUserInput) {
@@ -3942,6 +4003,24 @@ function handlePageInput(event) {
 
 function handlePageChange(event) {
   const target = event.target;
+
+  if (target.id === "bestclass-dept-select") {
+    state.bestClassDepartment = target.value;
+    renderPage();
+    return;
+  }
+
+  if (target.id === "bestclass-compare-a") {
+    state.bestClassCompareClassA = target.value;
+    renderPage();
+    return;
+  }
+
+  if (target.id === "bestclass-compare-b") {
+    state.bestClassCompareClassB = target.value;
+    renderPage();
+    return;
+  }
 
   if (state.currentRole === "admin" && window.adminUserManagementModule && typeof window.adminUserManagementModule.handleChange === "function") {
     const handledAdminUserChange = window.adminUserManagementModule.handleChange(event, getAdminUserManagementContext());
@@ -5807,6 +5886,638 @@ function getDefaultCriteriaCatalog() {
 
 function getDefaultSubmissions() {
   return cloneSubmissions(window.seedSubmissions || []);
+}
+
+// ==========================================
+// BEST CLASS EVALUATION DASHBOARD FUNCTIONS
+// ==========================================
+
+function buildClassPerformanceForDashboard(year, departmentFilter) {
+  let filteredStudents = students;
+  if (departmentFilter && departmentFilter !== "all") {
+    filteredStudents = students.filter(s => getDepartmentByClassName(s.className) === departmentFilter);
+  }
+  const classNames = Array.from(new Set(filteredStudents.map(item => item.className)));
+  const classMap = new Map();
+
+  classNames.forEach(className => {
+    classMap.set(className, {
+      className: className,
+      department: getDepartmentByClassName(className),
+      totalScore: 0,
+      maxScore: 0,
+      normalizedScore: 0,
+      percentile: 0,
+      grade: "D",
+      submissionCount: 0,
+      approvedCount: 0,
+      pendingCount: 0,
+      rejectedCount: 0
+    });
+  });
+
+  const targetYear = year || state.selectedAcademicYear;
+  submissions.forEach(submission => {
+    const subYear = getSubmissionAcademicYear(submission);
+    if (subYear !== targetYear) {
+      return;
+    }
+
+    const student = getStudentById(submission.studentId);
+    if (!student) return;
+
+    const classEntry = classMap.get(student.className);
+    if (!classEntry) return;
+
+    classEntry.submissionCount++;
+    if (isSubmissionScored(submission.status)) {
+      classEntry.approvedCount++;
+      const effective = getSubmissionEffectiveMarks(submission);
+      classEntry.totalScore += effective;
+      classEntry.maxScore += getSubmissionScoreCapacity(submission);
+    } else if (submission.status === workflowStatus.SUBMITTED) {
+      classEntry.pendingCount++;
+    } else if (submission.status === workflowStatus.REJECTED) {
+      classEntry.rejectedCount++;
+    }
+  });
+
+  const classData = Array.from(classMap.values());
+  classData.forEach(entry => {
+    entry.normalizedScore = entry.maxScore > 0 ? (entry.totalScore / entry.maxScore) * 100 : 0;
+  });
+
+  const scoreArray = classData.map(entry => entry.totalScore).sort((a, b) => a - b);
+  classData.forEach(entry => {
+    const belowOrEqual = scoreArray.filter(score => score <= entry.totalScore).length;
+    entry.percentile = scoreArray.length > 0 ? (belowOrEqual / scoreArray.length) * 100 : 0;
+    entry.grade = calculateGrade(entry.normalizedScore);
+  });
+
+  return classData.sort((a, b) => b.totalScore - a.totalScore);
+}
+
+function renderBestClassDashboard() {
+  const rankedData = buildClassPerformanceForDashboard(state.selectedAcademicYear, state.bestClassDepartment);
+
+  // Default values for comparison class selectors if empty
+  const classNames = Array.from(new Set(students.map(item => item.className))).sort();
+  if (!state.bestClassCompareClassA && classNames.length > 0) {
+    state.bestClassCompareClassA = classNames[0];
+  }
+  if (!state.bestClassCompareClassB && classNames.length > 1) {
+    state.bestClassCompareClassB = classNames[1];
+  }
+
+  // Calculate metrics
+  const totalClasses = rankedData.length;
+  const topClass = rankedData[0] ? rankedData[0].className : "None";
+  const topScore = rankedData[0] ? rankedData[0].totalScore.toFixed(1) : "0.0";
+  const totalScorePoints = rankedData.reduce((sum, item) => sum + item.totalScore, 0).toFixed(1);
+  
+  const allSubsForYear = submissions.filter(s => getSubmissionAcademicYear(s) === state.selectedAcademicYear);
+  const totalSubsCount = allSubsForYear.length;
+  const verifiedSubsCount = allSubsForYear.filter(s => isSubmissionScored(s.status)).length;
+  const completionRate = totalSubsCount > 0 ? Math.round((verifiedSubsCount / totalSubsCount) * 100) : 100;
+
+  // Tabs navigation HTML
+  const standingsActive = state.bestClassTab === "standings" ? "active" : "";
+  const compareActive = state.bestClassTab === "compare" ? "active" : "";
+  const criteriaActive = state.bestClassTab === "criteria" ? "active" : "";
+
+  // Department option elements
+  const deptOptions = ["all"].concat(state.departments || [])
+    .map(dept => {
+      const label = dept === "all" ? "All Departments" : dept;
+      const selected = state.bestClassDepartment === dept ? "selected" : "";
+      return `<option value="${escapeAttribute(dept)}" ${selected}>${escapeHtml(label)}</option>`;
+    }).join("");
+
+  let subViewHtml = "";
+  if (state.bestClassTab === "compare") {
+    subViewHtml = renderBestClassCompareView();
+  } else if (state.bestClassTab === "criteria") {
+    subViewHtml = renderBestClassCriteriaView();
+  } else {
+    subViewHtml = renderBestClassStandingsView(rankedData);
+  }
+
+  return `
+    <section class="section-header">
+      <div>
+        <h1>Best Class Competition Dashboard</h1>
+        <p class="muted">Institution-wide evaluations, ranking leaderboard, and activity metrics.</p>
+      </div>
+      <div class="button-row">
+        <button type="button" class="btn ghost" data-bestclass-export="evaluation-summary">
+          Export Summary
+        </button>
+      </div>
+    </section>
+
+    <!-- Visual Stats Ribbon -->
+    <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-5);">
+      <article class="stat-card">
+        <div class="stat-card-icon">Class</div>
+        <p class="muted">Classes Evaluated</p>
+        <h2>${totalClasses}</h2>
+      </article>
+      <article class="stat-card" style="border-left: 4px solid #fbbf24; background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.03));">
+        <div class="stat-card-icon" style="color:#b45309;">Top</div>
+        <p class="muted">Current Top Class</p>
+        <h2>${topClass}</h2>
+        <span class="badge warning" style="margin-top: 4px; display:inline-block;">${topScore} points</span>
+      </article>
+      <article class="stat-card">
+        <div class="stat-card-icon">Pts</div>
+        <p class="muted">Total Score Points</p>
+        <h2>${totalScorePoints}</h2>
+      </article>
+      <article class="stat-card">
+        <div class="stat-card-icon" style="color:#10b981;">Done</div>
+        <p class="muted">Verification Completion</p>
+        <h2>${completionRate}%</h2>
+        <div class="progress-track" style="margin-top: 8px; height: 6px;"><div class="progress-fill" style="width: ${completionRate}%;"></div></div>
+      </article>
+    </div>
+
+    <!-- Dashboard Sub-Navigation Tabs -->
+    <div class="tab-row" style="display: flex; gap: 8px; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-5); padding-bottom: 2px;">
+      <button type="button" class="tab-button ${standingsActive}" data-bestclass-tab="standings" style="padding: 10px 20px; font-family: inherit; font-size: 0.95rem; font-weight: 600; border: none; background: none; cursor: pointer; border-bottom: 3px solid ${state.bestClassTab === 'standings' ? 'var(--color-primary)' : 'transparent'}; color: ${state.bestClassTab === 'standings' ? 'var(--color-primary)' : 'var(--text-secondary)'}; transition: all var(--transition);">
+        🏆 Standings & Spotlight
+      </button>
+      <button type="button" class="tab-button ${compareActive}" data-bestclass-tab="compare" style="padding: 10px 20px; font-family: inherit; font-size: 0.95rem; font-weight: 600; border: none; background: none; cursor: pointer; border-bottom: 3px solid ${state.bestClassTab === 'compare' ? 'var(--color-primary)' : 'transparent'}; color: ${state.bestClassTab === 'compare' ? 'var(--color-primary)' : 'var(--text-secondary)'}; transition: all var(--transition);">
+        📊 Class Comparison Tool
+      </button>
+      <button type="button" class="tab-button ${criteriaActive}" data-bestclass-tab="criteria" style="padding: 10px 20px; font-family: inherit; font-size: 0.95rem; font-weight: 600; border: none; background: none; cursor: pointer; border-bottom: 3px solid ${state.bestClassTab === 'criteria' ? 'var(--color-primary)' : 'transparent'}; color: ${state.bestClassTab === 'criteria' ? 'var(--color-primary)' : 'var(--text-secondary)'}; transition: all var(--transition);">
+        ⚙️ Criteria Matrix Reference
+      </button>
+    </div>
+
+    <!-- Toolbar Filters (Only visible for Standings tab) -->
+    ${state.bestClassTab === 'standings' ? `
+    <div class="list-toolbar" style="display:flex; flex-wrap:wrap; gap: var(--space-4); margin-bottom: var(--space-4);">
+      <div class="field" style="flex: 1; min-width: 200px;">
+        <label for="bestclass-search-input">Search Class</label>
+        <input id="bestclass-search-input" type="search" placeholder="Type class name (e.g. BSc CS A)..." value="${escapeAttribute(state.bestClassSearch)}" />
+      </div>
+      <div class="field" style="width: 240px;">
+        <label for="bestclass-dept-select">Department</label>
+        <select id="bestclass-dept-select">${deptOptions}</select>
+      </div>
+    </div>
+    ` : ''}
+
+    <!-- Tab Sub-view Content -->
+    ${subViewHtml}
+  `;
+}
+
+function renderBestClassStandingsView(rankedData) {
+  const top1 = rankedData[0];
+  const top2 = rankedData[1];
+  const top3 = rankedData[2];
+
+  let spotlightHtml = "";
+  if (rankedData.length > 0 && !state.bestClassSearch && state.bestClassDepartment === "all") {
+    spotlightHtml = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-5);">
+        <!-- 2nd Place -->
+        ${top2 ? `
+        <article class="stat-card" style="border: 1.5px solid #cbd5e1; box-shadow: 0 10px 25px rgba(148, 163, 184, 0.08); transition: transform 0.3s; cursor: pointer; text-align: center; padding: 24px;" data-bestclass-select-class="${escapeAttribute(top2.className)}">
+          <div style="font-size: 2.2rem; margin-bottom: 4px;">🥈</div>
+          <span style="font-size: 0.8rem; font-weight:700; color:#64748b; text-transform:uppercase;">2nd Place</span>
+          <h3 style="font-size: 1.5rem; font-weight:800; margin: 8px 0 4px; color:var(--color-text);">${escapeHtml(top2.className)}</h3>
+          <p class="muted" style="font-size:0.85rem; margin-bottom:12px; color:var(--color-text-soft);">${escapeHtml(top2.department)}</p>
+          <div style="background:#f1f5f9; border-radius:12px; padding:10px; display:flex; justify-content:space-around; border: 1px solid var(--color-border);">
+            <div><p class="muted" style="font-size:0.75rem; color:var(--color-text-soft);">Score</p><strong style="color:var(--color-text);">${top2.totalScore.toFixed(1)}</strong></div>
+            <div><p class="muted" style="font-size:0.75rem; color:var(--color-text-soft);">Grade</p><span class="grade-badge ${getGradeClass(top2.grade)}">${top2.grade}</span></div>
+            <div><p class="muted" style="font-size:0.75rem; color:var(--color-text-soft);">Percentile</p><strong style="color:var(--color-text);">${top2.percentile.toFixed(1)}%</strong></div>
+          </div>
+        </article>
+        ` : ''}
+
+        <!-- 1st Place (Gold Spotlight) -->
+        ${top1 ? `
+        <article class="stat-card" style="border: 2px solid #f59e0b; box-shadow: 0 15px 35px rgba(245, 158, 11, 0.15); transform: translateY(-4px); transition: transform 0.3s; cursor: pointer; text-align: center; padding: 28px; background: linear-gradient(135deg, #fffbeb, #ffffff);" data-bestclass-select-class="${escapeAttribute(top1.className)}">
+          <div style="font-size: 2.8rem; margin-bottom: 2px;">👑🥇</div>
+          <span style="font-size: 0.85rem; font-weight:800; color:#d97706; text-transform:uppercase; letter-spacing:0.05em;">Competition Leader</span>
+          <h3 style="font-size: 1.8rem; font-weight:800; margin: 8px 0 4px; color:#1e293b;">${escapeHtml(top1.className)}</h3>
+          <p class="muted" style="font-size:0.85rem; margin-bottom:14px; color:#64748b;">${escapeHtml(top1.department)}</p>
+          <div style="background:#fffbeb; border:1px solid #fef3c7; border-radius:12px; padding:12px; display:flex; justify-content:space-around; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+            <div><p class="muted" style="font-size:0.75rem; color:#b45309;">Score</p><strong style="font-size:1.1rem; color:#b45309;">${top1.totalScore.toFixed(1)}</strong></div>
+            <div><p class="muted" style="font-size:0.75rem; color:#b45309;">Grade</p><span class="grade-badge ${getGradeClass(top1.grade)}" style="padding:4px 10px; font-size:0.9rem;">${top1.grade}</span></div>
+            <div><p class="muted" style="font-size:0.75rem; color:#b45309;">Percentile</p><strong style="font-size:1.1rem; color:#b45309;">${top1.percentile.toFixed(1)}%</strong></div>
+          </div>
+        </article>
+        ` : ''}
+
+        <!-- 3rd Place -->
+        ${top3 ? `
+        <article class="stat-card" style="border: 1.5px solid #ca8a04; box-shadow: 0 10px 25px rgba(202, 138, 4, 0.08); transition: transform 0.3s; cursor: pointer; text-align: center; padding: 24px;" data-bestclass-select-class="${escapeAttribute(top3.className)}">
+          <div style="font-size: 2.2rem; margin-bottom: 4px;">🥉</div>
+          <span style="font-size: 0.8rem; font-weight:700; color:#b45309; text-transform:uppercase;">3rd Place</span>
+          <h3 style="font-size: 1.5rem; font-weight:800; margin: 8px 0 4px; color:var(--color-text);">${escapeHtml(top3.className)}</h3>
+          <p class="muted" style="font-size:0.85rem; margin-bottom:12px; color:var(--color-text-soft);">${escapeHtml(top3.department)}</p>
+          <div style="background:#fdfaf7; border-radius:12px; padding:10px; display:flex; justify-content:space-around; border: 1px solid var(--color-border);">
+            <div><p class="muted" style="font-size:0.75rem; color:var(--color-text-soft);">Score</p><strong style="color:var(--color-text);">${top3.totalScore.toFixed(1)}</strong></div>
+            <div><p class="muted" style="font-size:0.75rem; color:var(--color-text-soft);">Grade</p><span class="grade-badge ${getGradeClass(top3.grade)}">${top3.grade}</span></div>
+            <div><p class="muted" style="font-size:0.75rem; color:var(--color-text-soft);">Percentile</p><strong style="color:var(--color-text);">${top3.percentile.toFixed(1)}%</strong></div>
+          </div>
+        </article>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  // Create Standings Table Rows
+  const maxScore = Math.max(1, ...rankedData.map(item => item.totalScore));
+  const tableRows = rankedData.map((entry, idx) => {
+    const isTop3 = idx < 3 && !state.bestClassSearch && state.bestClassDepartment === "all";
+    const highlightClass = isTop3 ? `top-${idx+1}-row` : "";
+    const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+    const barWidth = (entry.totalScore / maxScore) * 100;
+    
+    return `
+      <tr class="bestclass-leaderboard-row ${highlightClass}" data-class-name="${escapeAttribute(entry.className)}" style="cursor:pointer;" data-bestclass-select-class="${escapeAttribute(entry.className)}">
+        <td style="font-weight: 700; width:60px;">${medal}</td>
+        <td>
+          <div style="font-weight:600; font-size:1.02rem;">${escapeHtml(entry.className)}</div>
+          <div class="muted" style="font-size:0.78rem;">${escapeHtml(entry.department)}</div>
+        </td>
+        <td style="width: 35%;">
+          <div style="display:flex; align-items:center; gap: 8px;">
+            <span style="font-size:0.85rem; font-weight:600; min-width:35px; text-align:right;">${entry.totalScore.toFixed(1)}</span>
+            <div class="progress-track" style="flex:1; height:8px;"><div class="progress-fill" style="width: ${barWidth.toFixed(1)}%;"></div></div>
+          </div>
+        </td>
+        <td>${entry.normalizedScore.toFixed(1)}%</td>
+        <td>${entry.percentile.toFixed(1)}%</td>
+        <td><span class="grade-badge ${getGradeClass(entry.grade)}">${entry.grade}</span></td>
+        <td>
+          <button type="button" class="btn ghost" style="padding:4px 10px; font-size:0.8rem;" data-bestclass-select-class="${escapeAttribute(entry.className)}">
+            View details
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    ${spotlightHtml}
+    
+    <div class="two-panel-grid" style="display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--space-5); align-items: start;">
+      
+      <!-- Leaderboard list -->
+      <section class="panel" style="margin-bottom:0;">
+        <div class="panel-head">
+          <h3>Class Evaluation Standings</h3>
+          <p class="muted">Showing evaluated academic scores for the selected criteria.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Class / Department</th>
+                <th>Points / Progress</th>
+                <th>Normalized</th>
+                <th>Percentile</th>
+                <th>Grade</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows.length > 0 ? tableRows : `<tr><td colspan="7" class="empty-state">No matching classes found.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Detailed Drilldown Column -->
+      <div id="bestclass-detail-column">
+        ${renderBestClassDetailSection()}
+      </div>
+      
+    </div>
+  `;
+}
+
+function renderBestClassCompareView() {
+  const classNames = Array.from(new Set(students.map(item => item.className))).sort();
+  const classOptionsA = classNames.map(c => `<option value="${escapeAttribute(c)}" ${state.bestClassCompareClassA === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join("");
+  const classOptionsB = classNames.map(c => `<option value="${escapeAttribute(c)}" ${state.bestClassCompareClassB === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join("");
+
+  const classAData = buildClassPerformanceForDashboard(state.selectedAcademicYear, "all").find(c => c.className === state.bestClassCompareClassA);
+  const classBData = buildClassPerformanceForDashboard(state.selectedAcademicYear, "all").find(c => c.className === state.bestClassCompareClassB);
+
+  const categories = criteriaCatalog;
+  let categoryComparisonHtml = "";
+
+  if (classAData && classBData) {
+    categoryComparisonHtml = categories.map(cat => {
+      const classASubs = submissions.filter(sub => {
+        const student = getStudentById(sub.studentId);
+        const criteriaItem = getCriteriaById(sub.criteriaId);
+        return student && student.className === state.bestClassCompareClassA && 
+               criteriaItem && criteriaItem.category === cat.category && 
+               isSubmissionScored(sub.status) &&
+               getSubmissionAcademicYear(sub) === state.selectedAcademicYear;
+      });
+      const scoreA = classASubs.reduce((sum, s) => sum + getSubmissionEffectiveMarks(s), 0);
+
+      const classBSubs = submissions.filter(sub => {
+        const student = getStudentById(sub.studentId);
+        const criteriaItem = getCriteriaById(sub.criteriaId);
+        return student && student.className === state.bestClassCompareClassB && 
+               criteriaItem && criteriaItem.category === cat.category && 
+               isSubmissionScored(sub.status) &&
+               getSubmissionAcademicYear(sub) === state.selectedAcademicYear;
+      });
+      const scoreB = classBSubs.reduce((sum, s) => sum + getSubmissionEffectiveMarks(s), 0);
+
+      const maxScore = Math.max(1, scoreA, scoreB);
+      const widthA = (scoreA / maxScore) * 100;
+      const widthB = (scoreB / maxScore) * 100;
+
+      const leadingA = scoreA > scoreB ? "color: #10b981; font-weight:700;" : "";
+      const leadingB = scoreB > scoreA ? "color: #10b981; font-weight:700;" : "";
+
+      return `
+        <div style="padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); display: grid; grid-template-columns: 1fr 120px 1fr; gap: 20px; align-items: center;">
+          <div style="text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+            <span style="${leadingA}">${scoreA.toFixed(1)} pts</span>
+            <div class="progress-track" style="width: 140px; height: 10px; transform: scaleX(-1);"><div class="progress-fill" style="width: ${widthA}%; background: var(--color-primary);"></div></div>
+          </div>
+          
+          <div style="text-align: center; font-weight: 600; font-size: 0.88rem; color: var(--text-secondary); background: #f1f5f9; padding: 4px 8px; border-radius: 8px;">
+            ${escapeHtml(cat.category)}
+          </div>
+          
+          <div style="text-align: left; display: flex; align-items: center; justify-content: flex-start; gap: 8px;">
+            <div class="progress-track" style="width: 140px; height: 10px;"><div class="progress-fill" style="width: ${widthB}%; background: #3b82f6;"></div></div>
+            <span style="${leadingB}">${scoreB.toFixed(1)} pts</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  return `
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Class Comparison Tool</h3>
+        <p class="muted">Compare evaluated category metrics side-by-side between two classes.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; background: #f8fafc; border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-5);">
+        <div class="field" style="margin-bottom:0;">
+          <label for="bestclass-compare-a" style="font-weight:700;">Compare Class A</label>
+          <select id="bestclass-compare-a" style="width: 100%; border: 1.5px solid var(--border); border-radius:12px; padding:10px;">${classOptionsA}</select>
+        </div>
+        <div style="font-size: 1.4rem; font-weight:800; color:var(--text-muted); margin-top:20px;">VS</div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="bestclass-compare-b" style="font-weight:700;">Compare Class B</label>
+          <select id="bestclass-compare-b" style="width: 100%; border: 1.5px solid var(--border); border-radius:12px; padding:10px;">${classOptionsB}</select>
+        </div>
+      </div>
+
+      ${classAData && classBData ? `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 24px;">
+          <div style="background: linear-gradient(135deg, #fff7f0, #ffffff); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; border-top: 4px solid var(--color-primary);">
+            <h3 style="font-size:1.6rem; font-weight:800; color:var(--color-primary);">${escapeHtml(classAData.className)}</h3>
+            <p class="muted" style="font-size:0.85rem; margin-bottom:12px;">${escapeHtml(classAData.department)}</p>
+            <div style="display:flex; justify-content:space-around; margin-top: 16px;">
+              <div><p class="muted" style="font-size:0.75rem;">Rank</p><strong>#${buildClassPerformanceForDashboard(state.selectedAcademicYear, "all").findIndex(c => c.className === classAData.className) + 1}</strong></div>
+              <div><p class="muted" style="font-size:0.75rem;">Points</p><strong>${classAData.totalScore.toFixed(1)}</strong></div>
+              <div><p class="muted" style="font-size:0.75rem;">Grade</p><span class="grade-badge ${getGradeClass(classAData.grade)}">${classAData.grade}</span></div>
+              <div><p class="muted" style="font-size:0.75rem;">Percentile</p><strong>${classAData.percentile.toFixed(1)}%</strong></div>
+            </div>
+          </div>
+
+          <div style="background: linear-gradient(135deg, #f0f4ff, #ffffff); border: 1px solid #dbeafe; border-radius: var(--radius-md); padding: 20px; text-align: center; border-top: 4px solid #3b82f6;">
+            <h3 style="font-size:1.6rem; font-weight:800; color:#3b82f6;">${escapeHtml(classBData.className)}</h3>
+            <p class="muted" style="font-size:0.85rem; margin-bottom:12px;">${escapeHtml(classBData.department)}</p>
+            <div style="display:flex; justify-content:space-around; margin-top: 16px;">
+              <div><p class="muted" style="font-size:0.75rem;">Rank</p><strong>#${buildClassPerformanceForDashboard(state.selectedAcademicYear, "all").findIndex(c => c.className === classBData.className) + 1}</strong></div>
+              <div><p class="muted" style="font-size:0.75rem;">Points</p><strong>${classBData.totalScore.toFixed(1)}</strong></div>
+              <div><p class="muted" style="font-size:0.75rem;">Grade</p><span class="grade-badge ${getGradeClass(classBData.grade)}">${classBData.grade}</span></div>
+              <div><p class="muted" style="font-size:0.75rem;">Percentile</p><strong>${classBData.percentile.toFixed(1)}%</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="margin-bottom: var(--space-3); border-bottom: 2px solid var(--color-border); padding-bottom: 8px; font-weight:700;">Category Score Comparison</h4>
+        <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+          ${categoryComparisonHtml}
+        </div>
+      ` : `
+        <p class="empty-state">Please select two classes to view comparison metrics.</p>
+      `}
+    </section>
+  `;
+}
+
+function renderBestClassCriteriaView() {
+  const categories = criteriaCatalog;
+  
+  const categoryCards = categories.map(cat => {
+    const itemCount = cat.items ? cat.items.length : 0;
+    
+    const catSubmissions = submissions.filter(sub => {
+      const criteriaItem = getCriteriaById(sub.criteriaId);
+      return criteriaItem && criteriaItem.category === cat.category && getSubmissionAcademicYear(sub) === state.selectedAcademicYear;
+    });
+    
+    const approvedCount = catSubmissions.filter(s => isSubmissionScored(s.status)).length;
+    const totalPoints = catSubmissions.filter(s => isSubmissionScored(s.status)).reduce((sum, s) => sum + getSubmissionEffectiveMarks(s), 0);
+
+    const itemsListHtml = (cat.items || []).map(item => {
+      let markText = item.marks > 0 ? `+${item.marks}` : item.marks;
+      if (item.type === "range" && item.rules) {
+        markText = "Range rules";
+      }
+      return `
+        <li style="display:flex; justify-content:space-between; font-size:0.82rem; padding: 4px 0; border-bottom:1px dashed rgba(255,255,255,0.08); gap:10px;">
+          <span style="color:var(--color-text-soft);">${escapeHtml(item.title)}</span>
+          <span style="font-weight:600; color:${item.marks < 0 ? '#ef4444' : 'var(--color-text-soft)'}">${markText}</span>
+        </li>
+      `;
+    }).join("");
+
+    return `
+      <article class="stat-card" style="display:flex; flex-direction:column; justify-content:space-between; border: 1px solid var(--color-border); box-shadow: var(--shadow-xs);">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1.5px solid var(--color-border); padding-bottom:8px;">
+            <h4 style="font-weight: 700; color:var(--color-text); font-size:1.05rem;">${escapeHtml(cat.category)}</h4>
+            <span class="badge info" style="font-size:0.75rem;">${itemCount} rules</span>
+          </div>
+          <ul style="list-style:none; padding:0; margin-bottom: 16px;">
+            ${itemsListHtml}
+          </ul>
+        </div>
+        <div style="background:rgba(30, 41, 59, 0.4); border-radius:8px; padding:10px; display:flex; justify-content:space-between; font-size:0.8rem; border:1px solid var(--color-border);">
+          <div><p class="muted" style="font-size:0.72rem; color:var(--color-text-soft);">Claims Approved</p><strong>${approvedCount}</strong></div>
+          <div><p class="muted" style="font-size:0.72rem; color:var(--color-text-soft);">Total Points</p><strong style="color:var(--color-primary);">${totalPoints.toFixed(1)}</strong></div>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  return `
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4);">
+      ${categoryCards}
+    </div>
+  `;
+}
+
+function renderBestClassDetailSection() {
+  if (!state.bestClassSelectedClass) {
+    return `
+      <section class="panel" style="text-align:center; padding: 60px 20px; border: 2px dashed var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:350px;">
+        <span style="font-size: 3rem; margin-bottom: 12px;">📊</span>
+        <h4 style="font-weight: 700; margin-bottom:8px;">No Class Selected</h4>
+        <p class="muted" style="font-size:0.9rem; max-width:280px; line-height:1.5;">Click on any class in the leaderboard to inspect its points ledger, top student contributions, and category scorecard.</p>
+      </section>
+    `;
+  }
+
+  const className = state.bestClassSelectedClass;
+  const classStudents = students.filter(s => s.className === className);
+  const classSubmissions = submissions.filter(sub => {
+    const student = getStudentById(sub.studentId);
+    return student && student.className === className && getSubmissionAcademicYear(sub) === state.selectedAcademicYear;
+  });
+
+  const classData = buildClassPerformanceForDashboard(state.selectedAcademicYear, "all").find(c => c.className === className);
+  if (!classData) {
+    return `<section class="panel"><p class="empty-state">Class data not available.</p></section>`;
+  }
+
+  const studentStats = [];
+  classStudents.forEach(st => {
+    const studentSubs = classSubmissions.filter(sub => sub.studentId === st.id && isSubmissionScored(sub.status));
+    const score = studentSubs.reduce((sum, sub) => sum + getSubmissionEffectiveMarks(sub), 0);
+    if (score !== 0 || studentSubs.length > 0) {
+      studentStats.push({ student: st, score: score, count: studentSubs.length });
+    }
+  });
+  const topContributors = studentStats.sort((a, b) => b.score - a.score).slice(0, 5);
+
+  const contributorsHtml = topContributors.map((c, i) => {
+    const medals = ["🥇", "🥈", "🥉", "🏅", "🏅"];
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom:1px dashed #f1f5f9; font-size:0.88rem;">
+        <div style="display:flex; align-items:center; gap: 8px;">
+          <span style="font-size:1.1rem; width:22px; text-align:center;">${medals[i]}</span>
+          <span style="font-weight:600;">${escapeHtml(c.student.name)}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap: 8px;">
+          <span class="muted" style="font-size:0.75rem;">${c.count} claims</span>
+          <strong style="color:var(--color-primary);">${c.score.toFixed(1)} pts</strong>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const categoryScoresHtml = criteriaCatalog.map(cat => {
+    const catSubs = classSubmissions.filter(sub => {
+      const criteriaItem = getCriteriaById(sub.criteriaId);
+      return criteriaItem && criteriaItem.category === cat.category && isSubmissionScored(sub.status);
+    });
+    const score = catSubs.reduce((sum, s) => sum + getSubmissionEffectiveMarks(s), 0);
+
+    let scoreLimit = cat.items.reduce((sum, s) => sum + (s.marks > 0 ? s.marks * 3 : 0), 10);
+    if (scoreLimit < 20) scoreLimit = 20;
+    const progressWidth = Math.min(100, (score / scoreLimit) * 100);
+
+    return `
+      <div style="margin-bottom: 12px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:4px; font-weight:600;">
+          <span style="color:#475569;">${escapeHtml(cat.category)}</span>
+          <span>${score.toFixed(1)} pts</span>
+        </div>
+        <div class="progress-track" style="height:6px; background:#e2e8f0;"><div class="progress-fill" style="width:${progressWidth.toFixed(1)}%; background:var(--color-primary);"></div></div>
+      </div>
+    `;
+  }).join("");
+
+  const approvedLedger = classSubmissions.filter(sub => isSubmissionScored(sub.status)).sort((a,b) => b.id - a.id);
+  const ledgerRowsHtml = approvedLedger.map(record => {
+    const criteriaItem = getCriteriaById(record.criteriaId);
+    const student = getStudentById(record.studentId);
+    const pts = getSubmissionEffectiveMarks(record);
+    const marksDisplay = pts >= 0 ? `+${pts.toFixed(1)}` : pts.toFixed(1);
+    
+    return `
+      <div style="padding: 10px; border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 8px; font-size: 0.82rem; background:#ffffff;">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-weight:700;">
+          <span style="color:#1e293b;">${escapeHtml(student ? student.name : "Student")}</span>
+          <span style="color:${pts >= 0 ? '#10b981' : '#ef4444'}">${marksDisplay} pts</span>
+        </div>
+        <p class="muted" style="margin-bottom:6px; line-height:1.4;">${escapeHtml(record.description || criteriaItem.title)}</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #f1f5f9; padding-top:6px;">
+          <span class="badge info" style="font-size:0.7rem; padding: 2px 6px;">${escapeHtml(criteriaItem ? criteriaItem.category : "Category")}</span>
+          <button type="button" class="btn ghost" style="padding: 2px 8px; font-size: 0.72rem;" data-view-doc="${escapeAttribute(record.proof)}">View Proof</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <section class="panel" style="border: 1.5px solid var(--border); box-shadow: var(--shadow-card); position:sticky; top:20px;">
+      <div class="panel-head" style="margin-bottom:16px;">
+        <div>
+          <div style="display:flex; align-items:center; gap: 8px;">
+            <h3 style="font-size: 1.35rem; font-weight:800; color:var(--text-primary);">${escapeHtml(className)}</h3>
+            <span class="grade-badge ${getGradeClass(classData.grade)}">${classData.grade}</span>
+          </div>
+          <p class="muted" style="font-size:0.8rem; margin-top:2px;">${escapeHtml(classData.department)} Department</p>
+        </div>
+        <button type="button" class="btn ghost" id="bestclass-back-to-leaderboard" style="padding:4px 8px; font-size:0.8rem;">
+          ✕
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding: 12px; background:#fafafa; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px; text-align:center;">
+        <div>
+          <p class="muted" style="font-size:0.75rem;">Total Points</p>
+          <h4 style="font-size:1.3rem; font-weight:800; color:var(--color-primary);">${classData.totalScore.toFixed(1)}</h4>
+        </div>
+        <div>
+          <p class="muted" style="font-size:0.75rem;">Percentile Rank</p>
+          <h4 style="font-size:1.3rem; font-weight:800; color:#3b82f6;">${classData.percentile.toFixed(1)}%</h4>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-weight: 700; font-size: 0.95rem; border-bottom: 2px solid var(--color-border); padding-bottom: 6px; margin-bottom: 12px;">📊 Category Scorecard</h4>
+        <div style="max-height: 250px; overflow-y: auto; padding-right: 4px;">
+          ${categoryScoresHtml}
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-weight: 700; font-size: 0.95rem; border-bottom: 2px solid var(--color-border); padding-bottom: 6px; margin-bottom: 12px;">👑 Top Student Contributors</h4>
+        <div>
+          ${contributorsHtml.length > 0 ? contributorsHtml : '<p class="empty-state" style="font-size:0.8rem; padding:10px 0;">No scored contributions yet.</p>'}
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-weight: 700; font-size: 0.95rem; border-bottom: 2px solid var(--color-border); padding-bottom: 6px; margin-bottom: 12px;">📋 Approved Points Ledger</h4>
+        <div style="max-height: 300px; overflow-y: auto; padding-right: 4px;">
+          ${ledgerRowsHtml.length > 0 ? ledgerRowsHtml : '<p class="empty-state" style="font-size:0.8rem; padding:10px 0;">No approved submissions found.</p>'}
+        </div>
+      </div>
+
+      <div style="margin-top:20px; border-top:1.5px solid var(--color-border); padding-top:12px; display:flex; gap:10px;">
+        <button type="button" class="btn ghost full" style="font-size:0.82rem; padding:8px 12px;" data-bestclass-export="class-points-ledger">
+          📥 Export Ledger
+        </button>
+      </div>
+    </section>
+  `;
 }
 
 

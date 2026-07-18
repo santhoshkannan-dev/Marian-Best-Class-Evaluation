@@ -1,95 +1,755 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Best Class Evaluation System - Marian College Kuttikkanam. A smart way to track, verify and celebrate class achievements.">
+  <meta name="description"
+    content="Best Class Evaluation System - Marian College Kuttikkanam. A smart way to track, verify and celebrate class achievements.">
   <title>Marian Best Class — Marian College Kuttikkanam</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap"
+    rel="stylesheet">
   <style>
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
     :root {
-      --orange-start: #ff8c32;
-      --orange-mid: #ff6b1a;
-      --orange-end: #e85d04;
-      --orange-glow: rgba(255, 108, 26, 0.25);
-      --surface: #ffffff;
-      --text-primary: #1a1a2e;
-      --text-secondary: #6b7280;
-      --text-muted: #9ca3af;
-      --border: #f1dfd1;
-      --shadow-card: 0 20px 60px rgba(15, 23, 42, 0.08), 0 10px 24px rgba(15, 23, 42, 0.05);
-      --shadow-button: 0 8px 24px rgba(255, 108, 26, 0.32);
-      --shadow-button-hover: 0 12px 32px rgba(255, 108, 26, 0.45);
-      --radius-lg: 24px;
-      --motion-fast: 0.3s;
-      --motion-medium: 0.45s;
-      --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-      --transition: var(--motion-fast) var(--ease-smooth);
+      --primary: #4f46e5; /* Indigo */
+      --primary-hover: #3730a3;
+      --secondary: #db2777; /* Pink */
+      --secondary-hover: #be185d;
+      --bg-dark: #f8fafc; /* Clean off-white background */
+      --bg-light: #f1f5f9;
+      --text-main: #0f172a; /* Slate-900 */
+      --text-muted: #64748b; /* Slate-500 */
+      --glass-card: rgba(255, 255, 255, 0.8);
+      --glass-border: rgba(15, 23, 42, 0.08);
+      --glass-input: #ffffff;
+      --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.08);
+      --radius: 24px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     body {
       font-family: 'Outfit', 'Segoe UI', Tahoma, sans-serif;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 32px;
-      color: var(--text-primary);
-      background: linear-gradient(135deg, #fff7f0 0%, #ffefe1 45%, #fff4e8 100%);
+      color: var(--text-main);
+      background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.03) 0%, transparent 40%),
+                  linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 50%, var(--bg-dark) 100%);
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: relative;
+      padding: 40px 24px 80px;
+    }
+
+    /* Top-Left Navigation Sidebar (Always visible & prominent) */
+    .nav-sidebar {
+      position: fixed;
+      top: 40px;
+      left: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      z-index: 1000;
+      padding: 14px 10px;
+      border-radius: 35px;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid var(--glass-border);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+
+    .nav-line {
+      position: absolute;
+      top: 40px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), var(--secondary));
+      z-index: -1;
+      height: 150px;
+      opacity: 0.65;
+    }
+
+    /* Regular icon buttons (Login, About) */
+    .nav-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1.5px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s, border-color 0.3s;
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
       overflow: hidden;
     }
 
+    /* Home button — larger, image fills it like an avatar */
+    #btn-nav-home {
+      width: 68px;
+      height: 68px;
+      padding: 0;
+      background: transparent;
+      border: 2.5px solid rgba(139, 35, 35, 0.25);
+      box-shadow: 0 6px 20px rgba(139, 35, 35, 0.15);
+    }
+
+    #btn-nav-home img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    #btn-nav-home:hover {
+      transform: scale(1.08) !important;
+      border-color: rgba(139, 35, 35, 0.6);
+      box-shadow: 0 8px 28px rgba(139, 35, 35, 0.25);
+    }
+
+    #btn-nav-home.active {
+      border-color: rgba(139, 35, 35, 0.8);
+      box-shadow: 0 0 22px rgba(139, 35, 35, 0.3);
+    }
+
+    .nav-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--text-muted);
+      stroke-width: 2.5;
+      fill: none;
+      transition: stroke var(--transition);
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.1) !important;
+      border-color: var(--primary);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+    }
+
+    .nav-btn:hover svg {
+      stroke: var(--primary);
+    }
+
+    .nav-btn.active {
+      border-color: var(--primary);
+      border-width: 2.5px;
+      box-shadow: 0 0 18px rgba(99, 102, 241, 0.25);
+      background: #ffffff;
+    }
+
+    .nav-btn.active svg {
+      stroke: var(--primary);
+    }
+
+    /* Premium tooltips on hover */
+    .nav-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 76px;
+      top: 50%;
+      transform: translateY(-50%) translateX(-8px);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      z-index: 1001;
+    }
+
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      left: 70px;
+      top: 50%;
+      transform: translateY(-50%) translateX(-4px);
+      border-width: 5px 6px 5px 0;
+      border-style: solid;
+      border-color: transparent rgba(15, 23, 42, 0.95) transparent transparent;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      z-index: 1001;
+    }
+
+    .nav-btn:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) translateX(0);
+    }
+
+    .nav-btn:hover::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) translateX(0);
+    }
+
+    /* View Routing Structure */
+    .content-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 20px auto;
+      z-index: 1;
+    }
+
+    .view-section {
+      display: none;
+      animation: pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    /* View centering layout helper for Login screen */
+    .view-section.centered-layout.active {
+      display: grid;
+      place-items: center;
+      min-height: 80vh;
+    }
+
+    /* ------------------------------ */
+    /* HOME VIEW STYLES               */
+    /* ------------------------------ */
+
+    .home-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .home-header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .home-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #0f172a 20%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .home-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Total Submissions Card (Above gauge) */
+    .total-submissions-card {
+      background: #ffffff;
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 24px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .total-submissions-card:hover {
+      box-shadow: 0 15px 35px rgba(15, 23, 42, 0.05);
+      border-color: rgba(99, 102, 241, 0.15);
+    }
+
+    .total-submissions-card::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .submissions-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .submissions-icon {
+      font-size: 2.2rem;
+      background: rgba(99, 102, 241, 0.06);
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      border: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .submissions-details h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .submissions-count {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1;
+    }
+
+    .submissions-stats {
+      display: flex;
+      gap: 40px;
+    }
+
+    .stat-item {
+      text-align: right;
+    }
+
+    .stat-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-val {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .stat-val.approved { color: #10b981; }
+    .stat-val.pending { color: #f59e0b; }
+
+    /* Dashboard Grid Core Card */
+    .dashboard-core-card {
+      background: var(--glass-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.04);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 0.85fr;
+      gap: 40px;
+    }
+
+    /* Left Side: SVG Gauge */
+    .chart-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .chart-heading-container {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 24px;
+    }
+
+    .chart-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+      position: relative;
+    }
+
+    .chart-title::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 32px;
+      height: 3px;
+      border-radius: 1.5px;
+      background: #f59e0b; /* Golden border accent matching reference */
+    }
+
+    .svg-container {
+      width: 100%;
+      max-width: 640px;
+      aspect-ratio: 500/330;
+      margin: 0 auto;
+    }
+
+    .gauge-track {
+      fill: none;
+      stroke: rgba(15, 23, 42, 0.03);
+      stroke-linecap: round;
+      stroke-width: 8px;
+    }
+
+    .gauge-arc {
+      fill: none;
+      stroke-linecap: round;
+      stroke-width: 8px;
+      transition: stroke-dashoffset 1.2s cubic-bezier(0.25, 0.8, 0.25, 1), stroke-width 0.3s, filter 0.3s;
+    }
+
+    .gauge-arc.highlighted {
+      stroke-width: 11px;
+      filter: drop-shadow(0 0 5px var(--glow-color));
+    }
+
+    .arc-tip-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      fill: var(--text-muted);
+      font-family: inherit;
+      transition: font-size 0.3s, fill 0.3s, font-weight 0.3s;
+      user-select: none;
+      pointer-events: none;
+      text-shadow: 0 1px 3px #ffffff, 0 -1px 3px #ffffff, 1px 0 3px #ffffff, -1px 0 3px #ffffff;
+    }
+
+    .arc-tip-label.highlighted {
+      font-size: 0.88rem;
+      font-weight: 800;
+      fill: var(--text-main);
+    }
+
+    /* Scale Ticks */
+    .scale-tick-line {
+      stroke: rgba(15, 23, 42, 0.1);
+      stroke-width: 1.5px;
+    }
+
+    .scale-tick-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      fill: var(--text-muted);
+      text-anchor: middle;
+      user-select: none;
+    }
+
+    /* Right Side: Leaderboard list */
+    .leaderboard-section {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 24px;
+      border-bottom: 1.5px solid var(--glass-border);
+      padding-bottom: 12px;
+    }
+
+    .total-score-badge {
+      text-align: right;
+    }
+
+    .total-score-val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.1;
+    }
+
+    .total-score-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .leaderboard-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      border-radius: 14px;
+      background: transparent;
+      border: 1.5px solid transparent;
+      transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+      cursor: pointer;
+    }
+
+    .leaderboard-row:hover, .leaderboard-row.highlighted {
+      background: #ffffff;
+      border-color: var(--glass-border);
+      transform: translateX(4px);
+      box-shadow: 0 4px 15px rgba(15, 23, 42, 0.02);
+    }
+
+    .row-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .row-bullet {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .row-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.05);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .row-class-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .row-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .row-percent {
+      font-size: 0.94rem;
+      font-weight: 700;
+      color: #f59e0b; /* Amber */
+    }
+
+    .row-score {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 80px;
+      text-align: right;
+    }
+
+    /* ------------------------------ */
+    /* ABOUT VIEW STYLES              */
+    /* ------------------------------ */
+
+    .about-container {
+      background: var(--glass-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 48px;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.04);
+    }
+
+    .about-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #0f172a 20%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .about-lead {
+      font-size: 1.05rem;
+      text-align: center;
+      color: var(--text-muted);
+      max-width: 620px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      margin-bottom: 40px;
+    }
+
+    .about-card {
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 28px;
+    }
+
+    .about-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .about-card ul {
+      list-style: none;
+    }
+
+    .about-card li {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .about-card li::before {
+      content: "•";
+      color: var(--primary);
+      font-weight: bold;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .workflow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .workflow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.88rem;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-details h4 {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 3px;
+    }
+
+    .step-details p {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Original login-layout styles mapping */
     .login-layout {
       width: min(1120px, 100%);
       min-height: 640px;
-      background: var(--surface);
-      border-radius: var(--radius-lg);
+      background: var(--glass-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
       overflow: hidden;
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
-      box-shadow: var(--shadow-card);
-      animation: pageEnter var(--motion-medium) var(--ease-smooth);
-      animation-fill-mode: both;
+      box-shadow: 0 40px 80px rgba(15, 23, 42, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+      animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .login-visual {
       position: relative;
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: 28px;
       padding: 48px 56px 40px;
-      background: linear-gradient(150deg, var(--orange-start), var(--orange-mid) 45%, var(--orange-end));
-      color: #ffffff;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(236, 72, 153, 0.02) 50%, rgba(255, 255, 255, 0.2) 100%);
+      color: var(--text-main);
       overflow: hidden;
-      place-items: center;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--glass-border);
     }
 
     .login-visual::before {
       content: '';
       position: absolute;
-      width: 380px;
-      height: 380px;
+      width: 400px;
+      height: 400px;
       border-radius: 50%;
-      top: -160px;
-      right: -140px;
-      background: rgba(255, 255, 255, 0.08);
+      top: -200px;
+      right: -200px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      pointer-events: none;
     }
 
     .login-visual::after {
       content: '';
       position: absolute;
-      width: 280px;
-      height: 280px;
+      width: 300px;
+      height: 300px;
       border-radius: 50%;
-      bottom: -140px;
-      left: -80px;
-      background: rgba(255, 255, 255, 0.06);
+      bottom: -150px;
+      left: -100px;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, transparent 70%);
+      pointer-events: none;
     }
 
     .brand-logo {
@@ -99,7 +759,7 @@
 
     .visual-copy {
       display: grid;
-      gap: 12px;
+      gap: 16px;
       z-index: 1;
       max-width: 460px;
       justify-items: center;
@@ -108,10 +768,11 @@
 
     .visual-kicker {
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-size: 0.74rem;
+      letter-spacing: 0.15em;
+      font-size: 0.76rem;
       font-weight: 700;
-      color: rgba(255, 255, 255, 0.8);
+      color: var(--primary);
+      text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
     }
 
     .visual-title {
@@ -119,39 +780,29 @@
       font-weight: 800;
       line-height: 1.15;
       letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #0f172a 30%, #334155 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .visual-lead {
       font-size: 1.05rem;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.92);
+      color: var(--text-main);
     }
 
     .visual-desc {
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       line-height: 1.6;
-      color: rgba(255, 255, 255, 0.78);
+      color: var(--text-muted);
     }
 
     .visual-tagline {
       font-family: 'Playfair Display', Georgia, serif;
       font-style: italic;
       font-size: 1.2rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--text-muted);
       margin-top: 6px;
-    }
-
-    .visual-hero {
-      display: flex;
-      align-items: flex-end;
-      justify-content: flex-start;
-      z-index: 1;
-    }
-
-    .visual-hero img {
-      width: min(320px, 70%);
-      height: auto;
-      filter: drop-shadow(0 18px 28px rgba(15, 23, 42, 0.2));
     }
 
     .login-panel {
@@ -159,7 +810,7 @@
       display: grid;
       place-items: center;
       padding: 48px 40px;
-      background: #fff7ef;
+      background: rgba(255, 255, 255, 0.15);
       overflow: hidden;
     }
 
@@ -168,58 +819,30 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at 20% 20%, rgba(255, 108, 26, 0.06) 0%, transparent 55%),
-        radial-gradient(circle at 80% 80%, rgba(255, 108, 26, 0.04) 0%, transparent 55%);
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.02) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.02) 0%, transparent 50%);
       pointer-events: none;
-    }
-
-    .panel-hero {
-      position: absolute;
-      right: 24px;
-      bottom: 24px;
-      width: min(240px, 45%);
-      height: auto;
-      opacity: 0.95;
-      filter: drop-shadow(0 16px 26px rgba(15, 23, 42, 0.14));
-      pointer-events: none;
-      z-index: 0;
     }
 
     .login-card {
       position: relative;
       z-index: 1;
       width: min(420px, 100%);
-      background: #ffffff;
+      background: var(--glass-card);
       border-radius: 22px;
-      padding: 34px 32px;
-      border: 1px solid var(--border);
-      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
-      animation: cardSlideUp var(--motion-medium) var(--ease-smooth);
-      animation-fill-mode: both;
+      padding: 38px 34px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      animation: cardSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .card-logo {
       display: block;
-      width: 130px;
-      height: auto;
-      margin: 0 auto 18px;
-      filter: drop-shadow(0 10px 18px rgba(15, 23, 42, 0.14));
-    }
-
-    .card-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #fff5eb, #ffe8d6);
-      display: grid;
-      place-items: center;
-      margin: 0 auto 22px;
-    }
-
-    .card-icon svg {
-      width: 28px;
-      height: 28px;
-      color: var(--orange-mid);
+      width: auto;
+      height: 60px;
+      max-width: 100%;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
     }
 
     .card-heading {
@@ -231,11 +854,12 @@
       font-size: 1.5rem;
       font-weight: 700;
       margin-bottom: 6px;
+      color: var(--text-main);
     }
 
     .card-heading p {
       font-size: 0.92rem;
-      color: var(--text-secondary);
+      color: var(--text-muted);
     }
 
     .form-group {
@@ -246,7 +870,7 @@
       display: block;
       font-size: 0.88rem;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--text-muted);
       margin-bottom: 8px;
     }
 
@@ -262,7 +886,7 @@
       transform: translateY(-50%);
       width: 20px;
       height: 20px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'%3E%3C/path%3E%3Ccircle cx='12' cy='7' r='4'%3E%3C/circle%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'%3E%3C/path%3E%3Ccircle cx='12' cy='7' r='4'%3E%3C/circle%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-size: contain;
       z-index: 1;
@@ -271,31 +895,36 @@
 
     .select-wrapper select {
       width: 100%;
-      padding: 14px 44px 14px 44px;
+      padding: 14px 44px;
       font-family: inherit;
       font-size: 0.95rem;
-      color: var(--text-primary);
-      background: #fafafa;
-      border: 1.5px solid var(--border);
+      color: var(--text-main);
+      background: var(--glass-input);
+      border: 1.5px solid var(--glass-border);
       border-radius: 12px;
       appearance: none;
       -webkit-appearance: none;
       cursor: pointer;
       transition: var(--transition);
       outline: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 16px center;
     }
 
     .select-wrapper select:focus {
-      border-color: var(--orange-mid);
-      background-color: #fff;
-      box-shadow: 0 0 0 4px var(--orange-glow);
+      border-color: var(--primary);
+      background-color: #ffffff;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1), var(--shadow-glow);
     }
 
     .select-wrapper select.placeholder-active {
       color: var(--text-muted);
+    }
+
+    .select-wrapper select option {
+      background: #ffffff;
+      color: var(--text-main);
     }
 
     .btn-continue {
@@ -305,7 +934,7 @@
       font-size: 1rem;
       font-weight: 600;
       color: #ffffff;
-      background: linear-gradient(135deg, var(--orange-start), var(--orange-end));
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
       border: none;
       border-radius: 12px;
       cursor: pointer;
@@ -314,7 +943,7 @@
       justify-content: center;
       gap: 10px;
       transition: var(--transition);
-      box-shadow: var(--shadow-button);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
       position: relative;
       overflow: hidden;
     }
@@ -323,14 +952,14 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent);
       opacity: 0;
       transition: var(--transition);
     }
 
     .btn-continue:hover {
-      transform: translateY(-2px) scale(1.01);
-      box-shadow: var(--shadow-button-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
     }
 
     .btn-continue:hover::before {
@@ -344,7 +973,7 @@
     .btn-continue svg {
       width: 18px;
       height: 18px;
-      transition: transform var(--motion-fast) var(--ease-smooth);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .btn-continue:hover svg {
@@ -354,10 +983,10 @@
     .login-alert {
       display: none;
       padding: 12px 16px;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
       border-radius: 10px;
-      color: #991b1b;
+      color: #f87171;
       font-size: 0.88rem;
       font-weight: 500;
       margin-bottom: 20px;
@@ -382,21 +1011,22 @@
 
     .accent-line {
       width: 40px;
-      height: 3px;
-      border-radius: 2px;
-      background: linear-gradient(90deg, var(--border), transparent);
+      height: 2px;
+      border-radius: 1px;
+      background: linear-gradient(90deg, var(--glass-border), transparent);
     }
 
     .accent-diamond {
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
-      background: var(--orange-mid);
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      background: var(--primary);
       transform: rotate(45deg);
+      box-shadow: 0 0 8px var(--primary);
     }
 
     .accent-line-right {
-      background: linear-gradient(90deg, transparent, var(--border));
+      background: linear-gradient(90deg, transparent, var(--glass-border));
     }
 
     .login-footer {
@@ -405,13 +1035,14 @@
       right: 0;
       bottom: 16px;
       text-align: center;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
+      font-size: 0.82rem;
+      color: var(--text-muted);
       line-height: 1.5;
-      letter-spacing: 0.01em;
+      letter-spacing: 0.02em;
       pointer-events: none;
     }
 
+    /* Keyframes */
     @keyframes pageEnter {
       from {
         opacity: 0;
@@ -434,11 +1065,6 @@
       }
     }
 
-    @keyframes floatSoft {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-
     @keyframes shakeAlert {
       0%, 100% { transform: translateX(0); }
       20% { transform: translateX(-6px); }
@@ -447,10 +1073,64 @@
       80% { transform: translateX(4px); }
     }
 
+    /* Responsive adjustments */
     @media (max-width: 980px) {
-      body {
-        overflow: auto;
-        padding: 24px;
+      .nav-sidebar {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        width: auto;
+        padding: 10px 14px;
+        border-radius: 35px;
+        gap: 20px;
+        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+      }
+
+      .nav-btn::after {
+        left: 50%;
+        top: 68px;
+        transform: translateX(-50%) translateY(-8px);
+        transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      }
+      .nav-btn::before {
+        left: 50%;
+        top: 62px;
+        transform: translateX(-50%) translateY(-4px);
+        border-width: 0 5px 6px 5px;
+        border-color: transparent transparent rgba(15, 23, 42, 0.95) transparent;
+        transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      }
+      .nav-btn:hover::after {
+        transform: translateX(-50%) translateY(0);
+      }
+      .nav-btn:hover::before {
+        transform: translateX(-50%) translateY(0);
+      }
+      
+      .nav-line {
+        position: absolute;
+        top: 50%;
+        left: 36px;
+        right: 36px;
+        height: 2px;
+        width: auto;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        z-index: -1;
+      }
+
+      .content-container {
+        margin-top: 100px;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .about-grid {
+        grid-template-columns: 1fr;
       }
 
       .login-layout {
@@ -463,25 +1143,7 @@
         padding: 40px 28px 32px;
       }
 
-      .brand-logo {
-        display: none;
-      }
-
-      .visual-copy {
-        margin: 0 auto;
-      }
-
-      .visual-hero {
-        justify-content: center;
-      }
-
-      .visual-hero img {
-        width: min(240px, 70%);
-      }
-
-      .visual-lead,
-      .visual-desc,
-      .visual-tagline {
+      .visual-kicker, .visual-lead, .visual-desc, .visual-tagline {
         display: none;
       }
 
@@ -489,146 +1151,491 @@
         padding: 36px 28px 40px;
       }
 
-      .panel-hero {
-        display: none;
-      }
-
       .login-footer {
         position: static;
-        margin: 20px auto 12px;
-      }
-    }
-
-    @media (max-width: 520px) {
-      body {
-        padding: 20px;
-      }
-
-      .login-card {
-        padding: 28px 24px;
-      }
-
-      .btn-continue {
-        font-size: 0.95rem;
+        margin: 40px auto 12px;
       }
     }
   </style>
 </head>
+
 <body>
-  <main class="login-layout" id="login-wrapper">
-    <section class="login-visual">
-      <div class="visual-copy">
-        <p class="visual-kicker">Marian College, Kuttikkanam</p>
-        <h1 class="visual-title">Marian Best Class</h1>
-        <p class="visual-lead">Recognize. Evaluate. Excel together.</p>
-        <p class="visual-desc">A smart way to track, verify and celebrate class achievements across Marian College Kuttikkanam.</p>
-        <p class="visual-tagline">Simple. Smart. Effective.</p>
-      </div>
 
+  <!-- Floating Navigation Sidebar -->
+  <nav class="nav-sidebar" id="nav-sidebar">
+    <div class="nav-line"></div>
+    <a class="nav-btn active" id="btn-nav-home" href="index.html" data-tooltip="Home">
+      <img src="Assets/Images/hands_logo.png" alt="Marian Logo">
+    </a>
+    <a class="nav-btn" id="btn-nav-login" href="login.html" data-tooltip="Logout">
+      <svg viewBox="0 0 24 24">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
+      </svg>
+    </a>
+    <a class="nav-btn" id="btn-nav-about" href="policy.html" data-tooltip="Policy">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+    </a>
+  </nav>
 
-    </section>
+  <!-- Content Container -->
+  <div class="content-container">
+    
+    <!-- 1. HOME SCREEN SECTION -->
+    <section id="home-view" class="view-section active">
+      <div class="home-layout">
+        <header class="home-header">
+          <h1 class="home-title">Marian Best Class</h1>
+          <p class="home-subtitle font-kicker">Competition Standings & Real-Time Performance Analytics</p>
+        </header>
 
-    <section class="login-panel">
-      <div class="login-card" id="login-card">
-        <img class="card-logo" src="Assets/Images/Main-bg removved .png" alt="Marian Best Class logo">
-        <div class="card-heading">
-          <p>Select your role to continue</p>
-        </div>
-
-        <div id="error-alert" class="login-alert">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          Please select a role to continue.
-        </div>
-
-        <form id="login-form">
-          <div class="form-group">
-            <label for="role-select">Select Role</label>
-            <div class="select-wrapper">
-              <select id="role-select" required class="placeholder-active">
-                <option value="" disabled selected>Select your role</option>
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="evaluator">Evaluator</option>
-                <option value="admin">Admin</option>
-                <option value="hod">HOD</option>
-                <option value="iqac">IQAC</option>
-              </select>
+        <!-- Total Submissions Card -->
+        <div class="total-submissions-card">
+          <div class="submissions-info">
+            <div class="submissions-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="submissions-details">
+              <h3>Total Submission Count</h3>
+              <div class="submissions-count" id="lbl-total-submissions">0</div>
             </div>
           </div>
+          <div class="submissions-stats">
+            <div class="stat-item">
+              <div class="stat-label">Approved claims</div>
+              <div class="stat-val approved" id="lbl-approved-submissions">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Pending Review</div>
+              <div class="stat-val pending" id="lbl-pending-submissions">0</div>
+            </div>
+          </div>
+        </div>
 
-          <button type="submit" class="btn-continue" id="btn-continue">
-            Continue
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </button>
-        </form>
+        <!-- Dashboard Analytics Card -->
+        <div class="dashboard-core-card">
+          <div class="dashboard-grid">
+            
+            <!-- Left Panel: SVG Progress Gauge -->
+            <div class="chart-section">
+              <div class="chart-heading-container">
+                <h2 class="chart-title">Class Progress Gauge</h2>
+              </div>
+              <div class="svg-container">
+                <svg id="gauge-svg" viewBox="-10 0 520 325" width="100%" height="100%">
+                  <!-- JS dynamically populates arcs, labels, and ticks -->
+                </svg>
+              </div>
+            </div>
 
-        <div class="card-accent">
-          <span class="accent-line"></span>
-          <span class="accent-diamond"></span>
-          <span class="accent-line accent-line-right"></span>
+            <!-- Right Panel: Leaderboard List -->
+            <div class="leaderboard-section">
+              <div class="leaderboard-header">
+                <div class="leaderboard-heading">
+                  <h2 class="chart-title" style="margin: 0;">Top 9 Standings</h2>
+                </div>
+                <div class="total-score-badge">
+                  <div class="total-score-val" id="lbl-total-top9-score">0</div>
+                  <div class="total-score-label">Total Points • Top 9</div>
+                </div>
+              </div>
+              
+              <div class="leaderboard-list" id="leaderboard-list-container">
+                <!-- JS dynamically populates leaderboard rows here -->
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </section>
-  </main>
+
+  </div>
 
   <footer class="login-footer">
     Made by MCA 2025<br>
-    Sijomon P S, Anjana V U, Tojo Tom, Riya George, Santhana Raveendran
+    Santhosh Kannan, Amal Thomas
   </footer>
 
+  <!-- Include Data Scripts -->
+  <script src="data.js"></script>
+  <script src="page-bootstrap.js"></script>
+
+  <!-- Application Logic -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const loginForm = document.getElementById('login-form');
-      const roleSelect = document.getElementById('role-select');
-      const errorAlert = document.getElementById('error-alert');
+      // ----------------------------------------
+      // 2. DATA CALCULATION ENGINE
+      // ----------------------------------------
+      const loadPersistentData = () => {
+        let submissionsList = [];
+        let studentsList = window.seedStudents || [];
 
-      // Handle placeholder color state
-      roleSelect.addEventListener('change', () => {
-        if (roleSelect.value) {
-          roleSelect.classList.remove('placeholder-active');
-          errorAlert.classList.remove('show');
-        } else {
-          roleSelect.classList.add('placeholder-active');
+        const saved = localStorage.getItem("bc_persistent_state");
+        if (saved) {
+          try {
+            const data = JSON.parse(saved);
+            if (data.submissions) submissionsList = data.submissions;
+          } catch (e) {
+            console.error("Failed to parse local storage state", e);
+          }
         }
-      });
 
-      loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+        if (!submissionsList || !submissionsList.length) {
+          submissionsList = window.seedSubmissions || [];
+        }
 
-        const role = roleSelect.value;
+        return { submissions: submissionsList, students: studentsList };
+      };
 
-        if (!role) {
-          errorAlert.classList.add('show');
+      const getCriteriaItem = (criteriaId) => {
+        if (!window.criteriaData) return null;
+        for (const cat of window.criteriaData) {
+          if (cat.items) {
+            const matched = cat.items.find(item => item.id === criteriaId);
+            if (matched) return matched;
+          }
+        }
+        return null;
+      };
+
+      const calculateSubmissionScore = (sub, criteria) => {
+        if (!criteria) return 0;
+        if (typeof sub.marks === 'number') return sub.marks;
+
+        const evidence = sub.evidence || {};
+        if (criteria.type === "count" || criteria.type === "negative") {
+          const count = typeof evidence.count === 'number' ? evidence.count : (criteria.type === 'negative' ? 1 : 0);
+          return count * criteria.marks;
+        } else if (criteria.type === "range") {
+          const val = typeof evidence.value === 'number' ? evidence.value : 0;
+          const matched = (criteria.rules || []).find(r => val >= r.min && val <= r.max);
+          return matched ? matched.marks : 0;
+        } else if (criteria.type === "boolean") {
+          return evidence.checked ? criteria.marks : 0;
+        }
+        return criteria.marks || 0;
+      };
+
+      const buildClassPerformances = () => {
+        const { submissions, students } = loadPersistentData();
+
+        // Calculate metadata submissions counts
+        const totalCount = submissions.length;
+        const approvedCount = submissions.filter(s => ["Approved", "Verified", "Evaluated", "Locked"].includes(s.status)).length;
+        const pendingCount = submissions.filter(s => ["Pending", "Submitted", "Draft"].includes(s.status)).length;
+
+        // Group by class names
+        const classNames = Array.from(new Set(students.map(s => s.className)));
+        const classStats = {};
+        
+        classNames.forEach(name => {
+          classStats[name] = {
+            className: name,
+            totalScore: 0
+          };
+        });
+
+        submissions.forEach(sub => {
+          // Count scored points
+          const isScored = ["Approved", "Verified", "Evaluated", "Locked"].includes(sub.status);
+          if (!isScored) return;
+
+          const student = students.find(s => s.id === sub.studentId);
+          if (!student) return;
+
+          const classEntry = classStats[student.className];
+          if (!classEntry) return;
+
+          const criteria = getCriteriaItem(sub.criteriaId);
+          classEntry.totalScore += calculateSubmissionScore(sub, criteria);
+        });
+
+        const classList = Object.values(classStats);
+        
+        // Sort descending by points
+        classList.sort((a, b) => b.totalScore - a.totalScore);
+
+        return { classList, totalCount, approvedCount, pendingCount };
+      };
+
+      // Color Palette for top 9 classes — deep red #550000 gradient spectrum
+      // Outer (rank 1) = brightest highlight, inner = deepest crimson
+      const colors = [
+        '#cc2200', // Rank 1 — bright crimson red
+        '#aa1a00', // Rank 2
+        '#991500', // Rank 3
+        '#880f00', // Rank 4
+        '#770a00', // Rank 5
+        '#660600', // Rank 6
+        '#5a0300', // Rank 7
+        '#550000', // Rank 8 — deep dark red
+        '#3d0000'  // Rank 9 — near-black maroon
+      ];
+
+      // Gradient stop pairs per ring: [startColor, endColor]
+      const gradientPairs = [
+        ['#ff4422', '#cc2200'], // Rank 1 — bright highlight
+        ['#e03000', '#aa1a00'], // Rank 2
+        ['#cc2800', '#991500'], // Rank 3
+        ['#bb2000', '#880f00'], // Rank 4
+        ['#aa1800', '#770a00'], // Rank 5
+        ['#991000', '#660600'], // Rank 6
+        ['#880800', '#5a0300'], // Rank 7
+        ['#770400', '#550000'], // Rank 8
+        ['#660000', '#3d0000']  // Rank 9
+      ];
+
+      // ----------------------------------------
+      // 3. HOME SCREEN RENDER ENGINE
+      // ----------------------------------------
+      const renderHomeDashboard = () => {
+        const { classList, totalCount, approvedCount, pendingCount } = buildClassPerformances();
+
+        // Update headers count indicators
+        document.getElementById('lbl-total-submissions').textContent = totalCount.toLocaleString();
+        document.getElementById('lbl-approved-submissions').textContent = approvedCount.toLocaleString();
+        document.getElementById('lbl-pending-submissions').textContent = pendingCount.toLocaleString();
+
+        // Slice to Top 9 items
+        const top9 = classList.slice(0, 9);
+        
+        // Calculate total points of the top 9 classes
+        const totalTop9Score = top9.reduce((sum, item) => sum + item.totalScore, 0);
+        document.getElementById('lbl-total-top9-score').textContent = totalTop9Score.toLocaleString() + ' pts';
+
+        // Calculate progress for each relative to the top performing class
+        const topScore = top9[0] ? top9[0].totalScore : 1;
+        top9.forEach((item, idx) => {
+          item.percentage = totalTop9Score > 0 ? (item.totalScore / totalTop9Score) * 100 : 0;
+          item.color = colors[idx % colors.length];
+        });
+
+        // 1. Draw SVG Gauge
+        renderGaugeSVG(top9, topScore);
+
+        // 2. Draw Leaderboard List
+        renderLeaderboardList(top9, totalTop9Score);
+      };
+
+      const renderGaugeSVG = (top9, topScore) => {
+        const svg = document.getElementById('gauge-svg');
+        svg.innerHTML = ''; // reset SVG content
+
+        // Inject SVG <defs> with linearGradients for each ring
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        top9.forEach((_, index) => {
+          const [startColor, endColor] = gradientPairs[index % gradientPairs.length];
+          const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+          grad.setAttribute('id', `arc-grad-${index}`);
+          grad.setAttribute('x1', '100%'); // right (0% sweep start)
+          grad.setAttribute('y1', '0%');
+          grad.setAttribute('x2', '0%');  // left (100% sweep end)
+          grad.setAttribute('y2', '0%');
+          const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+          stop1.setAttribute('offset', '0%');
+          stop1.setAttribute('stop-color', startColor);
+          const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+          stop2.setAttribute('offset', '100%');
+          stop2.setAttribute('stop-color', endColor);
+          grad.appendChild(stop1);
+          grad.appendChild(stop2);
+          defs.appendChild(grad);
+        });
+        svg.appendChild(defs);
+
+        const cx = 250;
+        const cy = 310;
+        const maxRadius = 220;
+        const radiusStep = 17;
+
+        // Draw Scale Ticks & Ticks Labels
+        const tickLabels = {
+          0: "0%",
+          0.25: "25%",
+          0.5: "50%",
+          0.75: "75%",
+          1: "100%"
+        };
+
+        Object.entries(tickLabels).forEach(([progress, text]) => {
+          const theta = progress * Math.PI;
+          
+          // Radiate outward ticks lines
+          const rTickStart = 234;
+          const rTickEnd = 246;
+          const rLabel = 260;
+
+          const x1 = cx + rTickStart * Math.cos(theta);
+          const y1 = cy - rTickStart * Math.sin(theta);
+          const x2 = cx + rTickEnd * Math.cos(theta);
+          const y2 = cy - rTickEnd * Math.sin(theta);
+
+          // Create Line
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", x1);
+          line.setAttribute("y1", y1);
+          line.setAttribute("x2", x2);
+          line.setAttribute("y2", y2);
+          line.setAttribute("class", "scale-tick-line");
+          svg.appendChild(line);
+
+          // Create Text
+          const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          label.setAttribute("x", cx + rLabel * Math.cos(theta));
+          label.setAttribute("y", cy - rLabel * Math.sin(theta) + 4);
+          label.setAttribute("class", "scale-tick-label");
+          label.textContent = text;
+          svg.appendChild(label);
+        });
+
+        // Draw concentric arcs for each item in top 9
+        top9.forEach((item, index) => {
+          const r = maxRadius - index * radiusStep;
+          
+          // Arc goes from right (cx+r, cy) to left (cx-r, cy) over the top
+          const dPath = `M ${cx + r} ${cy} A ${r} ${r} 0 0 0 ${cx - r} ${cy}`;
+          const pathLen = Math.PI * r;
+
+          // Compute gauge sweep progress (cap max at 95% to leave gap)
+          const ratio = topScore > 0 ? (item.totalScore / topScore) : 0;
+          const progressForGauge = Math.max(0.02, ratio * 0.95); // at least a dot visible
+
+          // 1. Background Arc Track
+          const track = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          track.setAttribute("d", dPath);
+          track.setAttribute("class", "gauge-track");
+          svg.appendChild(track);
+
+          // 2. Filled Progress Arc
+          const arc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          arc.setAttribute("d", dPath);
+          arc.setAttribute("class", "gauge-arc");
+          arc.setAttribute("id", `arc-ring-${index}`);
+          arc.setAttribute("stroke", `url(#arc-grad-${index})`);
+          arc.setAttribute("stroke-dasharray", pathLen);
+          
+          // Animate offset: start at empty and sweep in
+          arc.setAttribute("stroke-dashoffset", pathLen);
+          setTimeout(() => {
+            arc.setAttribute("stroke-dashoffset", pathLen * (1 - progressForGauge));
+          }, 50);
+
+          // Custom glow property for highlights
+          arc.style.setProperty('--glow-color', item.color);
+          
+          // Event handlers
+          arc.addEventListener('mouseenter', () => highlightItem(index));
+          arc.addEventListener('mouseleave', () => unhighlightItem(index));
+          
+          svg.appendChild(arc);
+
+          // 3. Tip score values label
+          const theta = progressForGauge * Math.PI;
+          const labelX = cx + r * Math.cos(theta);
+          const labelY = cy - r * Math.sin(theta) - 5; // offset slightly above the arc tip
+
+          const valText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          valText.setAttribute("x", labelX);
+          valText.setAttribute("y", labelY);
+          valText.setAttribute("class", "arc-tip-label");
+          valText.setAttribute("id", `arc-label-${index}`);
+          valText.setAttribute("text-anchor", "middle");
+          valText.textContent = item.totalScore.toLocaleString();
+          svg.appendChild(valText);
+        });
+      };
+
+      const renderLeaderboardList = (top9, totalTop9Score) => {
+        const container = document.getElementById('leaderboard-list-container');
+        container.innerHTML = ''; // reset content
+
+        if (!top9.length) {
+          container.innerHTML = '<div class="row-class-name" style="text-align:center; padding: 20px;">No verified evaluations found yet.</div>';
           return;
         }
 
-        errorAlert.classList.remove('show');
+        top9.forEach((item, index) => {
+          // Get initials for class avatar placeholder
+          const initials = item.className.split(' ').map(n => n.charAt(0)).join('').toUpperCase();
 
-        // Store role in localStorage
-        localStorage.setItem('role', role);
+          const row = document.createElement('div');
+          row.className = 'leaderboard-row';
+          row.setAttribute('id', `leaderboard-row-${index}`);
+          
+          row.innerHTML = `
+            <div class="row-left">
+              <div class="row-bullet" style="background-color: ${item.color};"></div>
+              <div class="row-avatar">${initials}</div>
+              <div class="row-class-name">${item.className}</div>
+            </div>
+            <div class="row-right">
+              <div class="row-percent">${item.percentage.toFixed(1)}%</div>
+              <div class="row-score">${item.totalScore.toLocaleString()} pts</div>
+            </div>
+          `;
 
-        // Define routes to the actual role-specific HTML entry points
-        const routes = {
-          student: 'roles/student/student-dashboard.html',
-          teacher: 'roles/teacher/teacher-dashboard.html',
-          evaluator: 'roles/evaluator/evaluation-dashboard.html',
-          admin: 'roles/admin/admin-dashboard.html',
-          hod: 'roles/hod/hod-dashboard.html',
-          iqac: 'roles/iqac/iqac-dashboard.html'
-        };
+          // Hover handlers
+          row.addEventListener('mouseenter', () => highlightItem(index));
+          row.addEventListener('mouseleave', () => unhighlightItem(index));
 
-        // Redirect to the appropriate dashboard
-        if (routes[role]) {
-          window.location.href = routes[role];
-        }
-      });
+          container.appendChild(row);
+        });
+      };
+
+      // ----------------------------------------
+      // 4. CROSS HIGHLIGHT UTILITIES
+      // ----------------------------------------
+      const highlightItem = (index) => {
+        // Highlight row
+        const row = document.getElementById(`leaderboard-row-${index}`);
+        if (row) row.classList.add('highlighted');
+
+        // Highlight SVG ring & label
+        const arc = document.getElementById(`arc-ring-${index}`);
+        if (arc) arc.classList.add('highlighted');
+
+        const label = document.getElementById(`arc-label-${index}`);
+        if (label) label.classList.add('highlighted');
+
+        // Dim other elements slightly
+        document.querySelectorAll('.gauge-arc').forEach((a, idx) => {
+          if (idx !== index) a.style.opacity = '0.2';
+        });
+        document.querySelectorAll('.arc-tip-label').forEach((l, idx) => {
+          if (idx !== index) l.style.opacity = '0.2';
+        });
+        document.querySelectorAll('.leaderboard-row').forEach((r, idx) => {
+          if (idx !== index) r.style.opacity = '0.35';
+        });
+      };
+
+      const unhighlightItem = (index) => {
+        // Reset row
+        const row = document.getElementById(`leaderboard-row-${index}`);
+        if (row) row.classList.remove('highlighted');
+
+        // Reset SVG ring & label
+        const arc = document.getElementById(`arc-ring-${index}`);
+        if (arc) arc.classList.remove('highlighted');
+
+        const label = document.getElementById(`arc-label-${index}`);
+        if (label) label.classList.remove('highlighted');
+
+        // Restore opacities
+        document.querySelectorAll('.gauge-arc').forEach(a => a.style.opacity = '1');
+        document.querySelectorAll('.arc-tip-label').forEach(l => l.style.opacity = '1');
+        document.querySelectorAll('.leaderboard-row').forEach(r => r.style.opacity = '1');
+      };
+
+      // Initial render call
+      renderHomeDashboard();
     });
   </script>
 
 </body>
+
 </html>

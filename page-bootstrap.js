@@ -47,7 +47,7 @@
 
     window.appPageConfig = {
       rolePageRoutes: window.rolePageRoutes,
-      logoutRedirect: getAppRoute("index.html"),
+      logoutRedirect: getAppRoute("login.html"),
       ...safeConfig
     };
   };
