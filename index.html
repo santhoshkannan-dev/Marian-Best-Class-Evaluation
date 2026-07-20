@@ -578,6 +578,531 @@
       text-align: right;
     }
 
+    /* ---------------------------------------------------- */
+    /* PREVIOUS YEAR CHAMPIONS CAROUSEL SECTION            */
+    /* ---------------------------------------------------- */
+
+    .champions-section-card {
+      background: var(--glass-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 36px 40px;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.04);
+      margin-top: 36px;
+      position: relative;
+    }
+
+    .champions-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .champions-header-left h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--text-main);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .champions-header-left p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .champions-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .champions-year-select {
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: #ffffff;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .champions-year-select:hover, .champions-year-select:focus {
+      border-color: var(--primary);
+    }
+
+    .nav-arrow-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border);
+      background: #ffffff;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      transition: var(--transition);
+    }
+
+    .nav-arrow-btn:hover {
+      background: var(--bg-dark);
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateY(-1px);
+      color: var(--primary);
+    }
+
+    .nav-arrow-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Track & Carousel Wrapper */
+    .champions-carousel-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .carousel-floating-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-main);
+    }
+
+    .carousel-floating-btn.prev-btn {
+      left: -20px;
+    }
+
+    .carousel-floating-btn.next-btn {
+      right: -20px;
+    }
+
+    .carousel-floating-btn:hover {
+      background: #ffffff;
+      transform: translateY(-50%) scale(1.08);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+      color: var(--primary);
+    }
+
+    .champions-scroll-track {
+      display: flex;
+      gap: 24px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      padding: 16px 8px 24px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; /* Firefox */
+      cursor: grab;
+      user-select: none;
+    }
+
+    .champions-scroll-track.dragging {
+      cursor: grabbing;
+      scroll-snap-type: none;
+      scroll-behavior: auto;
+    }
+
+    .champions-scroll-track::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Edge */
+    }
+
+    /* Individual Champion Card */
+    .champion-card {
+      flex: 0 0 calc(33.333% - 16px);
+      min-width: 310px;
+      max-width: 380px;
+      scroll-snap-align: center;
+      background: #ffffff;
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s, border-color 0.3s;
+    }
+
+    .champion-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Champion Rank 1 Card Highlight */
+    .champion-card.rank-1 {
+      border: 2px solid #f59e0b;
+      box-shadow: 0 14px 35px rgba(245, 158, 11, 0.14);
+      background: linear-gradient(180deg, #ffffff 0%, #fffdf5 100%);
+      transform: scale(1.02);
+    }
+
+    .champion-card.rank-1:hover {
+      transform: scale(1.04) translateY(-4px);
+      box-shadow: 0 22px 45px rgba(245, 158, 11, 0.22);
+    }
+
+    /* Card Top Badges */
+    .card-top-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    /* Medal Icon (Top-Left) */
+    .medal-badge {
+      width: 44px;
+      height: 44px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .medal-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      z-index: 2;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+      border: 2px solid #ffffff;
+    }
+
+    .medal-badge.rank-1 .medal-circle {
+      background: linear-gradient(135deg, #fef08a 0%, #eab308 100%);
+      color: #78350f;
+    }
+
+    .medal-badge.rank-2 .medal-circle {
+      background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+      color: #334155;
+    }
+
+    .medal-badge.rank-3 .medal-circle {
+      background: linear-gradient(135deg, #ffedd5 0%, #c2410c 100%);
+      color: #7c2d12;
+    }
+
+    .medal-badge.rank-4 .medal-circle, .medal-badge.rank-5 .medal-circle {
+      background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+      color: #475569;
+    }
+
+    .medal-ribbon {
+      position: absolute;
+      bottom: -4px;
+      width: 18px;
+      height: 12px;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .medal-ribbon::before, .medal-ribbon::after {
+      content: '';
+      width: 7px;
+      height: 12px;
+      background: currentColor;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+    }
+
+    .medal-badge.rank-1 .medal-ribbon { color: #d97706; }
+    .medal-badge.rank-2 .medal-ribbon { color: #64748b; }
+    .medal-badge.rank-3 .medal-ribbon { color: #ea580c; }
+    .medal-badge.rank-4 .medal-ribbon, .medal-badge.rank-5 .medal-ribbon { color: #94a3b8; }
+
+    /* Rank Label Pill (Top-Right) */
+    .rank-pill {
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .rank-pill.rank-1 {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .rank-pill.rank-2 {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+
+    .rank-pill.rank-3 {
+      background: #ffedd5;
+      color: #c2410c;
+      border: 1px solid #fdba74;
+    }
+
+    .rank-pill.rank-4, .rank-pill.rank-5 {
+      background: #f8fafc;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Avatar Frame */
+    .champion-avatar-frame {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 8px 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .champion-avatar-img {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #ffffff;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+      z-index: 2;
+    }
+
+    /* Laurel wreath for Rank 1 champion */
+    .laurel-wreath {
+      position: absolute;
+      top: -12px;
+      left: -18px;
+      right: -18px;
+      bottom: -12px;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1;
+    }
+
+    .laurel-branch {
+      width: 34px;
+      height: 110px;
+      color: #f59e0b;
+      opacity: 0.9;
+    }
+
+    .laurel-branch.right {
+      transform: scaleX(-1);
+    }
+
+    /* Card Information */
+    .champion-team-name {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .champion-event-name {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .champion-score-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 20px;
+    }
+
+    .champion-score-row .star-icon {
+      font-size: 1.2rem;
+    }
+
+    .champion-score-row.rank-1 .star-icon { color: #f59e0b; }
+    .champion-score-row.rank-2 .star-icon { color: #94a3b8; }
+    .champion-score-row.rank-3 .star-icon { color: #ea580c; }
+    .champion-score-row.rank-4 .star-icon, .champion-score-row.rank-5 .star-icon { color: #cbd5e1; }
+
+    .score-max {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Bottom Detail Pill */
+    .champion-footer-pill {
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: var(--bg-dark);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .champion-card.rank-1 .champion-footer-pill {
+      background: #fef8e7;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+
+    .champion-card.rank-3 .champion-footer-pill {
+      background: #fff7ed;
+      border-color: #ffedd5;
+      color: #9a3412;
+    }
+
+    .pill-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(15, 23, 42, 0.15);
+    }
+
+    /* Pagination Dots */
+    .champions-dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin: 16px 0 24px;
+    }
+
+    .champions-dots .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .champions-dots .dot.active {
+      width: 24px;
+      border-radius: 4px;
+      background: #0f172a;
+    }
+
+    /* Bottom Bar */
+    .champions-bottom-bar {
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .bottom-left-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+
+    .bottom-center-text {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .view-all-years-btn {
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: #ffffff;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    }
+
+    .view-all-years-btn:hover {
+      background: var(--bg-dark);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+      .champions-section-card {
+        padding: 24px 18px;
+      }
+
+      .champion-card {
+        flex: 0 0 calc(85% - 12px);
+        min-width: 280px;
+      }
+
+      .carousel-floating-btn {
+        display: none;
+      }
+
+      .champions-bottom-bar {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+    }
+
     /* ------------------------------ */
     /* ABOUT VIEW STYLES              */
     /* ------------------------------ */
@@ -1250,6 +1775,63 @@
 
           </div>
         </div>
+
+        <!-- Previous Year Champions Section -->
+        <div class="champions-section-card">
+          <div class="champions-header">
+            <div class="champions-header-left">
+              <h2>PREVIOUS YEAR CHAMPIONS</h2>
+              <p>Celebrating the best minds and outstanding achievements.</p>
+            </div>
+            <div class="champions-header-right">
+              <select id="champions-year-select" class="champions-year-select" aria-label="Select Champion Year">
+                <option value="2025" selected>2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+              </select>
+              <button id="btn-champions-prev" class="nav-arrow-btn" aria-label="Previous Champion">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button id="btn-champions-next" class="nav-arrow-btn" aria-label="Next Champion">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="champions-carousel-wrapper">
+            <button id="floating-champions-prev" class="carousel-floating-btn prev-btn" aria-label="Scroll left">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+
+            <div id="champions-scroll-track" class="champions-scroll-track">
+              <!-- JS dynamically populates champion cards here -->
+            </div>
+
+            <button id="floating-champions-next" class="carousel-floating-btn next-btn" aria-label="Scroll right">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
+
+          <!-- Pagination Dots -->
+          <div id="champions-dots-container" class="champions-dots">
+            <!-- JS dynamically populates indicator dots -->
+          </div>
+
+          <!-- Bottom Footer Bar -->
+          <div class="champions-bottom-bar">
+            <div class="bottom-left-info">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>Explore more champions</span>
+            </div>
+            <div class="bottom-center-text">
+              Swipe or scroll to view champions from other years
+            </div>
+            <button class="view-all-years-btn" id="btn-view-all-years">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
+              View All Years
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1631,8 +2213,328 @@
         document.querySelectorAll('.leaderboard-row').forEach(r => r.style.opacity = '1');
       };
 
+      // ----------------------------------------
+      // CHAMPIONS CAROUSEL MODULE
+      // ----------------------------------------
+      // ----------------------------------------
+      // CHAMPIONS CAROUSEL MODULE
+      // ----------------------------------------
+      const championsData = {
+        "2025": [
+          {
+            rank: 2,
+            rankLabel: "RUNNER-UP",
+            teamName: "BCom C",
+            eventName: "Dept. of Commerce — Marian Best Class",
+            score: "95.7",
+            institution: "Dept. of Commerce",
+            prize: "₹25,000",
+            image: "Assets/Images/team_vision.png"
+          },
+          {
+            rank: 1,
+            rankLabel: "👑 CHAMPION",
+            teamName: "BSc CS B",
+            eventName: "Dept. of Computer Science — Marian Best Class",
+            score: "98.4",
+            institution: "Dept. of Comp Science",
+            prize: "₹50,000",
+            image: "Assets/Images/team_alpha.png"
+          },
+          {
+            rank: 3,
+            rankLabel: "2nd RUNNER-UP",
+            teamName: "BCA A",
+            eventName: "Dept. of Computer Applications — Marian Best Class",
+            score: "94.2",
+            institution: "Dept. of BCA",
+            prize: "₹10,000",
+            image: "Assets/Images/team_nexus.png"
+          },
+          {
+            rank: 4,
+            rankLabel: "4th PLACE",
+            teamName: "BA English B",
+            eventName: "Dept. of English — Marian Best Class",
+            score: "91.5",
+            institution: "Dept. of English",
+            prize: "₹5,000",
+            image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80"
+          },
+          {
+            rank: 5,
+            rankLabel: "5th PLACE",
+            teamName: "BBA B",
+            eventName: "Dept. of Business Admin — Marian Best Class",
+            score: "89.0",
+            institution: "Dept. of BBA",
+            prize: "₹3,000",
+            image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=400&q=80"
+          }
+        ],
+        "2024": [
+          {
+            rank: 2,
+            rankLabel: "RUNNER-UP",
+            teamName: "BSc CS A",
+            eventName: "Dept. of Computer Science — Marian Best Class",
+            score: "96.3",
+            institution: "Dept. of Comp Science",
+            prize: "₹25,000",
+            image: "Assets/Images/team_vision.png"
+          },
+          {
+            rank: 1,
+            rankLabel: "👑 CHAMPION",
+            teamName: "BCA A",
+            eventName: "Dept. of Computer Applications — Marian Best Class",
+            score: "99.1",
+            institution: "Dept. of BCA",
+            prize: "₹50,000",
+            image: "Assets/Images/team_alpha.png"
+          },
+          {
+            rank: 3,
+            rankLabel: "2nd RUNNER-UP",
+            teamName: "BCom A",
+            eventName: "Dept. of Commerce — Marian Best Class",
+            score: "93.9",
+            institution: "Dept. of Commerce",
+            prize: "₹10,000",
+            image: "Assets/Images/team_nexus.png"
+          }
+        ],
+        "2023": [
+          {
+            rank: 2,
+            rankLabel: "RUNNER-UP",
+            teamName: "BBA A",
+            eventName: "Dept. of Business Admin — Marian Best Class",
+            score: "94.5",
+            institution: "Dept. of BBA",
+            prize: "₹25,000",
+            image: "Assets/Images/team_vision.png"
+          },
+          {
+            rank: 1,
+            rankLabel: "👑 CHAMPION",
+            teamName: "BSc CS A",
+            eventName: "Dept. of Computer Science — Marian Best Class",
+            score: "97.8",
+            institution: "Dept. of Comp Science",
+            prize: "₹50,000",
+            image: "Assets/Images/team_alpha.png"
+          },
+          {
+            rank: 3,
+            rankLabel: "2nd RUNNER-UP",
+            teamName: "BA English A",
+            eventName: "Dept. of English — Marian Best Class",
+            score: "92.1",
+            institution: "Dept. of English",
+            prize: "₹10,000",
+            image: "Assets/Images/team_nexus.png"
+          }
+        ]
+      };
+
+      const renderChampionsCarousel = (year = "2025") => {
+        const track = document.getElementById("champions-scroll-track");
+        const dotsContainer = document.getElementById("champions-dots-container");
+        if (!track || !dotsContainer) return;
+
+        const data = championsData[year] || championsData["2025"];
+
+        track.innerHTML = data.map(item => {
+          const isRank1 = item.rank === 1;
+          const rankClass = `rank-${item.rank}`;
+
+          const laurelSVG = isRank1 ? `
+            <div class="laurel-wreath">
+              <svg class="laurel-branch" viewBox="0 0 30 100" fill="currentColor">
+                <path d="M25 90 C 10 70, 5 40, 20 10 C 18 20, 12 40, 25 60 Z"/>
+                <path d="M12 25 C 2 20, 0 10, 8 5 C 10 12, 15 18, 12 25 Z"/>
+                <path d="M10 45 C 0 40, -2 30, 6 25 C 8 32, 13 38, 10 45 Z"/>
+                <path d="M12 65 C 2 60, 0 50, 8 45 C 10 52, 15 58, 12 65 Z"/>
+                <path d="M16 82 C 6 77, 4 67, 12 62 C 14 69, 19 75, 16 82 Z"/>
+              </svg>
+              <svg class="laurel-branch right" viewBox="0 0 30 100" fill="currentColor">
+                <path d="M25 90 C 10 70, 5 40, 20 10 C 18 20, 12 40, 25 60 Z"/>
+                <path d="M12 25 C 2 20, 0 10, 8 5 C 10 12, 15 18, 12 25 Z"/>
+                <path d="M10 45 C 0 40, -2 30, 6 25 C 8 32, 13 38, 10 45 Z"/>
+                <path d="M12 65 C 2 60, 0 50, 8 45 C 10 52, 15 58, 12 65 Z"/>
+                <path d="M16 82 C 6 77, 4 67, 12 62 C 14 69, 19 75, 16 82 Z"/>
+              </svg>
+            </div>
+          ` : '';
+
+          return `
+            <div class="champion-card ${rankClass}">
+              <div class="card-top-row">
+                <div class="medal-badge ${rankClass}">
+                  <div class="medal-circle">${item.rank}</div>
+                  <div class="medal-ribbon"></div>
+                </div>
+                <div class="rank-pill ${rankClass}">${item.rankLabel}</div>
+              </div>
+
+              <div class="champion-avatar-frame">
+                ${laurelSVG}
+                <img src="${item.image}" alt="${item.teamName}" class="champion-avatar-img" />
+              </div>
+
+              <h3 class="champion-team-name">${item.teamName}</h3>
+              <p class="champion-event-name">${item.eventName}</p>
+
+              <div class="champion-score-row ${rankClass}">
+                <span class="star-icon">★</span>
+                <span>${item.score}</span>
+                <span class="score-max">/ 100</span>
+              </div>
+
+              <div class="champion-footer-pill">
+                <div class="pill-item">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3"></path><path d="M5 21V10.85"></path><path d="M19 21V10.85"></path><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"></path></svg>
+                  <span>${item.institution}</span>
+                </div>
+                <div class="pill-divider"></div>
+                <div class="pill-item">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"></rect><path d="M12 8v12"></path><path d="M19 12a3 3 0 0 0-3-3H8a3 3 0 0 0-3 3"></path></svg>
+                  <span>${item.prize}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Dots
+        dotsContainer.innerHTML = data.map((_, idx) => `
+          <span class="dot ${idx === 0 ? 'active' : ''}" data-index="${idx}"></span>
+        `).join('');
+
+        // Center card on Rank 1 or start
+        setTimeout(() => {
+          const rank1Card = track.querySelector('.champion-card.rank-1');
+          if (rank1Card) {
+            const scrollPos = rank1Card.offsetLeft - (track.clientWidth / 2) + (rank1Card.clientWidth / 2);
+            track.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
+          } else {
+            track.scrollTo({ left: 0, behavior: 'smooth' });
+          }
+        }, 150);
+      };
+
+      const setupChampionsInteractions = () => {
+        const track = document.getElementById("champions-scroll-track");
+        if (!track) return;
+
+        // 1. Navigation Arrow Buttons
+        const scrollByAmount = (direction) => {
+          const card = track.querySelector('.champion-card');
+          const amount = card ? (card.clientWidth + 24) : 340;
+          track.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
+        };
+
+        document.getElementById("btn-champions-prev")?.addEventListener("click", () => scrollByAmount('left'));
+        document.getElementById("btn-champions-next")?.addEventListener("click", () => scrollByAmount('right'));
+        document.getElementById("floating-champions-prev")?.addEventListener("click", () => scrollByAmount('left'));
+        document.getElementById("floating-champions-next")?.addEventListener("click", () => scrollByAmount('right'));
+
+        // 2. Drag to Scroll
+        let isDrag = false;
+        let startX, startScrollLeft;
+
+        track.addEventListener('mousedown', (e) => {
+          isDrag = true;
+          track.classList.add('dragging');
+          startX = e.pageX - track.offsetLeft;
+          startScrollLeft = track.scrollLeft;
+        });
+
+        track.addEventListener('mouseleave', () => {
+          isDrag = false;
+          track.classList.remove('dragging');
+        });
+
+        track.addEventListener('mouseup', () => {
+          isDrag = false;
+          track.classList.remove('dragging');
+        });
+
+        track.addEventListener('mousemove', (e) => {
+          if (!isDrag) return;
+          e.preventDefault();
+          const x = e.pageX - track.offsetLeft;
+          const walk = (x - startX) * 1.8;
+          track.scrollLeft = startScrollLeft - walk;
+        });
+
+        // 3. Mouse wheel horizontal scroll
+        track.addEventListener('wheel', (e) => {
+          if (e.deltaY !== 0) {
+            e.preventDefault();
+            track.scrollBy({ left: e.deltaY * 1.5, behavior: 'smooth' });
+          }
+        }, { passive: false });
+
+        // 4. Update dots on scroll
+        track.addEventListener('scroll', () => {
+          const cards = track.querySelectorAll('.champion-card');
+          const dots = document.querySelectorAll('#champions-dots-container .dot');
+          if (!cards.length || !dots.length) return;
+
+          const trackCenter = track.scrollLeft + track.clientWidth / 2;
+          let closestIdx = 0;
+          let minDistance = Infinity;
+
+          cards.forEach((card, idx) => {
+            const cardCenter = card.offsetLeft + card.clientWidth / 2;
+            const dist = Math.abs(trackCenter - cardCenter);
+            if (dist < minDistance) {
+              minDistance = dist;
+              closestIdx = idx;
+            }
+          });
+
+          dots.forEach((dot, idx) => {
+            dot.classList.toggle('active', idx === closestIdx);
+          });
+        });
+
+        // 5. Dots click
+        document.getElementById("champions-dots-container")?.addEventListener("click", (e) => {
+          const dot = e.target.closest('.dot');
+          if (dot) {
+            const idx = parseInt(dot.dataset.index);
+            const cards = track.querySelectorAll('.champion-card');
+            if (cards[idx]) {
+              cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }
+        });
+
+        // 6. Year select change
+        document.getElementById("champions-year-select")?.addEventListener("change", (e) => {
+          renderChampionsCarousel(e.target.value);
+        });
+
+        // 7. View All Years button
+        document.getElementById("btn-view-all-years")?.addEventListener("click", () => {
+          const select = document.getElementById("champions-year-select");
+          if (select) {
+            const currentYear = select.value;
+            const years = Array.from(select.options).map(o => o.value);
+            const nextYearIdx = (years.indexOf(currentYear) + 1) % years.length;
+            select.value = years[nextYearIdx];
+            renderChampionsCarousel(select.value);
+          }
+        });
+      };
+
       // Initial render call
       renderHomeDashboard();
+      renderChampionsCarousel("2025");
+      setupChampionsInteractions();
     });
   </script>
 
