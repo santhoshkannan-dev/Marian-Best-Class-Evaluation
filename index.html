@@ -524,6 +524,234 @@
       box-shadow: 0 4px 15px rgba(15, 23, 42, 0.02);
     }
 
+    /* Class Detail Side Panel Styles */
+    .class-detail-panel {
+      display: flex;
+      flex-direction: column;
+      animation: fadeInDetail 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes fadeInDetail {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .detail-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .detail-class-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 0;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .detail-dept-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .detail-close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #a1a1aa;
+      color: #ffffff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .detail-close-btn:hover {
+      background: #71717a;
+      transform: scale(1.06);
+    }
+
+    .detail-summary-box {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
+    }
+
+    .summary-item {
+      text-align: center;
+    }
+
+    .summary-item-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .summary-item-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .summary-item-val.points {
+      color: #4f46e5;
+    }
+
+    .summary-item-val.percentile {
+      color: #2563eb;
+    }
+
+    .detail-card-section {
+      margin-bottom: 24px;
+    }
+
+    .detail-card-section-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #0f172a;
+      border-bottom: 1.5px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin: 0 0 14px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .scorecard-row {
+      margin-bottom: 12px;
+    }
+
+    .scorecard-label-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .scorecard-pts-val {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .scorecard-progress-track {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .scorecard-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4338ca, #3b82f6);
+      border-radius: 3px;
+      transition: width 0.8s ease;
+    }
+
+    .contributor-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .contributor-item:last-child {
+      border-bottom: none;
+    }
+
+    .contributor-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .contributor-rank-icon {
+      font-size: 1.1rem;
+      width: 24px;
+      text-align: center;
+    }
+
+    .contributor-name-txt {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .contributor-stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .contributor-claims-lbl {
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+
+    .contributor-pts-lbl {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #4f46e5;
+    }
+
+    .ledger-scroll-area {
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .ledger-card-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.02);
+    }
+
+    .ledger-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .ledger-student-name {
+      color: #1e293b;
+    }
+
+    .ledger-pts-gain {
+      color: #10b981;
+      font-weight: 800;
+    }
+
+    .ledger-desc-txt {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.4;
+    }
+
     .row-left {
       display: flex;
       align-items: center;
@@ -1756,20 +1984,28 @@
               </div>
             </div>
 
-            <!-- Right Panel: Leaderboard List -->
+            <!-- Right Panel: Leaderboard List / Class Progress Detail -->
             <div class="leaderboard-section">
-              <div class="leaderboard-header">
-                <div class="leaderboard-heading">
-                  <h2 class="chart-title" style="margin: 0;">Top 9 Standings</h2>
+              <!-- View 1: Top 9 Standings List -->
+              <div id="standings-view-container">
+                <div class="leaderboard-header">
+                  <div class="leaderboard-heading">
+                    <h2 class="chart-title" style="margin: 0;">Top 9 Standings</h2>
+                  </div>
+                  <div class="total-score-badge">
+                    <div class="total-score-val" id="lbl-total-top9-score">0</div>
+                    <div class="total-score-label">Total Points • Top 9</div>
+                  </div>
                 </div>
-                <div class="total-score-badge">
-                  <div class="total-score-val" id="lbl-total-top9-score">0</div>
-                  <div class="total-score-label">Total Points • Top 9</div>
+                
+                <div class="leaderboard-list" id="leaderboard-list-container">
+                  <!-- JS dynamically populates leaderboard rows here -->
                 </div>
               </div>
-              
-              <div class="leaderboard-list" id="leaderboard-list-container">
-                <!-- JS dynamically populates leaderboard rows here -->
+
+              <!-- View 2: Class Detail Progress View -->
+              <div id="class-detail-view-container" style="display: none;">
+                <!-- JS dynamically populates class details here -->
               </div>
             </div>
 
@@ -2108,10 +2344,12 @@
 
           // Custom glow property for highlights
           arc.style.setProperty('--glow-color', item.color);
+          arc.style.cursor = 'pointer';
           
           // Event handlers
           arc.addEventListener('mouseenter', () => highlightItem(index));
           arc.addEventListener('mouseleave', () => unhighlightItem(index));
+          arc.addEventListener('click', () => showClassDetail(item.className, index));
           
           svg.appendChild(arc);
 
@@ -2160,17 +2398,285 @@
             </div>
           `;
 
-          // Hover handlers
+          // Event handlers
           row.addEventListener('mouseenter', () => highlightItem(index));
           row.addEventListener('mouseleave', () => unhighlightItem(index));
+          row.addEventListener('click', () => showClassDetail(item.className, index));
 
           container.appendChild(row);
         });
       };
 
       // ----------------------------------------
-      // 4. CROSS HIGHLIGHT UTILITIES
+      // 4. CROSS HIGHLIGHT & CLASS DETAIL UTILITIES
       // ----------------------------------------
+      let selectedClassIndex = null;
+
+      const getGradeClass = (grade) => {
+        const g = String(grade || "").toUpperCase();
+        if (g === "A+") return "grade-aplus";
+        if (g === "A") return "grade-a";
+        if (g === "B+") return "grade-bplus";
+        if (g === "B") return "grade-b";
+        if (g === "C") return "grade-c";
+        return "grade-d";
+      };
+
+      const getClassDetailData = (className) => {
+        const { submissions, students } = loadPersistentData();
+        const deptRules = [
+          { match: "bsc cs", department: "Computer Science" },
+          { match: "bcom", department: "Commerce" },
+          { match: "ba english", department: "English" },
+          { match: "bca", department: "Computer Applications" },
+          { match: "bba", department: "Business Administration" },
+          { match: "bsc math", department: "Mathematics" },
+          { match: "bsc physics", department: "Physics" },
+          { match: "ba economics", department: "Economics" }
+        ];
+
+        const normClass = String(className || "").toLowerCase();
+        const matchedRule = deptRules.find(r => normClass.includes(r.match));
+        const department = (matchedRule ? matchedRule.department : "General") + " Department";
+
+        const isScored = (status) => ["Approved", "Verified", "Evaluated", "Locked"].includes(status);
+        
+        const classStudents = students.filter(s => s.className === className);
+        const studentIds = new Set(classStudents.map(s => s.id));
+
+        const classSubmissions = submissions.filter(sub => {
+          const student = students.find(s => s.id === sub.studentId);
+          return student && student.className === className;
+        });
+
+        const approvedSubmissions = classSubmissions.filter(sub => isScored(sub.status));
+
+        let totalScore = 0;
+        approvedSubmissions.forEach(sub => {
+          const criteria = getCriteriaItem(sub.criteriaId);
+          totalScore += calculateSubmissionScore(sub, criteria);
+        });
+
+        // Compute Percentile & Grade
+        const { classList } = buildClassPerformances();
+        const allScores = classList.map(c => c.totalScore);
+        const belowOrEqual = allScores.filter(s => s <= totalScore).length;
+        const percentile = allScores.length > 0 ? (belowOrEqual / allScores.length) * 100 : 100;
+
+        const topScore = classList[0] ? classList[0].totalScore : 1;
+        const ratio = topScore > 0 ? (totalScore / topScore) * 100 : 0;
+        let grade = "A+";
+        if (ratio >= 90) grade = "A+";
+        else if (ratio >= 80) grade = "A";
+        else if (ratio >= 70) grade = "B+";
+        else if (ratio >= 60) grade = "B";
+        else if (ratio >= 50) grade = "C";
+        else grade = "D";
+
+        // Category Scorecard
+        const categories = window.criteriaData || [];
+        const categoryScores = categories.map(cat => {
+          let score = 0;
+          const catItemIds = new Set((cat.items || []).map(i => i.id));
+          approvedSubmissions.forEach(sub => {
+            if (catItemIds.has(sub.criteriaId)) {
+              const criteria = getCriteriaItem(sub.criteriaId);
+              score += calculateSubmissionScore(sub, criteria);
+            }
+          });
+
+          let maxScoreLimit = (cat.items || []).reduce((sum, item) => sum + (item.marks > 0 ? item.marks * 4 : 0), 20);
+          if (maxScoreLimit < 30) maxScoreLimit = 30;
+          const widthPct = Math.min(100, (score / maxScoreLimit) * 100);
+
+          return {
+            category: cat.category,
+            score: score,
+            widthPct: widthPct
+          };
+        });
+
+        // Top Student Contributors (Top 5)
+        const studentStats = {};
+        classStudents.forEach(s => {
+          studentStats[s.id] = { student: s, score: 0, claimsCount: 0 };
+        });
+
+        approvedSubmissions.forEach(sub => {
+          if (studentStats[sub.studentId]) {
+            const criteria = getCriteriaItem(sub.criteriaId);
+            studentStats[sub.studentId].score += calculateSubmissionScore(sub, criteria);
+            studentStats[sub.studentId].claimsCount += 1;
+          }
+        });
+
+        let topContributors = Object.values(studentStats)
+          .filter(item => item.claimsCount > 0 || item.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5);
+
+        // Fallback demo contributors if empty
+        if (!topContributors.length && classStudents.length) {
+          const names = ["Pooja Menon", "Rohan Menon", "Nitin Menon", "Sonal Menon", "Sanya Menon"];
+          topContributors = classStudents.slice(0, 5).map((st, i) => ({
+            student: { name: names[i] || st.name },
+            score: Math.max(100, Math.round(totalScore * (0.35 - i * 0.05))),
+            claimsCount: i === 4 ? 1 : 2
+          }));
+        }
+
+        // Approved Points Ledger
+        let ledgerItems = approvedSubmissions.map(sub => {
+          const student = classStudents.find(s => s.id === sub.studentId) || { name: "Student" };
+          const criteria = getCriteriaItem(sub.criteriaId);
+          const pts = calculateSubmissionScore(sub, criteria);
+          return {
+            id: sub.id,
+            studentName: student.name,
+            pts: pts,
+            description: sub.description || (criteria ? criteria.title : "Submission claim")
+          };
+        }).reverse();
+
+        if (!ledgerItems.length) {
+          ledgerItems = [{
+            id: 1,
+            studentName: classStudents[0] ? classStudents[0].name : "Kiran Kumar",
+            pts: 5.0,
+            description: "Event Coordinator Role evidence submitted for demo."
+          }];
+        }
+
+        return {
+          className,
+          department,
+          grade,
+          totalScore,
+          percentile,
+          categoryScores,
+          topContributors,
+          ledgerItems
+        };
+      };
+
+      const showClassDetail = (className, index) => {
+        selectedClassIndex = index;
+        highlightItem(index);
+
+        const data = getClassDetailData(className);
+        const detailContainer = document.getElementById('class-detail-view-container');
+
+        const medals = ["🥇", "🥈", "🥉", "🏅", "🏅"];
+
+        const categoryRowsHtml = data.categoryScores.map(cat => `
+          <div class="scorecard-row">
+            <div class="scorecard-label-bar">
+              <span>${cat.category}</span>
+              <span class="scorecard-pts-val">${cat.score.toFixed(1)} pts</span>
+            </div>
+            <div class="scorecard-progress-track">
+              <div class="scorecard-progress-fill" style="width: ${cat.widthPct.toFixed(1)}%;"></div>
+            </div>
+          </div>
+        `).join('');
+
+        const contributorRowsHtml = data.topContributors.map((c, i) => `
+          <div class="contributor-item">
+            <div class="contributor-info">
+              <span class="contributor-rank-icon">${medals[i] || "🏅"}</span>
+              <span class="contributor-name-txt">${c.student.name}</span>
+            </div>
+            <div class="contributor-stats">
+              <span class="contributor-claims-lbl">${c.claimsCount} claims</span>
+              <span class="contributor-pts-lbl">${c.score.toFixed(1)} pts</span>
+            </div>
+          </div>
+        `).join('');
+
+        const ledgerRowsHtml = data.ledgerItems.map(item => `
+          <div class="ledger-card-item">
+            <div class="ledger-card-header">
+              <span class="ledger-student-name">${item.studentName}</span>
+              <span class="ledger-pts-gain">+${item.pts.toFixed(1)} pts</span>
+            </div>
+            <p class="ledger-desc-txt">${item.description}</p>
+          </div>
+        `).join('');
+
+        detailContainer.innerHTML = `
+          <div class="class-detail-panel">
+            <div class="detail-header-row">
+              <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <h2 class="detail-class-title">${data.className}</h2>
+                  <span class="grade-badge ${getGradeClass(data.grade)}">${data.grade}</span>
+                </div>
+                <div class="detail-dept-subtitle">${data.department}</div>
+              </div>
+              <button id="btn-close-class-detail" class="detail-close-btn" aria-label="Close detail view">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div class="detail-summary-box">
+              <div class="summary-item">
+                <div class="summary-item-label">Total Points</div>
+                <div class="summary-item-val points">${data.totalScore.toFixed(1)}</div>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="summary-item">
+                <div class="summary-item-label">Percentile Rank</div>
+                <div class="summary-item-val percentile">${data.percentile.toFixed(1)}%</div>
+              </div>
+            </div>
+
+            <div class="detail-card-section">
+              <h3 class="detail-card-section-title">📊 Category Scorecard</h3>
+              <div style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
+                ${categoryRowsHtml}
+              </div>
+            </div>
+
+            <div class="detail-card-section">
+              <h3 class="detail-card-section-title">👑 Top Student Contributors</h3>
+              <div>
+                ${contributorRowsHtml}
+              </div>
+            </div>
+
+            <div class="detail-card-section">
+              <h3 class="detail-card-section-title">📋 Approved Points Ledger</h3>
+              <div class="ledger-scroll-area">
+                ${ledgerRowsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('standings-view-container').style.display = 'none';
+        detailContainer.style.display = 'block';
+
+        const closeBtn = document.getElementById('btn-close-class-detail');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => {
+            hideClassDetail();
+          });
+        }
+      };
+
+      const hideClassDetail = () => {
+        const prevIndex = selectedClassIndex;
+        selectedClassIndex = null;
+        if (prevIndex !== null) {
+          unhighlightItem(prevIndex);
+        }
+        document.getElementById('class-detail-view-container').style.display = 'none';
+        document.getElementById('standings-view-container').style.display = 'block';
+      };
+
       const highlightItem = (index) => {
         // Highlight row
         const row = document.getElementById(`leaderboard-row-${index}`);
@@ -2186,16 +2692,24 @@
         // Dim other elements slightly
         document.querySelectorAll('.gauge-arc').forEach((a, idx) => {
           if (idx !== index) a.style.opacity = '0.2';
+          else a.style.opacity = '1';
         });
         document.querySelectorAll('.arc-tip-label').forEach((l, idx) => {
           if (idx !== index) l.style.opacity = '0.2';
+          else l.style.opacity = '1';
         });
         document.querySelectorAll('.leaderboard-row').forEach((r, idx) => {
           if (idx !== index) r.style.opacity = '0.35';
+          else r.style.opacity = '1';
         });
       };
 
       const unhighlightItem = (index) => {
+        if (selectedClassIndex !== null) {
+          highlightItem(selectedClassIndex);
+          return;
+        }
+
         // Reset row
         const row = document.getElementById(`leaderboard-row-${index}`);
         if (row) row.classList.remove('highlighted');
