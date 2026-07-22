@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "clean": "rd /s /q .next",
+    "clean-dev": "rd /s /q .next && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
