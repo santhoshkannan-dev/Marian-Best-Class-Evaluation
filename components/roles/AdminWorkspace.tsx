@@ -170,12 +170,15 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
       { id: '10-3', title: 'Blood Donation or Health Camp Participation', type: 'Count Based', marks: 2, details: 'per count x 2' }
     ],
     '11': [ // Career Advancement
-      { id: '11-1', title: 'Placed in Campus Recruitment', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '11-2', title: 'Higher Studies Admission', type: 'Fixed', marks: 5, details: 'fixed: 5' }
+      { id: '11-1', title: 'Placement Offer Received', type: 'Fixed', marks: 20, details: 'fixed: 20' },
+      { id: '11-2', title: 'Higher Studies Admission Secured', type: 'Fixed', marks: 15, details: 'fixed: 15' },
+      { id: '11-3', title: 'Professional Certification Completed', type: 'Count Based', marks: 8, details: 'per count x 8' },
+      { id: '11-4', title: 'Career Workshop Participation', type: 'Count Based', marks: 2, details: 'per count x 2' }
     ],
     '12': [ // Documentation
-      { id: '12-1', title: 'Outstanding Portfolio', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '12-2', title: 'Timely Profile Verification', type: 'Fixed', marks: 5, details: 'fixed: 5' }
+      { id: '12-1', title: 'Complete Best Class File Submitted', type: 'Fixed', marks: 10, details: 'fixed: 10' },
+      { id: '12-2', title: 'Valid Proof Uploaded for All Claims', type: 'Fixed', marks: 5, details: 'fixed: 5' },
+      { id: '12-3', title: 'Late or Incomplete Documentation', type: 'Negative Marks', marks: 0, details: 'penalty per count x -5' }
     ]
   });
 
