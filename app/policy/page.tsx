@@ -2,54 +2,69 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Hero } from '@/components/Hero';
+import { PolicyCarousel } from '@/components/PolicyCarousel';
+import { EvaluationGrid } from '@/components/EvaluationGrid';
+import { WorkflowTimeline } from '@/components/WorkflowTimeline';
+import { ScoreCalculation } from '@/components/ScoreCalculation';
+import { OutcomesGrid } from '@/components/OutcomesGrid';
 
 export default function PolicyPage() {
   return (
-    <main style={{ maxWidth: '960px', margin: '60px auto', padding: '0 24px' }}>
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '20px' }}>
-          <span className="eyebrow">Competition Policy & Rules</span>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginTop: '8px' }}>
-            Best Class Verification Workflow Guidelines
-          </h1>
-          <p className="muted" style={{ marginTop: '8px', fontSize: '1rem' }}>
-            Official guidelines and scoring standards for Marian College Kuttikkanam Best Class Competition.
-          </p>
-        </div>
+    <main
+      style={{
+        maxWidth: '1200px',
+        margin: '40px auto 80px',
+        padding: '0 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '60px',
+        animation: 'fadeUp 0.8s ease-out'
+      }}
+    >
+      {/* 1. Hero Section */}
+      <Hero />
 
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>1. Submission Standards</h2>
-          <p style={{ color: 'var(--color-text-soft)', lineHeight: 1.6 }}>
-            All claims made by students or class representatives must be supported by valid verification proof (such as official result spreadsheets, certificates, or letters signed by authority). Claims submitted without documentation will be placed under &quot;Correction Requested&quot; status.
-          </p>
-        </section>
+      {/* 2. 3D Card Carousel Section */}
+      <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <PolicyCarousel />
+      </section>
 
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>2. Teacher Verification Process</h2>
-          <p style={{ color: 'var(--color-text-soft)', lineHeight: 1.6 }}>
-            Class Teachers review all submitted activities from their assigned class section. Teachers have the authority to Approve, Reject, or Request Correction on any submission. Once verified, submissions move forward to the Evaluation Team.
-          </p>
-        </section>
+      {/* 3. Evaluation Grid Details */}
+      <EvaluationGrid />
 
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>3. Evaluation Team Scoring & Fallbacks</h2>
-          <p style={{ color: 'var(--color-text-soft)', lineHeight: 1.6 }}>
-            The Central Evaluation Team conducts independent verification and assigns marks based on predefined criteria rules (e.g., S Grade Course: 5 pts, A+ Grade: 3 pts, NPTEL Course: 10 pts). Evaluators can utilize the single-step &quot;Verify & Save&quot; workflow or apply manual overrides when special conditions arise.
-          </p>
-        </section>
+      {/* 4. Timeline Workflow */}
+      <WorkflowTimeline />
 
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>4. Leaderboard & IQAC Monitoring</h2>
-          <p style={{ color: 'var(--color-text-soft)', lineHeight: 1.6 }}>
-            Class totals are calculated dynamically across categories (Academics, Online Courses, Internships, Research, Leadership, etc.). IQAC and HODs monitor overall progress, providing remarks and analytical feedback before final academic year awards.
-          </p>
-        </section>
+      {/* 5. Score Formulation */}
+      <ScoreCalculation />
 
-        <div style={{ marginTop: '12px', paddingTop: '20px', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end' }}>
-          <Link href="/" className="btn btn-primary">
-            &larr; Back to Main Workspace
-          </Link>
-        </div>
+      {/* 6. Expected Outcomes */}
+      <OutcomesGrid />
+
+      {/* Back button Row */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          borderTop: '1px solid var(--color-border)',
+          paddingTop: '40px',
+          marginTop: '20px'
+        }}
+      >
+        <Link
+          href="/"
+          className="btn btn-primary"
+          style={{
+            padding: '14px 32px',
+            borderRadius: '14px',
+            fontSize: '1rem',
+            boxShadow: '0 10px 25px rgba(79, 70, 229, 0.15)',
+            textDecoration: 'none'
+          }}
+        >
+          &larr; Return to Workspace
+        </Link>
       </div>
     </main>
   );
