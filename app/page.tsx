@@ -20,6 +20,8 @@ export default function HomePage() {
         router.push('/iqac/dashboard');
       } else if (role === 'admin') {
         router.push('/admin/academic-years');
+      } else if (role === 'evaluator') {
+        router.push('/evaluator/dashboard');
       }
     }
   }, [loggedIn, currentRole, router]);

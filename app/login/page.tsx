@@ -21,6 +21,8 @@ export default function LoginPage() {
         router.push('/iqac/dashboard');
       } else if (role === 'admin') {
         router.push('/admin/academic-years');
+      } else if (role === 'evaluator') {
+        router.push('/evaluator/dashboard');
       }
     }
   }, [loggedIn, currentRole, router]);
@@ -40,6 +42,8 @@ export default function LoginPage() {
       router.push('/iqac/dashboard');
     } else if (selectedRole.toLowerCase() === 'admin') {
       router.push('/admin/academic-years');
+    } else if (selectedRole.toLowerCase() === 'evaluator') {
+      router.push('/evaluator/dashboard');
     } else {
       router.push('/');
     }
