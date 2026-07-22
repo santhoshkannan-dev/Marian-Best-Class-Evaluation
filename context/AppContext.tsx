@@ -53,10 +53,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const LOCAL_STORAGE_KEY = 'bc_persistent_state';
 
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentRole, setCurrentRole] = useState<string>('student');
+  const [currentRole, setCurrentRole] = useState<string>('');
   const [activePage, setActivePage] = useState<string>('dashboard');
-  const [loggedIn, setLoggedIn] = useState<boolean>(true);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(1);
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [currentStudentId, setCurrentStudentId] = useState<number>(1);
 
   const [academicYears, setAcademicYears] = useState<string[]>(defaultAcademicYears);
