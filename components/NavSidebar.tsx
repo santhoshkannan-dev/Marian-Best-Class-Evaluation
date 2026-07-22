@@ -27,18 +27,18 @@ export const NavSidebar: React.FC = () => {
         href="/"
         id="btn-nav-home"
         className={`nav-btn ${pathname === '/' ? 'active' : ''}`}
-        data-tooltip="Home"
-        aria-label="Home"
+        data-tooltip="Home/Dashboard"
+        aria-label="Home/Dashboard"
       >
         <img src="/Assets/Images/hands_logo.png" alt="Marian Logo" />
       </Link>
 
-      {/* 2. Logout */}
+      {/* 2. Login */}
       <Link
         href="/login"
         className={`nav-btn ${pathname === '/login' ? 'active' : ''}`}
-        data-tooltip="Logout"
-        aria-label="Logout"
+        data-tooltip="Login"
+        aria-label="Login"
       >
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
@@ -51,8 +51,8 @@ export const NavSidebar: React.FC = () => {
       <Link
         href="/policy"
         className={`nav-btn ${pathname === '/policy' ? 'active' : ''}`}
-        data-tooltip="Criteria"
-        aria-label="Criteria"
+        data-tooltip="Policy Criteria"
+        aria-label="Policy Criteria"
       >
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
