@@ -136,24 +136,38 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
       { id: '5-3', title: 'State Scholarship', type: 'Fixed', marks: 5, details: 'fixed: 5' }
     ],
     '6': [ // Research
-      { id: '6-1', title: 'UGC Care Journal Paper', type: 'Fixed', marks: 15, details: 'fixed: 15' },
-      { id: '6-2', title: 'Conference Presentation', type: 'Fixed', marks: 5, details: 'fixed: 5' }
+      { id: '6-1', title: 'Research Publication', type: 'Count Based', marks: 15, details: 'per count x 15' },
+      { id: '6-2', title: 'Patent Filed or Published', type: 'Count Based', marks: 20, details: 'per count x 20' },
+      { id: '6-3', title: 'Funded or Approved Student Project', type: 'Count Based', marks: 10, details: 'per count x 10' }
     ],
     '7': [ // Prizes
-      { id: '7-1', title: 'National Level First Prize', type: 'Fixed', marks: 15, details: 'fixed: 15' },
-      { id: '7-2', title: 'State/Zonal First Prize', type: 'Fixed', marks: 10, details: 'fixed: 10' }
+      { id: '7-1', title: 'Outside College Individual First Prize', type: 'Count Based', marks: 10, details: 'per count x 10' },
+      { id: '7-2', title: 'Outside College Individual Second Prize', type: 'Count Based', marks: 8, details: 'per count x 8' },
+      { id: '7-3', title: 'Outside College Individual Third Prize', type: 'Count Based', marks: 5, details: 'per count x 5' },
+      { id: '7-4', title: 'Outside College Group First Prize', type: 'Count Based', marks: 6, details: 'per count x 6' },
+      { id: '7-5', title: 'Outside College Group Second Prize', type: 'Count Based', marks: 4, details: 'per count x 4' },
+      { id: '7-6', title: 'Outside College Group Third Prize', type: 'Count Based', marks: 3, details: 'per count x 3' },
+      { id: '7-7', title: 'Inside College Individual First Prize', type: 'Count Based', marks: 5, details: 'per count x 5' },
+      { id: '7-8', title: 'Inside College Individual Second Prize', type: 'Count Based', marks: 3, details: 'per count x 3' },
+      { id: '7-9', title: 'Inside College Individual Third Prize', type: 'Count Based', marks: 2, details: 'per count x 2' },
+      { id: '7-10', title: 'Inside College Group First Prize', type: 'Count Based', marks: 3, details: 'per count x 3' },
+      { id: '7-11', title: 'Inside College Group Second Prize', type: 'Count Based', marks: 2, details: 'per count x 2' },
+      { id: '7-12', title: 'Inside College Group Third Prize', type: 'Count Based', marks: 1, details: 'per count x 1' }
     ],
     '8': [ // Leadership
-      { id: '8-1', title: 'College Union Member', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '8-2', title: 'Association Secretary', type: 'Fixed', marks: 5, details: 'fixed: 5' }
+      { id: '8-1', title: 'Class Representative', type: 'Fixed', marks: 10, details: 'fixed: 10' },
+      { id: '8-2', title: 'Association or Club Office Bearer', type: 'Fixed', marks: 8, details: 'fixed: 8' },
+      { id: '8-3', title: 'Event Coordinator Role', type: 'Count Based', marks: 5, details: 'per count x 5' }
     ],
     '9': [ // Programs Organized
-      { id: '9-1', title: 'National Seminar Coordinator', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '9-2', title: 'Department Fest Coordinator', type: 'Fixed', marks: 5, details: 'fixed: 5' }
+      { id: '9-1', title: 'Department Level Program Organized', type: 'Count Based', marks: 5, details: 'per count x 5' },
+      { id: '9-2', title: 'Interdepartment Program Organized', type: 'Count Based', marks: 8, details: 'per count x 8' },
+      { id: '9-3', title: 'State or National Level Program Organized', type: 'Count Based', marks: 15, details: 'per count x 15' }
     ],
     '10': [ // Social Responsibility
-      { id: '10-1', title: 'NSS Camp Attendee', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '10-2', title: 'Blood Donation Volunteer', type: 'Fixed', marks: 5, details: 'fixed: 5' }
+      { id: '10-1', title: 'NSS/NCC/Service Activity Participation', type: 'Count Based', marks: 5, details: 'per count x 5' },
+      { id: '10-2', title: 'Community Outreach Activity', type: 'Count Based', marks: 3, details: 'per count x 3' },
+      { id: '10-3', title: 'Blood Donation or Health Camp Participation', type: 'Count Based', marks: 2, details: 'per count x 2' }
     ],
     '11': [ // Career Advancement
       { id: '11-1', title: 'Placed in Campus Recruitment', type: 'Fixed', marks: 10, details: 'fixed: 10' },
