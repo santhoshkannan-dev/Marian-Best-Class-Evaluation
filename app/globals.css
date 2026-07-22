@@ -155,7 +155,7 @@ h1, h2, h3, h4, p {
   opacity: 1;
   transform: none;
   pointer-events: auto;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   text-decoration: none;
   color: var(--text-main);
