@@ -30,14 +30,14 @@ export default function EvaluatorLayout({ children }: { children: React.ReactNod
   const headerTitle = currentNav ? currentNav.label : 'Evaluator Dashboard';
 
   return (
-    <div className="portal-shell-grid" style={{ minHeight: '100vh', background: '#faf6f0' }}>
-      <aside className="portal-sidebar" style={{ background: '#361e12', color: '#ffffff' }}>
+    <div className="portal-shell-grid">
+      <aside className="portal-sidebar">
         <div>
           <div className="portal-brand">
-            <div className="portal-brand-badge" style={{ background: '#ea580c', color: '#ffffff' }}>BC</div>
+            <div className="portal-brand-badge">BC</div>
             <div>
-              <h2 className="portal-brand-title" style={{ color: '#ffffff' }}>Best Class</h2>
-              <p className="portal-brand-sub" style={{ color: '#fdba74' }}>Evaluation Panel</p>
+              <h2 className="portal-brand-title">Best Class</h2>
+              <p className="portal-brand-sub">Evaluation Panel</p>
             </div>
           </div>
 
@@ -50,12 +50,7 @@ export default function EvaluatorLayout({ children }: { children: React.ReactNod
                     <Link
                       href={item.href}
                       className={`portal-nav-btn ${isActive ? 'active' : ''}`}
-                      style={{
-                        textDecoration: 'none',
-                        color: isActive ? '#ffffff' : '#fed7aa',
-                        background: isActive ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                        fontWeight: 700
-                      }}
+                      style={{ textDecoration: 'none' }}
                     >
                       {item.label}
                     </Link>
@@ -66,12 +61,12 @@ export default function EvaluatorLayout({ children }: { children: React.ReactNod
           </nav>
         </div>
 
-        <div className="portal-sidebar-footer" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', color: '#fdba74' }}>
+        <div className="portal-sidebar-footer">
           Evaluator
         </div>
       </aside>
 
-      <div className="portal-content-area" style={{ background: '#faf6f0' }}>
+      <div className="portal-content-area">
         <div
           style={{
             position: 'fixed',
@@ -83,16 +78,16 @@ export default function EvaluatorLayout({ children }: { children: React.ReactNod
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
-            opacity: 0.04,
+            opacity: 0.06,
             filter: 'blur(3px)',
             pointerEvents: 'none',
             zIndex: 0
           }}
         />
 
-        <header className="portal-topbar" style={{ background: '#ffffff', borderBottom: '1px solid #fed7aa' }}>
+        <header className="portal-topbar">
           <div>
-            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#361e12' }}>{headerTitle}</h1>
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>{headerTitle}</h1>
             <p className="muted" style={{ fontSize: '0.84rem' }}>Academic Year {selectedAcademicYear || '2025-2026'}</p>
           </div>
 
@@ -101,8 +96,8 @@ export default function EvaluatorLayout({ children }: { children: React.ReactNod
               style={{
                 padding: '6px 16px',
                 borderRadius: '20px',
-                background: '#ffedd5',
-                color: '#ea580c',
+                background: '#e0e7ff',
+                color: '#3730a3',
                 fontSize: '0.84rem',
                 fontWeight: 700,
                 textTransform: 'capitalize'
@@ -112,14 +107,7 @@ export default function EvaluatorLayout({ children }: { children: React.ReactNod
             </span>
             <button
               className="btn btn-secondary"
-              style={{
-                padding: '8px 18px',
-                borderRadius: '10px',
-                fontSize: '0.88rem',
-                fontWeight: 700,
-                border: '1px solid #fdba74',
-                color: '#361e12'
-              }}
+              style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700 }}
               onClick={() => {
                 logout();
                 router.push('/login');

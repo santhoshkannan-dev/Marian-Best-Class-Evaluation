@@ -132,15 +132,15 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
         <>
           {/* STATS ROW */}
           <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-            <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid var(--glass-border)', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <span className="stat-label" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Total Submissions</span>
-                <span className="stat-value" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#361e12' }}>{verifiedCount + pendingCount}</span>
+                <span className="stat-value" style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>{verifiedCount + pendingCount}</span>
               </div>
               <span style={{ fontSize: '1.6rem' }}>📊</span>
             </div>
 
-            <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid var(--glass-border)', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <span className="stat-label" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Verified</span>
                 <span className="stat-value" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#16a34a' }}>{verifiedCount}</span>
@@ -148,7 +148,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
               <span style={{ fontSize: '1.6rem' }}>✓</span>
             </div>
 
-            <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid var(--glass-border)', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <span className="stat-label" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Pending</span>
                 <span className="stat-value" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#d97706' }}>{pendingCount}</span>
@@ -156,11 +156,11 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
               <span style={{ fontSize: '1.6rem' }}>⌛</span>
             </div>
 
-            <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', padding: '20px', borderRadius: '16px' }}>
+            <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid var(--glass-border)', padding: '20px', borderRadius: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div>
                   <span className="stat-label" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Total Score</span>
-                  <span className="stat-value" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#4f46e5' }}>{totalScore.toFixed(1)} / 11138.0</span>
+                  <span className="stat-value" style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-primary)' }}>{totalScore.toFixed(1)} / 11138.0</span>
                 </div>
                 <span style={{ fontSize: '1.2rem' }}>📈</span>
               </div>
@@ -174,8 +174,8 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
           </div>
 
           {/* PROGRESS SUMMARY BOX */}
-          <div className="card" style={{ padding: '24px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#361e12', marginBottom: '16px' }}>Evaluation Progress</h3>
+          <div className="card" style={{ padding: '24px', background: '#ffffff', border: '1.5px solid var(--glass-border)', borderRadius: '16px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '16px' }}>Evaluation Progress</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', fontWeight: 700, marginBottom: '4px' }}>
@@ -216,8 +216,8 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
           </div>
 
           {/* VERIFIED AND LOCKED SUBMISSIONS TABLE */}
-          <div className="card" style={{ padding: '24px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#361e12', marginBottom: '16px' }}>Verified and Locked Submissions</h3>
+          <div className="card" style={{ padding: '24px', background: '#ffffff', border: '1.5px solid var(--glass-border)', borderRadius: '16px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '16px' }}>Verified and Locked Submissions</h3>
             <div className="table-container">
               <table className="table">
                 <thead>
@@ -238,7 +238,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                       <td>
                         <span className="badge" style={{ background: '#dcfce7', color: '#16a34a', fontWeight: 700 }}>{item.status}</span>
                       </td>
-                      <td style={{ fontWeight: 700, color: '#ea580c' }}>{item.marks.toFixed(1)}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{item.marks.toFixed(1)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -247,8 +247,8 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
 
             <div style={{ marginTop: '20px' }}>
               <button
-                className="btn"
-                style={{ background: '#ea580c', color: '#ffffff', fontWeight: 700, padding: '12px 24px', borderRadius: '10px', border: 'none', cursor: 'pointer' }}
+                className="btn btn-primary"
+                style={{ padding: '12px 24px', borderRadius: '10px', cursor: 'pointer' }}
                 onClick={() => router.push('/evaluator/evaluation')}
               >
                 Open Evaluation
@@ -258,8 +258,8 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
         </>
       ) : (
         /* EVALUATION QUEUE VIEW */
-        <div className="card" style={{ padding: '24px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#361e12', marginBottom: '20px' }}>Evaluation Workspace</h2>
+        <div className="card" style={{ padding: '24px', background: '#ffffff', border: '1.5px solid var(--glass-border)', borderRadius: '16px' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '20px' }}>Evaluation Workspace</h2>
 
           {/* FILTER CONTROLS */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginBottom: '24px' }}>
@@ -273,7 +273,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                   fontWeight: 700,
                   fontSize: '0.88rem',
                   cursor: 'pointer',
-                  background: activeTab === 'pending' ? '#ea580c' : 'transparent',
+                  background: activeTab === 'pending' ? 'var(--color-primary)' : 'transparent',
                   color: activeTab === 'pending' ? '#ffffff' : '#475569'
                 }}
                 onClick={() => {
@@ -291,7 +291,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                   fontWeight: 700,
                   fontSize: '0.88rem',
                   cursor: 'pointer',
-                  background: activeTab === 'completed' ? '#ea580c' : 'transparent',
+                  background: activeTab === 'completed' ? 'var(--color-primary)' : 'transparent',
                   color: activeTab === 'completed' ? '#ffffff' : '#475569'
                 }}
                 onClick={() => {
@@ -346,7 +346,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
           {/* INNER DEPARTMENT LISTING */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#361e12' }}>Departments</h3>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>Departments</h3>
               <span className="muted" style={{ fontSize: '0.84rem' }}>
                 Showing 1-{filteredDepts.length} of {filteredDepts.length} records
               </span>
@@ -357,7 +357,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                 const isExpanded = expandedDept === dept.name;
                 const progressPct = (dept.verified / dept.total) * 100;
                 return (
-                  <div key={dept.name} style={{ display: 'flex', flexDirection: 'column', border: '1.5px solid #fed7aa', borderRadius: '12px', background: '#ffffff', overflow: 'hidden' }}>
+                  <div key={dept.name} style={{ display: 'flex', flexDirection: 'column', border: '1.5px solid var(--glass-border)', borderRadius: '12px', background: '#ffffff', overflow: 'hidden' }}>
                     <div
                       style={{
                         display: 'flex',
@@ -369,7 +369,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                       }}
                       onClick={() => setExpandedDept(isExpanded ? null : dept.name)}
                     >
-                      <span style={{ fontWeight: 800, color: '#361e12' }}>{dept.name}</span>
+                      <span style={{ fontWeight: 800, color: 'var(--text-main)' }}>{dept.name}</span>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '30%' }}>
                         <span style={{ fontSize: '0.84rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
@@ -378,29 +378,28 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                         <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
                           <div style={{ width: `${progressPct}%`, height: '100%', background: '#16a34a' }} />
                         </div>
-                        <span style={{ fontSize: '1rem', color: '#ea580c', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>&rarr;</span>
+                        <span style={{ fontSize: '1rem', color: 'var(--color-primary)', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>&rarr;</span>
                       </div>
                     </div>
 
                     {/* EXPANDED INNER LIST OF SUBMISSIONS */}
                     {isExpanded && (
-                      <div style={{ padding: '20px', background: '#fafaf9', borderTop: '1px solid #fed7aa' }}>
-                        <h4 style={{ fontSize: '0.94rem', fontWeight: 800, color: '#ea580c', marginBottom: '12px' }}>Pending Submissions in {dept.name}</h4>
+                      <div style={{ padding: '20px', background: '#fafaf9', borderTop: '1px solid var(--glass-border)' }}>
+                        <h4 style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--color-primary)', marginBottom: '12px' }}>Pending Submissions in {dept.name}</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {pendingItems.filter((i) => i.dept === dept.name).map((item) => (
                             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '14px 18px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
                               <div>
-                                <h5 style={{ fontWeight: 800, color: '#361e12', margin: '0 0 4px 0' }}>{item.student}</h5>
+                                <h5 style={{ fontWeight: 800, color: 'var(--text-main)', margin: '0 0 4px 0' }}>{item.student}</h5>
                                 <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
                                   Category: {item.category} | Item: {item.item}
                                 </p>
                               </div>
 
                               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#ea580c' }}>{item.marks.toFixed(1)} pts</span>
+                                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-primary)' }}>{item.marks.toFixed(1)} pts</span>
                                 <button
-                                  className="btn btn-sm"
-                                  style={{ background: '#ea580c', color: '#ffffff', fontWeight: 700 }}
+                                  className="btn btn-sm btn-primary"
                                   onClick={() => handleVerifyAndLock(item.id, dept.name, item.marks, item.student)}
                                 >
                                   Verify & Lock
@@ -428,7 +427,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
           {/* PAGINATION FOOTER */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '24px' }}>
             <button className="btn btn-secondary btn-sm" disabled style={{ opacity: 0.6 }}>Prev</button>
-            <button className="btn btn-sm" style={{ background: '#ea580c', color: '#ffffff', fontWeight: 700 }}>1</button>
+            <button className="btn btn-sm btn-primary">1</button>
             <button className="btn btn-secondary btn-sm" disabled style={{ opacity: 0.6 }}>Next</button>
           </div>
         </div>
