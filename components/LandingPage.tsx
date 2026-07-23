@@ -409,7 +409,7 @@ export const LandingPage: React.FC = () => {
       </div>
 
       <div className="home-layout">
-        
+
         {/* Top bar with Interactive Search (Feature 9) */}
         <div className="search-header-container">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -419,8 +419,8 @@ export const LandingPage: React.FC = () => {
 
           <div className="search-bar-wrapper">
             <svg className="search-icon-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
               type="text"
@@ -450,37 +450,6 @@ export const LandingPage: React.FC = () => {
                 ))}
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Hero Section Banner (Feature 1) */}
-        <div className="hero-banner-container">
-          <div className="hero-banner-content">
-            <div className="hero-banner-badge">
-              🏆 Best Class Competition
-            </div>
-            <h1 className="hero-banner-title">Academic Excellence, Leadership, Innovation, Community</h1>
-            <div className="hero-banner-categories">
-              <span className="hero-cat-pill">📚 Academics</span>
-              <span className="hero-cat-pill">💼 Placements</span>
-              <span className="hero-cat-pill">🔬 Research</span>
-              <span className="hero-cat-pill">🚀 Innovation</span>
-              <span className="hero-cat-pill">🌱 Social Value</span>
-            </div>
-            <p className="hero-banner-lead">
-              &ldquo;Empowering every student to achieve excellence.&rdquo;
-            </p>
-            <div className="hero-banner-actions">
-              <Link href="/policy" className="hero-btn hero-btn-primary">
-                View Policy
-              </Link>
-              <a href="#core-analytics-section" className="hero-btn hero-btn-secondary" onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('core-analytics-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}>
-                Live Rankings
-              </a>
-            </div>
           </div>
         </div>
 
@@ -530,129 +499,11 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 3D stacked Categories Carousel Preview (Feature 5) */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '16px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>Evaluation Categories Preview</h2>
-          <p className="muted" style={{ fontSize: '0.86rem', marginBottom: '24px' }}>Brief summaries and key criteria rules for all scoring categories.</p>
-          
-          <div
-            style={{
-              position: 'relative',
-              height: '350px',
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              perspective: '1200px',
-              transformStyle: 'preserve-3d',
-              overflow: 'hidden'
-            }}
-          >
-            {policyCategories.map((card, index) => {
-              const isActive = index === activeCatIndex;
-              const style = getCatStyle(index);
-
-              return (
-                <div
-                  key={card.id}
-                  onClick={() => setActiveCatIndex(index)}
-                  style={{
-                    position: 'absolute',
-                    width: '310px',
-                    height: '300px',
-                    borderRadius: '20px',
-                    background: card.gradient,
-                    boxShadow: isActive
-                      ? '0 20px 40px rgba(0,0,0,0.25), 0 0 20px rgba(255,255,255,0.05)'
-                      : '0 8px 20px rgba(0,0,0,0.15)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    padding: '20px',
-                    color: '#ffffff',
-                    transformOrigin: 'center center',
-                    backfaceVisibility: 'hidden',
-                    cursor: 'pointer',
-                    ...style
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <span
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.15)',
-                          backdropFilter: 'blur(10px)',
-                          padding: '4px 10px',
-                          borderRadius: '20px',
-                          fontSize: '0.72rem',
-                          fontWeight: 800,
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {card.badge}
-                      </span>
-                      <span style={{ fontSize: '1.5rem' }}>{card.icon}</span>
-                    </div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 6px 0' }}>
-                      {card.title}
-                    </h3>
-                    <p style={{ fontSize: '0.8rem', opacity: 0.88, margin: 0, lineHeight: 1.4 }}>
-                      {card.description}
-                    </p>
-                  </div>
-
-                  <div style={{ flex: 1, margin: '14px 0', display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'center' }}>
-                    {card.highlights.slice(0, 2).map((highlight, idx) => (
-                      <div key={idx} style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', fontSize: '0.74rem', opacity: 0.9 }}>
-                        <span>✔</span>
-                        <span style={{ lineHeight: 1.3 }}>{highlight}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div
-                    style={{
-                      borderTop: '1px solid rgba(255,255,255,0.15)',
-                      paddingTop: '10px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.7, fontWeight: 700 }}>Max Score</span>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 800 }}>{card.maxMarks}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Slide dots */}
-          <div style={{ display: 'flex', gap: '6px', marginTop: '10px', zIndex: 10 }}>
-            {policyCategories.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveCatIndex(index)}
-                aria-label={`Go to slide ${index + 1}`}
-                style={{
-                  width: index === activeCatIndex ? '20px' : '6px',
-                  height: '6px',
-                  borderRadius: '3px',
-                  border: 'none',
-                  background: index === activeCatIndex ? 'var(--primary)' : '#cbd5e1',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
         {/* Core Analytics Card (Gauge + Standings + Activity + Trends + Achievements + notice) */}
         <div id="core-analytics-section" className="dashboard-core-card" style={{ marginTop: '16px' }}>
-          
+
           <div className="dashboard-grid">
-            
+
             {/* Left Panel: Class Progress Gauge */}
             <div className="chart-section">
               <div className="chart-heading-container">
@@ -707,7 +558,7 @@ export const LandingPage: React.FC = () => {
                     const pathLen = Math.PI * r;
                     const ratio = item.totalScore / topScore;
                     const progress = Math.max(0.02, ratio * 0.95);
-                    
+
                     // Loading Animation Dash Offset logic
                     const dashOffset = isLoaded ? (pathLen * (1 - progress)) : pathLen;
 
@@ -848,7 +699,7 @@ export const LandingPage: React.FC = () => {
 
         {/* Secondary Widgets Row: Live Activity Feed (3) + Trends (6) + Achievements (7) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginTop: '12px' }}>
-          
+
           {/* Live Activity Feed (Feature 3) */}
           <div className="premium-card activity-feed-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -858,7 +709,7 @@ export const LandingPage: React.FC = () => {
                 Real-Time
               </span>
             </div>
-            
+
             <div className="activity-feed-ticker">
               <div className="activity-feed-list">
                 {activitiesList.map((item) => (
@@ -878,7 +729,7 @@ export const LandingPage: React.FC = () => {
           <div className="premium-card">
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>Leaderboard Trends</h3>
             <p className="muted" style={{ fontSize: '0.8rem' }}>Current Score vs. Last Week index delta comparison</p>
-            
+
             <div className="trends-list">
               <div className="trend-item">
                 <div className="trend-meta">
@@ -983,12 +834,12 @@ export const LandingPage: React.FC = () => {
 
         {/* Tertiary Widgets Row: Department Ranks (8) + Notice Board (11) + Quote Section (10) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginTop: '12px' }}>
-          
+
           {/* Department Rankings (Feature 8) */}
           <div className="premium-card">
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px' }}>Department Rankings</h3>
             <p className="muted" style={{ fontSize: '0.8rem' }}>Aggregate departmental index metrics</p>
-            
+
             <div className="dept-rankings-list">
               {mockDepartments.map((dept, idx) => (
                 <div key={idx} className="dept-row">
@@ -1059,7 +910,7 @@ export const LandingPage: React.FC = () => {
         <div style={{ marginTop: '24px' }}>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textAlign: 'center' }}>Top Performers</h2>
           <p className="muted" style={{ fontSize: '0.86rem', marginBottom: '20px', textAlign: 'center' }}>Outstanding contributors in the current standings cycle.</p>
-          
+
           <div className="top-performers-grid">
             <div className="premium-card performer-card">
               <span className="performer-role-badge">Top Student</span>
@@ -1115,7 +966,7 @@ export const LandingPage: React.FC = () => {
         <div style={{ marginTop: '24px' }}>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textAlign: 'center' }}>Participation Analytics</h2>
           <p className="muted" style={{ fontSize: '0.86rem', marginBottom: '20px', textAlign: 'center' }}>Dynamic stats highlighting student body participation rates.</p>
-          
+
           <div className="motivational-stats-grid">
             <div className="premium-card m-stat-card">
               <div className="m-stat-circle-wrapper">
@@ -1211,12 +1062,12 @@ export const LandingPage: React.FC = () => {
               </select>
               <button className="nav-arrow-btn" onClick={handleScrollLeft} aria-label="Previous">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6"/>
+                  <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
               <button className="nav-arrow-btn" onClick={handleScrollRight} aria-label="Next">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
+                  <polyline points="9 18 15 12 9 6" />
                 </svg>
               </button>
             </div>
@@ -1307,10 +1158,10 @@ export const LandingPage: React.FC = () => {
           <div className="champions-bottom-bar">
             <div className="bottom-left-info">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
               <span>Explore more champions</span>
             </div>
@@ -1323,12 +1174,12 @@ export const LandingPage: React.FC = () => {
               document.getElementById('core-analytics-section')?.scrollIntoView({ behavior: 'smooth' });
             }}>
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                <path d="M4 22h16"/>
-                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-                <path d="M14 14.66V17c0 .55 .47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-                <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                <path d="M4 22h16" />
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                <path d="M14 14.66V17c0 .55 .47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
               </svg>
               View Active Standings
             </button>
