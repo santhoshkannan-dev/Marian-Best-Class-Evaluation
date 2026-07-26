@@ -25,6 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: 'years', label: 'Academic Years', href: '/admin/academic-years' },
     { id: 'criteria', label: 'Criteria Management', href: '/admin/criteria' },
     { id: 'users', label: 'User Management', href: '/admin/users' },
+    { id: 'groups', label: 'User Groups', href: '/admin/groups' },
     { id: 'departments', label: 'Department Management', href: '/admin/departments' },
     { id: 'settings', label: 'Settings', href: '/admin/settings' },
   ];
@@ -39,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="portal-brand">
             <div className="portal-brand-badge">BC</div>
             <div>
-              <h2 className="portal-brand-title">Best Class</h2>
+              <h2 className="portal-brand-title">Excellence Grid</h2>
               <p className="portal-brand-sub">Evaluation Panel</p>
             </div>
           </div>
@@ -95,6 +96,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <a
+              href="http://localhost:8000/admin/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn"
+              style={{
+                padding: '8px 16px',
+                borderRadius: '10px',
+                fontSize: '0.86rem',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #092e20, #0f5132)',
+                color: '#ffffff',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              ⚙️ Open Django Administration
+            </a>
             <span
               style={{
                 padding: '6px 16px',

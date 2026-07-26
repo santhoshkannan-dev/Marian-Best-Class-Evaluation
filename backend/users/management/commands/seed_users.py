@@ -79,6 +79,7 @@ class Command(BaseCommand):
                 user.is_superuser = is_superuser
                 user.first_name = first
                 user.last_name = last
+                user.set_password("MarianPassword@123")
                 user.save()
                 self.stdout.write(f"Updated pre-registered user: {email} ({role})")
 

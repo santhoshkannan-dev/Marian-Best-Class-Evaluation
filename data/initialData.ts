@@ -38,10 +38,11 @@ export interface Submission {
   criteriaId: number;
   academicYear?: string;
   description: string;
-  status: 'Approved' | 'Pending' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
+  status: 'Approved' | 'Pending' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
   remarks?: string;
   marks?: number | null;
   proof?: string;
+  eventId?: string;
   evaluatorVerified?: boolean;
   evidence?: SubmissionEvidence;
 }
@@ -54,6 +55,13 @@ export interface AppUser {
   department?: string;
   className?: string;
   isApproved?: boolean;
+}
+
+export interface UserGroup {
+  id: string;
+  name: string;
+  description: string;
+  emails: string[];
 }
 
 export const defaultCriteriaCatalog: CriteriaCategory[] = [
@@ -294,6 +302,31 @@ export const defaultSubmissions: Submission[] = [
     proof: "rahul_net_scorecard.pdf",
     evaluatorVerified: true,
     evidence: { type: "fixed" }
+  },
+  {
+    id: 9,
+    studentId: 2,
+    criteriaId: 901,
+    description: "Coordinated Department Tech Fest 'Interface 2025'.",
+    status: "Pending Rep Verification",
+    remarks: "Submitted for Student Rep review",
+    marks: null,
+    proof: "Event ID: EVT-2025-901",
+    eventId: "EVT-2025-901",
+    evaluatorVerified: false,
+    evidence: { type: "count", count: 1 }
+  },
+  {
+    id: 10,
+    studentId: 2,
+    criteriaId: 101,
+    description: "Secured S Grade in Advanced Web Engineering.",
+    status: "Pending Rep Verification",
+    remarks: "Submitted for Student Rep review",
+    marks: null,
+    proof: "rahul_s_grade_web.pdf",
+    evaluatorVerified: false,
+    evidence: { type: "count", count: 1 }
   }
 ];
 
@@ -307,3 +340,24 @@ export const defaultUsers: AppUser[] = [
 ];
 
 export const defaultAcademicYears = ["2025-2026", "2024-2025", "2023-2024"];
+
+export const defaultUserGroups: UserGroup[] = [
+  {
+    id: "grp-evaluation-committee",
+    name: "Evaluation Committee",
+    description: "Evaluator members assigned to review activity submissions.",
+    emails: ["allen.george@mariancollege.org", "elizabeth@marian.ac.in"]
+  },
+  {
+    id: "grp-class-teachers",
+    name: "Class Teachers Council",
+    description: "Faculty members acting as class advisors.",
+    emails: ["kochumol.abraham@mariancollege.org", "rajesh@marian.ac.in"]
+  },
+  {
+    id: "grp-student-reps",
+    name: "Student Representatives",
+    description: "Student council and DQC lead members.",
+    emails: ["santhosh.25pmc152@mariancollege.org", "amal.25pmc141@mariancollege.org", "anika@marian.ac.in"]
+  }
+];

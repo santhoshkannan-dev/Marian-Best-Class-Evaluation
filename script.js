@@ -6005,7 +6005,7 @@ function renderBestClassDashboard() {
   return `
     <section class="section-header">
       <div>
-        <h1>Best Class Competition Dashboard</h1>
+        <h1>Excellence Grid Competition Dashboard</h1>
         <p class="muted">Institution-wide evaluations, ranking leaderboard, and activity metrics.</p>
       </div>
       <div class="button-row">

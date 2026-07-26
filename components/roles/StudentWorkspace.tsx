@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { Submission, CriteriaItem } from '@/data/initialData';
 
 interface StudentWorkspaceProps {
-  view?: 'dashboard' | 'submit' | 'submissions';
+  view?: 'dashboard' | 'submit' | 'submissions' | 'verification';
 }
 
 export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
@@ -18,16 +18,47 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     currentStudentId,
     students,
     activePage,
-    setActivePage
+    setActivePage,
+    isStudentRep
   } = useApp();
 
   const activeTab = view || activePage || 'dashboard';
 
+  // Filter criteria categories based on Student Representative group membership
+  const availableCriteriaCatalog = React.useMemo(() => {
+    if (isStudentRep) return criteriaCatalog;
+    return criteriaCatalog.filter((c) => {
+      const lower = c.category.toLowerCase().trim();
+      return (
+        c.id !== 'cat-academics' &&
+        c.id !== 'cat-programs-organized' &&
+        c.id !== 'cat-documentation' &&
+        lower !== 'academics' &&
+        lower !== 'programs organized' &&
+        lower !== 'documentation'
+      );
+    });
+  }, [criteriaCatalog, isStudentRep]);
+
   // Form State for Submit Activity
-  const [selectedCategory, setSelectedCategory] = useState(criteriaCatalog[0]?.id || 'cat-academics');
-  const [selectedCriteriaId, setSelectedCriteriaId] = useState<number>(criteriaCatalog[0]?.items[0]?.id || 101);
+  const [selectedCategory, setSelectedCategory] = useState(availableCriteriaCatalog[0]?.id || 'cat-online-courses');
+  const [selectedCriteriaId, setSelectedCriteriaId] = useState<number>(availableCriteriaCatalog[0]?.items[0]?.id || 201);
+
+  // Sync selected category if current selection is not available for regular student
+  React.useEffect(() => {
+    if (!availableCriteriaCatalog.some((c) => c.id === selectedCategory)) {
+      if (availableCriteriaCatalog[0]) {
+        setSelectedCategory(availableCriteriaCatalog[0].id);
+        if (availableCriteriaCatalog[0].items[0]) {
+          setSelectedCriteriaId(availableCriteriaCatalog[0].items[0].id);
+        }
+      }
+    }
+  }, [availableCriteriaCatalog, selectedCategory]);
+
   const [countValue, setCountValue] = useState<number>(1);
   const [proofFile, setProofFile] = useState<string>('');
+  const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [editingSubId, setEditingSubId] = useState<number | null>(null);
 
@@ -37,28 +68,35 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
+  // Verification Desk Search & Filter State for Student Representative
+  const [repSearchQuery, setRepSearchQuery] = useState('');
+  const [repStatusFilter, setRepStatusFilter] = useState('all');
+  const [repPage, setRepPage] = useState(1);
+  const repPageSize = 5;
+
   // Category Checklist Pagination
   const [checklistPage, setChecklistPage] = useState(1);
   const checklistPageSize = 5;
 
-  const currentCategory = criteriaCatalog.find((c) => c.id === selectedCategory) || criteriaCatalog[0];
+  const currentCategory = availableCriteriaCatalog.find((c) => c.id === selectedCategory) || availableCriteriaCatalog[0];
   const currentItem: CriteriaItem | undefined = currentCategory?.items.find((i) => i.id === selectedCriteriaId) || currentCategory?.items[0];
+  const isProgramsOrganized = currentCategory?.id === 'cat-programs-organized' || currentCategory?.category.toLowerCase().trim() === 'programs organized';
 
   const mySubmissions = submissions.filter((s) => s.studentId === currentStudentId);
 
-  const totalChecklistPages = Math.ceil(criteriaCatalog.length / checklistPageSize) || 1;
-  const paginatedChecklist = criteriaCatalog.slice((checklistPage - 1) * checklistPageSize, checklistPage * checklistPageSize);
+  const totalChecklistPages = Math.ceil(availableCriteriaCatalog.length / checklistPageSize) || 1;
+  const paginatedChecklist = availableCriteriaCatalog.slice((checklistPage - 1) * checklistPageSize, checklistPage * checklistPageSize);
 
   // Category completion calculation
   const completedCategoryIds = new Set<string>();
   mySubmissions.forEach((sub) => {
-    if (['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status)) {
-      const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
+    if (['Approved', 'Verified', 'Student Rep Verified', 'Evaluated', 'Locked'].includes(sub.status)) {
+      const cat = availableCriteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
       if (cat) completedCategoryIds.add(cat.id);
     }
   });
 
-  const totalCategories = criteriaCatalog.length;
+  const totalCategories = availableCriteriaCatalog.length;
   const completedCount = completedCategoryIds.size;
   const remainingCount = totalCategories - completedCount;
 
@@ -82,9 +120,38 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const totalPages = Math.ceil(filteredSubmissions.length / pageSize) || 1;
   const paginatedSubmissions = filteredSubmissions.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+  // Peer Submissions for Group Verification Desk
+  const peerSubmissions = submissions.filter((s) => s.studentId !== currentStudentId);
+
+  const filteredRepSubmissions = peerSubmissions.filter((sub) => {
+    const studentObj = students.find((s) => s.id === sub.studentId);
+    const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
+    const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
+
+    const matchesSearch =
+      !repSearchQuery ||
+      (studentObj && studentObj.name.toLowerCase().includes(repSearchQuery.toLowerCase())) ||
+      sub.description.toLowerCase().includes(repSearchQuery.toLowerCase()) ||
+      (item && item.title.toLowerCase().includes(repSearchQuery.toLowerCase())) ||
+      (cat && cat.category.toLowerCase().includes(repSearchQuery.toLowerCase()));
+
+    const matchesStatus =
+      repStatusFilter === 'all' ||
+      (repStatusFilter === 'pending' && (sub.status === 'Pending Rep Verification' || sub.status === 'Pending' || sub.status === 'Submitted')) ||
+      (repStatusFilter === 'verified' && sub.status === 'Student Rep Verified') ||
+      (repStatusFilter === 'approved' && sub.status === 'Approved') ||
+      (repStatusFilter === 'correction' && sub.status === 'Correction Requested') ||
+      (repStatusFilter === 'rejected' && sub.status === 'Rejected');
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalRepPages = Math.ceil(filteredRepSubmissions.length / repPageSize) || 1;
+  const paginatedRepSubmissions = filteredRepSubmissions.slice((repPage - 1) * repPageSize, repPage * repPageSize);
+
   const handleNavToSubmit = (catId: string, itemId?: number) => {
     setSelectedCategory(catId);
-    const cat = criteriaCatalog.find((c) => c.id === catId);
+    const cat = availableCriteriaCatalog.find((c) => c.id === catId);
     if (cat && cat.items.length) {
       setSelectedCriteriaId(itemId || cat.items[0].id);
     }
@@ -94,12 +161,23 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const handleFormSubmit = (status: 'Submitted' | 'Draft') => {
     if (!description.trim()) return;
 
+    const isProgramsOrganized =
+      currentCategory?.id === 'cat-programs-organized' ||
+      currentCategory?.category.toLowerCase().trim() === 'programs organized';
+
+    const initialStatus = status === 'Draft' ? 'Draft' : 'Pending Rep Verification';
+    const computedEventId = isProgramsOrganized ? (eventId.trim() || undefined) : undefined;
+    const computedProof = isProgramsOrganized
+      ? (eventId.trim() ? `Event ID: ${eventId.trim()}` : (proofFile || 'EVT-SUBMISSION'))
+      : (proofFile || 'document_proof.pdf');
+
     if (editingSubId) {
       updateSubmission(editingSubId, {
         criteriaId: selectedCriteriaId,
         description,
-        proof: proofFile || 'document_proof.pdf',
-        status: status === 'Submitted' ? 'Pending' : 'Draft',
+        proof: computedProof,
+        eventId: computedEventId,
+        status: initialStatus,
         evidence: { type: currentItem?.type || 'count', count: countValue }
       });
       setEditingSubId(null);
@@ -108,9 +186,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         studentId: currentStudentId,
         criteriaId: selectedCriteriaId,
         description,
-        status: status === 'Submitted' ? 'Pending' : 'Draft',
-        remarks: status === 'Submitted' ? 'Awaiting verification' : 'Saved as draft',
-        proof: proofFile || 'document_proof.pdf',
+        status: initialStatus,
+        remarks: status === 'Submitted' ? 'Awaiting Student Rep verification' : 'Saved as draft',
+        proof: computedProof,
+        eventId: computedEventId,
         evaluatorVerified: false,
         evidence: { type: currentItem?.type || 'count', count: countValue }
       });
@@ -118,16 +197,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
     setDescription('');
     setProofFile('');
+    setEventId('');
     setCountValue(1);
     setActivePage('submissions');
   };
 
   const handleEdit = (sub: Submission) => {
-    const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
+    const cat = availableCriteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
     if (cat) setSelectedCategory(cat.id);
     setSelectedCriteriaId(sub.criteriaId);
     setDescription(sub.description);
-    setProofFile(sub.proof || '');
+    if (sub.eventId) {
+      setEventId(sub.eventId);
+      setProofFile('');
+    } else if (sub.proof?.startsWith('Event ID:')) {
+      setEventId(sub.proof.replace('Event ID: ', ''));
+      setProofFile('');
+    } else {
+      setEventId('');
+      setProofFile(sub.proof || '');
+    }
     setEditingSubId(sub.id);
     setActivePage('submit');
   };
@@ -279,6 +368,36 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
             </h1>
 
             <div className="card" style={{ maxWidth: '860px' }}>
+              {/* Category Availability Notice */}
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  marginBottom: '16px',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  background: isStudentRep ? 'rgba(99, 102, 241, 0.08)' : 'rgba(234, 179, 8, 0.1)',
+                  border: isStudentRep ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid rgba(234, 179, 8, 0.25)',
+                  color: isStudentRep ? '#3730a3' : '#854d0e',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+              >
+                <span>{isStudentRep ? '⭐' : 'ℹ️'}</span>
+                <div>
+                  {isStudentRep ? (
+                    <>
+                      <strong>Student Representative Access:</strong> All category options (including <em>Academics</em>, <em>Programs Organized</em>, and <em>Documentation</em>) are accessible for you.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Regular Student Access:</strong> Categories like <em>Academics</em>, <em>Programs Organized</em>, and <em>Documentation</em> are managed by your class <strong>Student Representative</strong> and are hidden here.
+                    </>
+                  )}
+                </div>
+              </div>
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -295,13 +414,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       onChange={(e) => {
                         const catId = e.target.value;
                         setSelectedCategory(catId);
-                        const cat = criteriaCatalog.find((c) => c.id === catId);
+                        const cat = availableCriteriaCatalog.find((c) => c.id === catId);
                         if (cat && cat.items[0]) {
                           setSelectedCriteriaId(cat.items[0].id);
                         }
                       }}
                     >
-                      {criteriaCatalog.map((cat) => (
+                      {availableCriteriaCatalog.map((cat) => (
                         <option key={cat.id} value={cat.id}>{cat.category}</option>
                       ))}
                     </select>
@@ -349,16 +468,71 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Upload Proof Document</label>
-                    <input
-                      type="text"
-                      className="input"
-                      placeholder="e.g. nptel_certificate_proof.pdf"
-                      value={proofFile}
-                      onChange={(e) => setProofFile(e.target.value)}
-                    />
-                  </div>
+                  {isProgramsOrganized ? (
+                    <div className="form-group">
+                      <label className="form-label">Event ID</label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="Enter Event ID (e.g. EVT-2026-001, EVT-901)..."
+                        value={eventId}
+                        onChange={(e) => setEventId(e.target.value)}
+                        required
+                      />
+                      <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
+                        Include the official Event ID for this organized program instead of uploading a proof document.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <label className="form-label">Proof Document (Google Drive Upload)</label>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <a
+                          href="https://drive.google.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            whiteSpace: 'nowrap',
+                            background: '#ffffff',
+                            border: '1.5px solid #cbd5e1',
+                            color: '#0f172a',
+                            fontWeight: 700,
+                            padding: '10px 16px',
+                            borderRadius: '10px',
+                            textDecoration: 'none',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Open Google Drive to upload proof document"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
+                            <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+                            <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/>
+                            <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 10.15z" fill="#ea4335"/>
+                            <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
+                            <path d="m59.8 53h27.5c0-1.55-.4-3.1-1.2-4.5l-25.4-44c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8z" fill="#ffba00"/>
+                            <path d="m73.55 76.8h-59.8c1.55.8 3.25 1.2 4.95 1.2h49.9c1.7 0 3.4-.4 4.95-1.2z" fill="#2684fc"/>
+                          </svg>
+                          Upload Proof to Google Drive
+                        </a>
+                        <input
+                          type="text"
+                          className="input"
+                          style={{ flex: 1, minWidth: '220px' }}
+                          placeholder="Paste Google Drive link or document reference..."
+                          value={proofFile}
+                          onChange={(e) => setProofFile(e.target.value)}
+                        />
+                      </div>
+                      <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
+                        Click the button above to upload your document to Google Drive, then paste the file link or reference here.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -446,6 +620,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       <th>Category</th>
                       <th>Item</th>
                       <th>Evidence</th>
+                      <th>Proof File</th>
                       <th>Description</th>
                       <th>Status</th>
                       <th>Rule Marks</th>
@@ -459,6 +634,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
                       const rulePts = item ? item.marks * (sub.evidence?.count || 1) : 0;
                       const isLocked = ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status);
+                      const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
+                      const isEventId = sub.eventId || sub.proof?.startsWith('Event ID:');
+                      const displayEventId = sub.eventId || (sub.proof?.startsWith('Event ID:') ? sub.proof.replace('Event ID: ', '') : sub.proof);
 
                       return (
                         <tr key={sub.id}>
@@ -466,6 +644,38 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           <td>{item?.title || 'Activity'}</td>
                           <td>
                             {sub.evidence?.count ? `${sub.evidence.count} x ${item?.marks || 0} = ${rulePts.toFixed(1)}` : '-'}
+                          </td>
+                          <td>
+                            {isEventId ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  padding: '4px 10px',
+                                  borderRadius: '8px',
+                                  fontWeight: 700,
+                                  fontSize: '0.82rem',
+                                  border: '1px solid #bfdbfe'
+                                }}
+                              >
+                                🎫 Event ID: {displayEventId}
+                              </span>
+                            ) : sub.proof ? (
+                              <a
+                                href={isDriveUrl ? sub.proof : 'https://drive.google.com/'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--primary)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                                title="Open Proof Document in Google Drive"
+                              >
+                                📁 {sub.proof.length > 20 ? sub.proof.substring(0, 20) + '...' : sub.proof}
+                              </a>
+                            ) : (
+                              <span className="muted">-</span>
+                            )}
                           </td>
                           <td style={{ maxWidth: '240px' }}>{sub.description}</td>
                           <td>{getStatusBadge(sub.status)}</td>
@@ -501,7 +711,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
                     {paginatedSubmissions.length === 0 && (
                       <tr>
-                        <td colSpan={8} style={{ textAlign: 'center', padding: '24px', color: 'var(--color-text-soft)' }}>
+                        <td colSpan={9} style={{ textAlign: 'center', padding: '24px', color: 'var(--color-text-soft)' }}>
                           No submissions matched your search filter.
                         </td>
                       </tr>
@@ -532,6 +742,216 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   className="pagination-btn"
                   disabled={currentPage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ---------------------------------------------------- */}
+        {/* TAB 4: GROUP VERIFICATION (STUDENT REPRESENTATIVE)   */}
+        {/* ---------------------------------------------------- */}
+        {activeTab === 'verification' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Group Submissions Verification Desk</h1>
+              <p className="muted" style={{ fontSize: '0.88rem' }}>
+                Review and verify activity claims submitted by other students from your class/group. Once verified by you, claims move forward to Class Teacher verification.
+              </p>
+            </div>
+
+            <div className="card">
+              {/* Search & Filter Bar */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Search Student / Claim</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="Search student name, item, or description..."
+                    value={repSearchQuery}
+                    onChange={(e) => {
+                      setRepSearchQuery(e.target.value);
+                      setRepPage(1);
+                    }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Verification Status Filter</label>
+                  <select
+                    className="select"
+                    value={repStatusFilter}
+                    onChange={(e) => {
+                      setRepStatusFilter(e.target.value);
+                      setRepPage(1);
+                    }}
+                  >
+                    <option value="all">All Peer Submissions</option>
+                    <option value="pending">Pending Student Rep Verification</option>
+                    <option value="verified">Verified by Student Rep</option>
+                    <option value="approved">Teacher Approved</option>
+                    <option value="correction">Correction Requested</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Category</th>
+                      <th>Item</th>
+                      <th>Proof File</th>
+                      <th>Description</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedRepSubmissions.map((sub) => {
+                      const studentObj = students.find((s) => s.id === sub.studentId);
+                      const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
+                      const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
+                      const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
+                      const isEventId = sub.eventId || sub.proof?.startsWith('Event ID:');
+                      const displayEventId = sub.eventId || (sub.proof?.startsWith('Event ID:') ? sub.proof.replace('Event ID: ', '') : sub.proof);
+
+                      const canVerify = sub.status === 'Pending Rep Verification' || sub.status === 'Pending' || sub.status === 'Submitted';
+
+                      return (
+                        <tr key={sub.id}>
+                          <td style={{ fontWeight: 700 }}>
+                            {studentObj ? studentObj.name : `Student #${sub.studentId}`}
+                            <div className="muted" style={{ fontSize: '0.76rem' }}>{studentObj?.className || 'BSc CS A'}</div>
+                          </td>
+                          <td style={{ fontWeight: 600 }}>{cat?.category || 'General'}</td>
+                          <td>{item?.title || 'Activity'}</td>
+                          <td>
+                            {isEventId ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  padding: '4px 10px',
+                                  borderRadius: '8px',
+                                  fontWeight: 700,
+                                  fontSize: '0.82rem',
+                                  border: '1px solid #bfdbfe'
+                                }}
+                              >
+                                🎫 Event ID: {displayEventId}
+                              </span>
+                            ) : sub.proof ? (
+                              <a
+                                href={isDriveUrl ? sub.proof : 'https://drive.google.com/'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--primary)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                                title="Open Proof Document"
+                              >
+                                📁 {sub.proof.length > 18 ? sub.proof.substring(0, 18) + '...' : sub.proof}
+                              </a>
+                            ) : (
+                              <span className="muted">-</span>
+                            )}
+                          </td>
+                          <td style={{ maxWidth: '220px' }}>{sub.description}</td>
+                          <td>{getStatusBadge(sub.status)}</td>
+                          <td>
+                            {canVerify ? (
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                <button
+                                  className="btn btn-sm btn-primary"
+                                  onClick={() =>
+                                    updateSubmission(sub.id, {
+                                      status: 'Student Rep Verified',
+                                      remarks: 'Verified by Student Representative and forwarded to Class Teacher.'
+                                    })
+                                  }
+                                  title="Verify and forward to Class Teacher"
+                                  style={{ padding: '6px 12px', fontSize: '0.8rem', fontWeight: 700 }}
+                                >
+                                  ✓ Verify & Forward
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-secondary"
+                                  onClick={() =>
+                                    updateSubmission(sub.id, {
+                                      status: 'Correction Requested',
+                                      remarks: 'Correction requested by Student Representative.'
+                                    })
+                                  }
+                                  title="Request correction"
+                                  style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                                >
+                                  Correction
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-danger"
+                                  onClick={() =>
+                                    updateSubmission(sub.id, {
+                                      status: 'Rejected',
+                                      remarks: 'Rejected by Student Representative.'
+                                    })
+                                  }
+                                  title="Reject submission"
+                                  style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="muted" style={{ fontSize: '0.82rem', fontWeight: 600 }}>
+                                {sub.status === 'Student Rep Verified' ? '✓ Forwarded to Teacher' : sub.status}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {paginatedRepSubmissions.length === 0 && (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: 'var(--color-text-soft)' }}>
+                          No peer group submissions match your filter.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Rep Pagination Controls */}
+              <div className="pagination-container">
+                <button
+                  className="pagination-btn"
+                  disabled={repPage <= 1}
+                  onClick={() => setRepPage((p) => Math.max(1, p - 1))}
+                >
+                  Prev
+                </button>
+                {Array.from({ length: totalRepPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    className={`pagination-num ${repPage === pageNum ? 'active' : ''}`}
+                    onClick={() => setRepPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+                <button
+                  className="pagination-btn"
+                  disabled={repPage >= totalRepPages}
+                  onClick={() => setRepPage((p) => Math.min(totalRepPages, p + 1))}
                 >
                   Next
                 </button>

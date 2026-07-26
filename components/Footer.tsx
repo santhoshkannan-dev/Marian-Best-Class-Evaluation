@@ -8,7 +8,7 @@ export const Footer: React.FC = () => {
     <footer className="footer-premium-container">
       <div className="footer-premium-grid">
         <div className="footer-brand">
-          <h3>Marian Best Class</h3>
+          <h3>Marian Excellence Grid</h3>
           <p>
             An advanced evaluation, analytics, and tracking dashboard celebrating classroom collaboration, leadership, and academic excellence.
           </p>

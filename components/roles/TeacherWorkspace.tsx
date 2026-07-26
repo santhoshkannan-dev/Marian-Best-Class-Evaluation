@@ -48,7 +48,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   // ----------------------------------------------------
   const totalSubmissionsCount = submissions.length;
   const verifiedCount = submissions.filter((s) => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)).length;
-  const pendingCount = submissions.filter((s) => s.status === 'Pending').length;
+  const pendingCount = submissions.filter((s) => ['Student Rep Verified', 'Pending Rep Verification', 'Pending'].includes(s.status)).length;
   const totalScoreVal = 966.0;
   const targetScoreVal = 971.0;
   const progressPercent = ((totalScoreVal / targetScoreVal) * 100).toFixed(1);
@@ -58,7 +58,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     const studentSubs = submissions.filter((s) => s.studentId === studentId);
     const verified = studentSubs.filter((s) => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)).length;
     const total = studentSubs.length;
-    const pending = studentSubs.filter((s) => s.status === 'Pending').length;
+    const pending = studentSubs.filter((s) => ['Student Rep Verified', 'Pending Rep Verification', 'Pending'].includes(s.status)).length;
     
     let percent = 0;
     if (total > 0) {
@@ -418,41 +418,78 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedStudentSubmissions.map((sub) => (
-                        <tr key={sub.id}>
-                          <td>{sub.description}</td>
+                      {selectedStudentSubmissions.map((sub) => {
+                        const isEventId = sub.eventId || sub.proof?.startsWith('Event ID:');
+                        const displayEventId = sub.eventId || (sub.proof?.startsWith('Event ID:') ? sub.proof.replace('Event ID: ', '') : sub.proof);
+
+                        return (
+                          <tr key={sub.id}>
+                            <td>{sub.description}</td>
+                            <td>
+                              {isEventId ? (
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    background: '#eff6ff',
+                                    color: '#1d4ed8',
+                                    padding: '4px 10px',
+                                    borderRadius: '8px',
+                                    fontWeight: 700,
+                                    fontSize: '0.82rem',
+                                    border: '1px solid #bfdbfe'
+                                  }}
+                                >
+                                  🎫 Event ID: {displayEventId}
+                                </span>
+                              ) : (
+                                <a href={`/Assets/Proofs/${sub.proof}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 700 }}>
+                                  {sub.proof}
+                                </a>
+                              )}
+                            </td>
                           <td>
-                            <a href={`/Assets/Proofs/${sub.proof}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                              {sub.proof}
-                            </a>
-                          </td>
-                          <td>
-                            <span className={`badge ${getStatusBadgeClass(sub.status)}`}>
-                              {sub.status}
-                            </span>
+                            {sub.status === 'Student Rep Verified' ? (
+                              <span className="badge badge-submitted" style={{ background: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' }}>
+                                ⭐ Rep Verified
+                              </span>
+                            ) : sub.status === 'Pending Rep Verification' ? (
+                              <span className="badge badge-submitted" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }}>
+                                ⏳ Awaiting Student Rep
+                              </span>
+                            ) : (
+                              <span className={`badge ${getStatusBadgeClass(sub.status)}`}>
+                                {sub.status}
+                              </span>
+                            )}
                           </td>
                           <td style={{ display: 'flex', gap: '6px' }}>
                             <button
                               className="btn btn-sm btn-primary"
                               onClick={() => handleVerifySubmission(sub.id, 'Approved')}
+                              title="Approve submission as Class Teacher"
                             >
                               Approve
                             </button>
                             <button
                               className="btn btn-sm btn-secondary"
                               onClick={() => handleVerifySubmission(sub.id, 'Correction Requested')}
+                              title="Request correction from student"
                             >
                               Correction
                             </button>
                             <button
                               className="btn btn-sm btn-danger"
                               onClick={() => handleVerifySubmission(sub.id, 'Rejected')}
+                              title="Reject submission"
                             >
                               Reject
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      );
+                    })}
                       {selectedStudentSubmissions.length === 0 && (
                         <tr>
                           <td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>

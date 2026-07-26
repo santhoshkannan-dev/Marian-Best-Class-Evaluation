@@ -8,7 +8,7 @@ import { useApp } from '@/context/AppContext';
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { loggedIn, logout, selectedAcademicYear } = useApp();
+  const { loggedIn, logout, selectedAcademicYear, isStudentRep, toggleStudentRepMode } = useApp();
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -25,6 +25,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     { id: 'dashboard', label: 'Dashboard', href: '/student/dashboard' },
     { id: 'submit', label: 'Submit Activity', href: '/student/submit' },
     { id: 'submissions', label: 'My Submissions', href: '/student/submissions' },
+    ...(isStudentRep
+      ? [{ id: 'verification', label: 'Group Verification', href: '/student/verification' }]
+      : []),
   ];
 
   const currentNav = studentNav.find((i) => pathname === i.href);
@@ -37,7 +40,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           <div className="portal-brand">
             <div className="portal-brand-badge">BC</div>
             <div>
-              <h2 className="portal-brand-title">Best Class</h2>
+              <h2 className="portal-brand-title">Excellence Grid</h2>
               <p className="portal-brand-sub">Evaluation Panel</p>
             </div>
           </div>
@@ -63,7 +66,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </div>
 
         <div className="portal-sidebar-footer">
-          Student
+          {isStudentRep ? 'Student Representative' : 'Student'}
         </div>
       </aside>
 
@@ -92,20 +95,21 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             <p className="muted" style={{ fontSize: '0.84rem' }}>Academic Year {selectedAcademicYear || '2025-2026'}</p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span
               style={{
                 padding: '6px 16px',
                 borderRadius: '20px',
-                background: '#e0e7ff',
-                color: '#3730a3',
+                background: isStudentRep ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : '#e0e7ff',
+                color: isStudentRep ? '#ffffff' : '#3730a3',
                 fontSize: '0.84rem',
                 fontWeight: 700,
-                textTransform: 'capitalize'
+                boxShadow: isStudentRep ? '0 2px 8px rgba(99, 102, 241, 0.3)' : 'none'
               }}
             >
-              Student
+              {isStudentRep ? '⭐ Student Rep Group Member' : 'Student'}
             </span>
+
             <button
               className="btn btn-secondary"
               style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700 }}

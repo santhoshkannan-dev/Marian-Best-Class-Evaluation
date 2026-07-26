@@ -123,8 +123,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True # In production, restrict to frontend URLs
+# CORS Settings (Restricted to authorized origins)
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173'
+).split(',')
 CORS_ALLOW_CREDENTIALS = True
 
 # REST Framework settings
@@ -151,5 +154,8 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# Google OAuth Client IDs (configure if using real Google OAuth on frontend)
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+# Google OAuth Client ID loaded from environment variable
+GOOGLE_CLIENT_ID = os.environ.get(
+    'GOOGLE_CLIENT_ID',
+    '844955988511-9f9oh4sjrp3eqoimenpkdg0ho3ljr1bo.apps.googleusercontent.com'
+)
