@@ -35,7 +35,7 @@ export default function HodLayout({ children }: { children: React.ReactNode }) {
           <div className="portal-brand">
             <div className="portal-brand-badge" style={{ background: '#f59e0b', color: '#fff' }}>HOD</div>
             <div>
-              <h2 className="portal-brand-title">Best Class</h2>
+              <h2 className="portal-brand-title">Excellence Grid</h2>
               <p className="portal-brand-sub">HOD Analytics Panel</p>
             </div>
           </div>

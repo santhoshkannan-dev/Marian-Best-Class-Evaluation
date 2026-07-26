@@ -5,8 +5,8 @@ import { NavSidebar } from '@/components/NavSidebar';
 import { Footer } from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Marian Best Class — Marian College Kuttikkanam',
-  description: 'Best Class Evaluation System - Marian College Kuttikkanam. Track, verify and celebrate class achievements.',
+  title: 'Marian Excellence Grid — Marian College Kuttikkanam',
+  description: 'Marian Excellence Grid Evaluation System - Marian College Kuttikkanam. Track, verify and celebrate class achievements.',
 };
 
 export default function RootLayout({

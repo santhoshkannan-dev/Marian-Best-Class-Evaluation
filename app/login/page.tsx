@@ -40,7 +40,7 @@ export default function LoginPage() {
     document.body.appendChild(script);
 
     script.onload = () => {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '85dfaa23-ea37-4477-84e1-e05860bfd052-dummy-client-id.apps.googleusercontent.com';
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '844955988511-9f9oh4sjrp3eqoimenpkdg0ho3ljr1bo.apps.googleusercontent.com';
       if ((window as any).google) {
         (window as any).google.accounts.id.initialize({
           client_id: clientId,
@@ -96,7 +96,7 @@ export default function LoginPage() {
         <section className="login-visual">
           <div className="visual-copy">
             <p className="visual-kicker">MARIAN COLLEGE, KUTTIKKANAM</p>
-            <h1 className="visual-title">Marian Best Class</h1>
+            <h1 className="visual-title">Marian Excellence Grid</h1>
             <p className="visual-lead">Recognize. Evaluate. Excel together.</p>
             <p className="visual-desc">
               A smart way to track, verify and celebrate class achievements across Marian College Kuttikkanam.

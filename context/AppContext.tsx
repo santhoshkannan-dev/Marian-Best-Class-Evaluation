@@ -7,11 +7,13 @@ import {
   Student,
   Submission,
   AppUser,
+  UserGroup,
   defaultCriteriaCatalog,
   defaultStudents,
   defaultSubmissions,
   defaultUsers,
-  defaultAcademicYears
+  defaultAcademicYears,
+  defaultUserGroups
 } from '@/data/initialData';
 
 interface AppContextType {
@@ -29,6 +31,7 @@ interface AppContextType {
   criteriaCatalog: CriteriaCategory[];
   users: AppUser[];
   students: Student[];
+  userGroups: UserGroup[];
   jwtToken: string | null;
   currentUserInfo: {
     id: number;
@@ -59,6 +62,12 @@ interface AppContextType {
   logout: () => void;
   addStudent: (student: Omit<Student, 'id'>) => void;
   deleteStudent: (id: number) => void;
+  addUserGroup: (group: Omit<UserGroup, 'id'>) => void;
+  deleteUserGroup: (groupId: string) => void;
+  isStudentRep: boolean;
+  toggleStudentRepMode: () => void;
+  addUserToGroup: (groupId: string, email: string) => boolean;
+  removeUserFromGroup: (groupId: string, email: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -91,6 +100,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [criteriaCatalog, setCriteriaCatalog] = useState<CriteriaCategory[]>(defaultCriteriaCatalog);
   const [users, setUsers] = useState<AppUser[]>(defaultUsers);
   const [students, setStudents] = useState<Student[]>(defaultStudents);
+  const [userGroups, setUserGroups] = useState<UserGroup[]>(defaultUserGroups);
 
   const [jwtToken, setJwtToken] = useState<string | null>(null);
   const [currentUserInfo, setCurrentUserInfo] = useState<AppContextType['currentUserInfo']>(null);
@@ -111,6 +121,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (data.criteriaCatalog) setCriteriaCatalog(data.criteriaCatalog);
           if (data.academicYears) setAcademicYears(data.academicYears);
           if (data.students) setStudents(data.students);
+          if (data.userGroups) setUserGroups(data.userGroups);
           if (data.activeAcademicYear) {
             setActiveAcademicYear(data.activeAcademicYear);
             setSelectedAcademicYear(data.activeAcademicYear);
@@ -356,6 +367,72 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setStudents((prev) => prev.filter((s) => s.id !== id));
   };
 
+  const addUserGroup = (newGrp: Omit<UserGroup, 'id'>) => {
+    const id = `grp-${Date.now()}`;
+    const group: UserGroup = { ...newGrp, id, emails: newGrp.emails || [] };
+    setUserGroups((prev) => [...prev, group]);
+  };
+
+  const deleteUserGroup = (groupId: string) => {
+    setUserGroups((prev) => prev.filter((g) => g.id !== groupId));
+  };
+
+  const addUserToGroup = (groupId: string, email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) return false;
+    let added = false;
+    setUserGroups((prev) =>
+      prev.map((g) => {
+        if (g.id === groupId) {
+          if (!g.emails.includes(cleanEmail)) {
+            added = true;
+            return { ...g, emails: [...g.emails, cleanEmail] };
+          }
+        }
+        return g;
+      })
+    );
+    return added;
+  };
+
+  const currentUserEmail = currentUserInfo?.email || users.find((u) => u.id === currentUserId)?.email || '';
+
+  const isStudentRep = React.useMemo(() => {
+    if (!currentUserEmail) return false;
+    const cleanEmail = currentUserEmail.trim().toLowerCase();
+    const repGroup = userGroups.find(
+      (g) => g.id === 'grp-student-reps' || g.name.toLowerCase().includes('student representative') || g.name.toLowerCase().includes('student rep')
+    );
+    if (!repGroup || !Array.isArray(repGroup.emails)) return false;
+    return repGroup.emails.some((e) => e.trim().toLowerCase() === cleanEmail);
+  }, [currentUserEmail, userGroups]);
+
+  const toggleStudentRepMode = () => {
+    if (!currentUserEmail) return;
+    const cleanEmail = currentUserEmail.trim().toLowerCase();
+    const repGroup = userGroups.find(
+      (g) => g.id === 'grp-student-reps' || g.name.toLowerCase().includes('student representative') || g.name.toLowerCase().includes('student rep')
+    );
+    if (!repGroup) return;
+
+    if (repGroup.emails.map(e => e.toLowerCase()).includes(cleanEmail)) {
+      removeUserFromGroup(repGroup.id, currentUserEmail);
+    } else {
+      addUserToGroup(repGroup.id, currentUserEmail);
+    }
+  };
+
+  const removeUserFromGroup = (groupId: string, email: string) => {
+    setUserGroups((prev) =>
+      prev.map((g) => {
+        if (g.id === groupId) {
+          return { ...g, emails: g.emails.filter((e) => e.toLowerCase() !== email.toLowerCase()) };
+        }
+        return g;
+      })
+    );
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -373,6 +450,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         criteriaCatalog,
         users,
         students,
+        userGroups,
         jwtToken,
         currentUserInfo,
         setRole,
@@ -393,7 +471,13 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         loginBypass,
         logout,
         addStudent,
-        deleteStudent
+        deleteStudent,
+        addUserGroup,
+        deleteUserGroup,
+        isStudentRep,
+        toggleStudentRepMode,
+        addUserToGroup,
+        removeUserFromGroup
       }}
     >
       {children}

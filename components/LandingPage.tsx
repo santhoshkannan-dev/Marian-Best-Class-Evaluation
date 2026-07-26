@@ -28,7 +28,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 2,
       rankLabel: "RUNNER-UP",
       teamName: "BCom C",
-      eventName: "Dept. of Commerce — Marian Best Class",
+      eventName: "Dept. of Commerce — Marian Excellence Grid",
       score: "95.7",
       institution: "Dept. of Commerce",
       image: "/Assets/Images/team_vision.png"
@@ -37,7 +37,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 1,
       rankLabel: "👑 CHAMPION",
       teamName: "BSc CS B",
-      eventName: "Dept. of Computer Science — Marian Best Class",
+      eventName: "Dept. of Computer Science — Marian Excellence Grid",
       score: "98.4",
       institution: "Dept. of Comp Science",
       image: "/Assets/Images/team_alpha.png"
@@ -46,7 +46,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 3,
       rankLabel: "2ND RUNNER-UP",
       teamName: "BCA A",
-      eventName: "Dept. of Computer Applications — Marian Best Class",
+      eventName: "Dept. of Computer Applications — Marian Excellence Grid",
       score: "94.2",
       institution: "Dept. of BCA",
       image: "/Assets/Images/team_nexus.png"
@@ -55,7 +55,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 4,
       rankLabel: "4TH PLACE",
       teamName: "BA English B",
-      eventName: "Dept. of English — Marian Best Class",
+      eventName: "Dept. of English — Marian Excellence Grid",
       score: "91.5",
       institution: "Dept. of English",
       image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80"
@@ -64,7 +64,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 5,
       rankLabel: "5TH PLACE",
       teamName: "BBA B",
-      eventName: "Dept. of Business Admin — Marian Best Class",
+      eventName: "Dept. of Business Admin — Marian Excellence Grid",
       score: "89.0",
       institution: "Dept. of BBA",
       image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=400&q=80"
@@ -75,7 +75,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 2,
       rankLabel: "RUNNER-UP",
       teamName: "BSc CS A",
-      eventName: "Dept. of Computer Science — Marian Best Class",
+      eventName: "Dept. of Computer Science — Marian Excellence Grid",
       score: "96.3",
       institution: "Dept. of Comp Science",
       image: "/Assets/Images/team_vision.png"
@@ -84,7 +84,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 1,
       rankLabel: "👑 CHAMPION",
       teamName: "BCA A",
-      eventName: "Dept. of Computer Applications — Marian Best Class",
+      eventName: "Dept. of Computer Applications — Marian Excellence Grid",
       score: "99.1",
       institution: "Dept. of BCA",
       image: "/Assets/Images/team_nexus.png"
@@ -93,7 +93,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 3,
       rankLabel: "2ND RUNNER-UP",
       teamName: "BCom B",
-      eventName: "Dept. of Commerce — Marian Best Class",
+      eventName: "Dept. of Commerce — Marian Excellence Grid",
       score: "93.8",
       institution: "Dept. of Commerce",
       image: "/Assets/Images/team_alpha.png"
@@ -104,7 +104,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 1,
       rankLabel: "👑 CHAMPION",
       teamName: "BA English A",
-      eventName: "Dept. of English — Marian Best Class",
+      eventName: "Dept. of English — Marian Excellence Grid",
       score: "97.5",
       institution: "Dept. of English",
       image: "/Assets/Images/team_alpha.png"
@@ -113,7 +113,7 @@ const championsData: Record<string, Champion[]> = {
       rank: 2,
       rankLabel: "RUNNER-UP",
       teamName: "BBA A",
-      eventName: "Dept. of Business Admin — Marian Best Class",
+      eventName: "Dept. of Business Admin — Marian Excellence Grid",
       score: "94.9",
       institution: "Dept. of BBA",
       image: "/Assets/Images/team_vision.png"
@@ -414,7 +414,7 @@ export const LandingPage: React.FC = () => {
         <div className="search-header-container">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '1.4rem' }}>📊</span>
-            <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em', color: 'var(--text-main)' }}>Marian Best Class Portal</span>
+            <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em', color: 'var(--text-main)' }}>Marian Excellence Grid Portal</span>
           </div>
 
           <div className="search-bar-wrapper">
@@ -453,57 +453,9 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Competition Overview (Feature 2) */}
-        <div className="overview-section-grid">
-          <div className="premium-card overview-stat-card">
-            <div className="overview-icon-container">🏫</div>
-            <div className="overview-value">
-              {isLoaded ? <CountUp end={14} /> : 0}
-            </div>
-            <div className="overview-label">Departments</div>
-          </div>
-          <div className="premium-card overview-stat-card">
-            <div className="overview-icon-container">👥</div>
-            <div className="overview-value">
-              {isLoaded ? <CountUp end={52} /> : 0}
-            </div>
-            <div className="overview-label">Classes</div>
-          </div>
-          <div className="premium-card overview-stat-card">
-            <div className="overview-icon-container">👨‍🎓</div>
-            <div className="overview-value">
-              {isLoaded ? <CountUp end={2450} /> : 0}
-            </div>
-            <div className="overview-label">Students</div>
-          </div>
-          <div className="premium-card overview-stat-card">
-            <div className="overview-icon-container">📁</div>
-            <div className="overview-value">
-              {isLoaded ? <CountUp end={2954} /> : 0}
-            </div>
-            <div className="overview-label">Evidence Uploaded</div>
-          </div>
-          <div className="premium-card overview-stat-card">
-            <div className="overview-icon-container">✅</div>
-            <div className="overview-value">
-              {isLoaded ? <CountUp end={2163} /> : 0}
-            </div>
-            <div className="overview-label">Verified</div>
-          </div>
-          <div className="premium-card overview-stat-card">
-            <div className="overview-icon-container">⏳</div>
-            <div className="overview-value">
-              {isLoaded ? <CountUp end={791} /> : 0}
-            </div>
-            <div className="overview-label">Pending</div>
-          </div>
-        </div>
-
-        {/* Core Analytics Card (Gauge + Standings + Activity + Trends + Achievements + notice) */}
+        {/* 1. Class Progress Gauge */}
         <div id="core-analytics-section" className="dashboard-core-card" style={{ marginTop: '16px' }}>
-
           <div className="dashboard-grid">
-
             {/* Left Panel: Class Progress Gauge */}
             <div className="chart-section">
               <div className="chart-heading-container">
@@ -693,322 +645,10 @@ export const LandingPage: React.FC = () => {
                 </div>
               )}
             </div>
-
           </div>
         </div>
 
-        {/* Secondary Widgets Row: Live Activity Feed (3) + Trends (6) + Achievements (7) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginTop: '12px' }}>
-
-          {/* Live Activity Feed (Feature 3) */}
-          <div className="premium-card activity-feed-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>Live Activity Feed</h3>
-              <span className="eyebrow" style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span className="pulse" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
-                Real-Time
-              </span>
-            </div>
-
-            <div className="activity-feed-ticker">
-              <div className="activity-feed-list">
-                {activitiesList.map((item) => (
-                  <div key={item.id} className="activity-item">
-                    <span className="activity-badge">✓</span>
-                    <div className="activity-text">
-                      <strong>{item.text.split(' ')[1]}</strong> {item.text.split(' ').slice(2).join(' ')}
-                      <span className="activity-time">{item.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Leaderboard Trends Chart (Feature 6) */}
-          <div className="premium-card">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>Leaderboard Trends</h3>
-            <p className="muted" style={{ fontSize: '0.8rem' }}>Current Score vs. Last Week index delta comparison</p>
-
-            <div className="trends-list">
-              <div className="trend-item">
-                <div className="trend-meta">
-                  <span className="trend-class-name">BSc CS B (Computer Science)</span>
-                  <span className="trend-badge up">+4.5%</span>
-                </div>
-                <div className="trend-bar-container">
-                  <div className="trend-bar-current" style={{ width: '88%' }}></div>
-                  <div className="trend-bar-last" style={{ width: '83.5%' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                  <span>Last Week: 1,217 pts</span>
-                  <span>Current: 1,272 pts</span>
-                </div>
-              </div>
-
-              <div className="trend-item">
-                <div className="trend-meta">
-                  <span className="trend-class-name">BCom C (Commerce)</span>
-                  <span className="trend-badge up">+3.2%</span>
-                </div>
-                <div className="trend-bar-container">
-                  <div className="trend-bar-current" style={{ width: '74%', background: 'linear-gradient(90deg, #ec4899 0%, #f472b6 100%)' }}></div>
-                  <div className="trend-bar-last" style={{ width: '70.8%' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                  <span>Last Week: 947 pts</span>
-                  <span>Current: 978 pts</span>
-                </div>
-              </div>
-
-              <div className="trend-item">
-                <div className="trend-meta">
-                  <span className="trend-class-name">BA English A (English)</span>
-                  <span className="trend-badge up">+5.8%</span>
-                </div>
-                <div className="trend-bar-container">
-                  <div className="trend-bar-current" style={{ width: '65%', background: 'linear-gradient(90deg, #14b8a6 0%, #2dd4bf 100%)' }}></div>
-                  <div className="trend-bar-last" style={{ width: '59.2%' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                  <span>Last Week: 825 pts</span>
-                  <span>Current: 876 pts</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Achievements Auto Carousel (Feature 7) */}
-          <div className="premium-card">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px' }}>Recent Achievements</h3>
-            <p className="muted" style={{ fontSize: '0.8rem' }}>Highlights and student highlights board</p>
-
-            <div className="achievements-carousel-container">
-              {achievements.map((item, idx) => {
-                const isActive = idx === activeAchIndex;
-                return (
-                  <div
-                    key={item.id}
-                    className="achievement-slide"
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      opacity: isActive ? 1 : 0,
-                      transform: `translateX(${isActive ? 0 : 30}px)`,
-                      pointerEvents: isActive ? 'auto' : 'none',
-                      transition: 'all 0.5s ease-in-out'
-                    }}
-                  >
-                    <div className="achievement-icon">{item.icon}</div>
-                    <div className="achievement-details">
-                      <h4>{item.class}</h4>
-                      <p style={{ fontWeight: 800, color: 'var(--primary)' }}>{item.title}</p>
-                      <p style={{ fontSize: '0.74rem' }}>{item.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Carousel indicator dots */}
-            <div style={{ display: 'flex', gap: '5px', marginTop: '12px', justifyContent: 'center' }}>
-              {achievements.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveAchIndex(idx)}
-                  style={{
-                    width: idx === activeAchIndex ? '16px' : '5px',
-                    height: '5px',
-                    borderRadius: '3px',
-                    border: 'none',
-                    background: idx === activeAchIndex ? 'var(--primary)' : '#cbd5e1',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* Tertiary Widgets Row: Department Ranks (8) + Notice Board (11) + Quote Section (10) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginTop: '12px' }}>
-
-          {/* Department Rankings (Feature 8) */}
-          <div className="premium-card">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px' }}>Department Rankings</h3>
-            <p className="muted" style={{ fontSize: '0.8rem' }}>Aggregate departmental index metrics</p>
-
-            <div className="dept-rankings-list">
-              {mockDepartments.map((dept, idx) => (
-                <div key={idx} className="dept-row">
-                  <div className="dept-info">
-                    <span className="dept-position">#{idx + 1}</span>
-                    <span className="dept-name">{dept.name}</span>
-                  </div>
-                  <span className="dept-score">{dept.score} pts</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Notice Board (Feature 11) */}
-          <div className="premium-card">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px' }}>Notice Board</h3>
-            <p className="muted" style={{ fontSize: '0.8rem' }}>Latest updates & scheduling guidelines</p>
-
-            <div className="notice-list">
-              <div className="notice-item">
-                <div className="notice-date-badge">
-                  <span className="notice-date-day">20</span>
-                  <span className="notice-date-month">Aug</span>
-                </div>
-                <div className="notice-details">
-                  <h4>Evidence Submission Deadline</h4>
-                  <p>All student portlet uploads must lock for primary audits.</p>
-                </div>
-              </div>
-
-              <div className="notice-item">
-                <div className="notice-date-badge" style={{ backgroundColor: 'rgba(99, 102, 241, 0.06)', color: 'var(--primary)', borderColor: 'rgba(99, 102, 241, 0.15)' }}>
-                  <span className="notice-date-day">25</span>
-                  <span className="notice-date-month">Aug</span>
-                </div>
-                <div className="notice-details">
-                  <h4>Teacher Verification Review</h4>
-                  <p>Class tutors lock claim check boxes and correction reviews.</p>
-                </div>
-              </div>
-
-              <div className="notice-item">
-                <div className="notice-date-badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.06)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.15)' }}>
-                  <span className="notice-date-day">01</span>
-                  <span className="notice-date-month">Sep</span>
-                </div>
-                <div className="notice-details">
-                  <h4>Central Evaluation Lock</h4>
-                  <p>Best Class audit evaluation score sheets published.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quote Section (Feature 10) */}
-          <div className="premium-card quote-section-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div className="quote-icon">&ldquo;</div>
-            <p className="quote-text">
-              &ldquo;Great classes are not built by individuals, they are built by collaboration, leadership and consistent excellence.&rdquo;
-            </p>
-          </div>
-
-        </div>
-
-
-
-        {/* Top Performers (Feature 12) */}
-        <div style={{ marginTop: '24px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textAlign: 'center' }}>Top Performers</h2>
-          <p className="muted" style={{ fontSize: '0.86rem', marginBottom: '20px', textAlign: 'center' }}>Outstanding contributors in the current standings cycle.</p>
-
-          <div className="top-performers-grid">
-            <div className="premium-card performer-card">
-              <span className="performer-role-badge">Top Student</span>
-              <div className="performer-avatar">🥇</div>
-              <div className="performer-name">Rahul S</div>
-              <div className="performer-context">BCA A • Applications</div>
-              <span className="performer-score">5 MOOCs Completed</span>
-            </div>
-
-            <div className="premium-card performer-card">
-              <span className="performer-role-badge">Best Mentor</span>
-              <div className="performer-avatar">👔</div>
-              <div className="performer-name">Dr. Jerome</div>
-              <div className="performer-context">Dept. of Computer Science</div>
-              <span className="performer-score" style={{ color: 'var(--primary)', background: 'rgba(99, 102, 241, 0.06)' }}>Active Support</span>
-            </div>
-
-            <div className="premium-card performer-card">
-              <span className="performer-role-badge">Most Active Class</span>
-              <div className="performer-avatar">⚡</div>
-              <div className="performer-name">BSc CS B</div>
-              <div className="performer-context">Computer Science</div>
-              <span className="performer-score" style={{ color: '#ec4899', background: 'rgba(236, 72, 153, 0.06)' }}>150+ Submissions</span>
-            </div>
-
-            <div className="premium-card performer-card">
-              <span className="performer-role-badge">Highest Research</span>
-              <div className="performer-avatar">🔬</div>
-              <div className="performer-name">BCom C</div>
-              <div className="performer-context">Commerce</div>
-              <span className="performer-score">3 UGC Publications</span>
-            </div>
-
-            <div className="premium-card performer-card">
-              <span className="performer-role-badge">Highest Internship</span>
-              <div className="performer-avatar">💼</div>
-              <div className="performer-name">BCA A</div>
-              <div className="performer-context">Computer Applications</div>
-              <span className="performer-score">24 Placements</span>
-            </div>
-
-            <div className="premium-card performer-card">
-              <span className="performer-role-badge">Library Usage</span>
-              <div className="performer-avatar">📖</div>
-              <div className="performer-name">BA English A</div>
-              <div className="performer-context">English</div>
-              <span className="performer-score">180+ Borrows</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Motivational Stats (Feature 14) */}
-        <div style={{ marginTop: '24px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textAlign: 'center' }}>Participation Analytics</h2>
-          <p className="muted" style={{ fontSize: '0.86rem', marginBottom: '20px', textAlign: 'center' }}>Dynamic stats highlighting student body participation rates.</p>
-
-          <div className="motivational-stats-grid">
-            <div className="premium-card m-stat-card">
-              <div className="m-stat-circle-wrapper">
-                <svg className="m-stat-circle-svg" viewBox="0 0 36 36">
-                  <path className="m-stat-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path className="m-stat-circle-fill" strokeDasharray="82, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <div className="m-stat-circle-text">82%</div>
-              </div>
-              <span className="m-stat-label">Submissions</span>
-              <span className="m-stat-sublabel">Students Uploaded Evidence</span>
-            </div>
-
-            <div className="premium-card m-stat-card">
-              <div className="m-stat-circle-wrapper">
-                <svg className="m-stat-circle-svg" viewBox="0 0 36 36">
-                  <path className="m-stat-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path className="m-stat-circle-fill" stroke="#10b981" strokeDasharray="95, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <div className="m-stat-circle-text" style={{ color: '#10b981' }}>95%</div>
-              </div>
-              <span className="m-stat-label">Verification</span>
-              <span className="m-stat-sublabel">Claims Verified</span>
-            </div>
-
-            <div className="premium-card m-stat-card">
-              <div className="overview-icon-container" style={{ width: '54px', height: '54px', fontSize: '1.4rem' }}>📜</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', margin: '4px 0' }}>420</div>
-              <span className="m-stat-label">Certifications</span>
-              <span className="m-stat-sublabel">NPTEL / MOOC Courses</span>
-            </div>
-
-            <div className="premium-card m-stat-card">
-              <div className="overview-icon-container" style={{ width: '54px', height: '54px', fontSize: '1.4rem', color: '#ec4899', background: 'rgba(236, 72, 153, 0.06)' }}>💼</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', margin: '4px 0' }}>250</div>
-              <span className="m-stat-label">Placements</span>
-              <span className="m-stat-sublabel">Completed Internships</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Policy Preview (Feature 13) */}
+        {/* 2. Policy Link Preview */}
         <div className="premium-card policy-preview-card" style={{ marginTop: '24px' }}>
           <div className="policy-preview-left">
             <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '1rem', color: 'var(--primary)' }}>Competition Policy Preview</h3>
@@ -1035,15 +675,18 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="policy-preview-right">
-            <Link href="/policy" className="btn btn-primary" style={{ padding: '16px 36px', borderRadius: '14px', fontSize: '1rem', textDecoration: 'none' }}>
+          <div className="policy-preview-right" style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'stretch', width: '100%', maxWidth: '280px', margin: '0 auto' }}>
+            <Link href="/policy" className="btn btn-primary" style={{ padding: '14px 28px', borderRadius: '14px', fontSize: '0.95rem', textDecoration: 'none', textAlign: 'center' }}>
               View Full Policy &rarr;
+            </Link>
+            <Link href="/login" className="btn" style={{ padding: '14px 28px', borderRadius: '14px', fontSize: '0.95rem', textDecoration: 'none', textAlign: 'center', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#ffffff', fontWeight: 700, boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}>
+              Portal Login &rarr;
             </Link>
           </div>
         </div>
 
-        {/* Previous Year Champions Section */}
-        <div className="champions-section-card" style={{ overflow: 'hidden' }}>
+        {/* 3. Previous Year Champions Section */}
+        <div className="champions-section-card" style={{ marginTop: '24px', overflow: 'hidden' }}>
           <div className="champions-header">
             <div className="champions-header-left">
               <h2>PREVIOUS YEAR CHAMPIONS</h2>
@@ -1183,6 +826,62 @@ export const LandingPage: React.FC = () => {
               </svg>
               View Active Standings
             </button>
+          </div>
+        </div>
+
+        {/* 4. Top Performers Section */}
+        <div style={{ marginTop: '24px' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textAlign: 'center' }}>Top Performers</h2>
+          <p className="muted" style={{ fontSize: '0.86rem', marginBottom: '20px', textAlign: 'center' }}>Outstanding contributors in the current standings cycle.</p>
+
+          <div className="top-performers-grid">
+            <div className="premium-card performer-card">
+              <span className="performer-role-badge">Top Student</span>
+              <div className="performer-avatar">🥇</div>
+              <div className="performer-name">Rahul S</div>
+              <div className="performer-context">BCA A • Applications</div>
+              <span className="performer-score">5 MOOCs Completed</span>
+            </div>
+
+            <div className="premium-card performer-card">
+              <span className="performer-role-badge">Best Mentor</span>
+              <div className="performer-avatar">👔</div>
+              <div className="performer-name">Dr. Jerome</div>
+              <div className="performer-context">Dept. of Computer Science</div>
+              <span className="performer-score" style={{ color: 'var(--primary)', background: 'rgba(99, 102, 241, 0.06)' }}>Active Support</span>
+            </div>
+
+            <div className="premium-card performer-card">
+              <span className="performer-role-badge">Most Active Class</span>
+              <div className="performer-avatar">⚡</div>
+              <div className="performer-name">BSc CS B</div>
+              <div className="performer-context">Computer Science</div>
+              <span className="performer-score" style={{ color: '#ec4899', background: 'rgba(236, 72, 153, 0.06)' }}>150+ Submissions</span>
+            </div>
+
+            <div className="premium-card performer-card">
+              <span className="performer-role-badge">Highest Research</span>
+              <div className="performer-avatar">🔬</div>
+              <div className="performer-name">BCom C</div>
+              <div className="performer-context">Commerce</div>
+              <span className="performer-score">3 UGC Publications</span>
+            </div>
+
+            <div className="premium-card performer-card">
+              <span className="performer-role-badge">Highest Internship</span>
+              <div className="performer-avatar">💼</div>
+              <div className="performer-name">BCA A</div>
+              <div className="performer-context">Computer Applications</div>
+              <span className="performer-score">24 Placements</span>
+            </div>
+
+            <div className="premium-card performer-card">
+              <span className="performer-role-badge">Library Usage</span>
+              <div className="performer-avatar">📖</div>
+              <div className="performer-name">BA English A</div>
+              <div className="performer-context">English</div>
+              <span className="performer-score">180+ Borrows</span>
+            </div>
           </div>
         </div>
 

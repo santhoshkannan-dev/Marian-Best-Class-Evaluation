@@ -37,7 +37,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
           <div className="portal-brand">
             <div className="portal-brand-badge">BC</div>
             <div>
-              <h2 className="portal-brand-title">Best Class</h2>
+              <h2 className="portal-brand-title">Excellence Grid</h2>
               <p className="portal-brand-sub">Evaluation Panel</p>
             </div>
           </div>
