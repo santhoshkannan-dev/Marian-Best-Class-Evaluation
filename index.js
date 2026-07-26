@@ -1,0 +1,3 @@
+window.applyPageConfig({
+  redirectOnLogin: true
+});
