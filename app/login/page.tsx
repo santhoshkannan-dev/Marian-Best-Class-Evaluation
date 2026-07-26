@@ -1,0 +1,196 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useApp } from '@/context/AppContext';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const { loggedIn, currentRole, loginWithGoogleToken, loginBypass } = useApp();
+  const [selectedBypassEmail, setSelectedBypassEmail] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Redirection when logged in
+  useEffect(() => {
+    if (loggedIn && currentRole) {
+      const role = currentRole.toLowerCase();
+      if (role === 'student') {
+        router.push('/student/dashboard');
+      } else if (role === 'teacher') {
+        router.push('/teacher/dashboard');
+      } else if (role === 'iqac') {
+        router.push('/iqac/dashboard');
+      } else if (role === 'admin') {
+        router.push('/admin/academic-years');
+      } else if (role === 'evaluator') {
+        router.push('/evaluator/dashboard');
+      } else if (role === 'hod') {
+        router.push('/hod/dashboard');
+      }
+    }
+  }, [loggedIn, currentRole, router]);
+
+  // Load Google Identity Services SDK
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '85dfaa23-ea37-4477-84e1-e05860bfd052-dummy-client-id.apps.googleusercontent.com';
+      if ((window as any).google) {
+        (window as any).google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCredentialResponse,
+        });
+        (window as any).google.accounts.id.renderButton(
+          document.getElementById('google-signin-btn'),
+          {
+            theme: 'filled_blue',
+            size: 'large',
+            width: '320',
+            text: 'signin_with',
+            shape: 'pill'
+          }
+        );
+      }
+    };
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handleGoogleCredentialResponse = async (response: any) => {
+    setErrorMsg('');
+    setLoading(true);
+    const result = await loginWithGoogleToken(response.credential);
+    setLoading(false);
+    if (!result.success) {
+      setErrorMsg(result.error || 'Google Sign-In failed.');
+    }
+  };
+
+  const handleBypassLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBypassEmail) {
+      setErrorMsg('Please select a profile to bypass authentication.');
+      return;
+    }
+    setErrorMsg('');
+    setLoading(true);
+    const result = await loginBypass(selectedBypassEmail);
+    setLoading(false);
+    if (!result.success) {
+      setErrorMsg(result.error || 'Bypass authentication failed.');
+    }
+  };
+
+  return (
+    <div className="login-page-container">
+      <main className="login-layout">
+        {/* Left Visual Card */}
+        <section className="login-visual">
+          <div className="visual-copy">
+            <p className="visual-kicker">MARIAN COLLEGE, KUTTIKKANAM</p>
+            <h1 className="visual-title">Marian Best Class</h1>
+            <p className="visual-lead">Recognize. Evaluate. Excel together.</p>
+            <p className="visual-desc">
+              A smart way to track, verify and celebrate class achievements across Marian College Kuttikkanam.
+            </p>
+            <p className="visual-tagline">SIMPLE. SMART. EFFECTIVE.</p>
+          </div>
+        </section>
+
+        {/* Right Form Card */}
+        <section className="login-panel">
+          <div className="login-card" style={{ padding: '40px 30px' }}>
+            <img className="card-logo" src="/Assets/Images/College-logo.png" alt="Marian College Logo" style={{ maxHeight: '80px', margin: '0 auto 20px auto' }} />
+
+            <div className="card-heading" style={{ marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '6px' }}>Portal Access</h2>
+              <p className="muted" style={{ fontSize: '0.86rem' }}>Sign in using your official institution account</p>
+            </div>
+
+            {errorMsg && (
+              <div style={{ padding: '12px 16px', background: '#fee2e2', color: '#b91c1c', borderRadius: '10px', marginBottom: '20px', fontSize: '0.84rem', fontWeight: 600, border: '1px solid #fca5a5' }}>
+                {errorMsg}
+              </div>
+            )}
+
+            {loading && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: 'rgba(99, 102, 241, 0.05)', color: 'var(--primary)', borderRadius: '10px', marginBottom: '20px', fontSize: '0.86rem', fontWeight: 600 }}>
+                <span className="spinner" style={{ display: 'inline-block', width: '16px', height: '16px', border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                <span>Authenticating with server...</span>
+              </div>
+            )}
+
+            {/* Google OAuth Login Button */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
+              <div id="google-signin-btn" style={{ width: '100%', display: 'flex', justifyContent: 'center' }}></div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px', textAlign: 'center' }}>
+                Only accounts ending with <strong>@mariancollege.org</strong> are authorized.
+              </p>
+            </div>
+
+            {/* Divider for Bypass Mode */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', marginBottom: '24px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(0,0,0,0.08)' }} />
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Development Bypass</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(0,0,0,0.08)' }} />
+            </div>
+
+            {/* Bypass Form */}
+            <form onSubmit={handleBypassLogin}>
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label htmlFor="bypass-email-select">SELECT ROLE</label>
+                <div className="select-wrapper">
+                  <select
+                    id="bypass-email-select"
+                    value={selectedBypassEmail}
+                    onChange={(e) => {
+                      setSelectedBypassEmail(e.target.value);
+                      setErrorMsg('');
+                    }}
+                    required
+                  >
+                    <option value="" disabled>Select your role</option>
+                    <option value="santhosh.25pmc152@mariancollege.org">Student/DQC Member</option>
+                    <option value="kochumol.abraham@mariancollege.org">Class Teacher</option>
+                    <option value="allen.george@mariancollege.org">Evaluator</option>
+                    <option value="hod.cs@mariancollege.org">HOD</option>
+                    <option value="iqac@mariancollege.org">IQAC</option>
+                    <option value="admin@mariancollege.org">Admin</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" className="btn-continue" disabled={loading} style={{ width: '100%', height: '48px', justifyContent: 'center' }}>
+                <span>Bypass & Log In</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+            </form>
+
+            <div className="card-accent" style={{ marginTop: '24px' }}>
+              <span className="accent-line"></span>
+              <span className="accent-diamond"></span>
+              <span className="accent-line"></span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <style jsx global>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+}

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Best Class Evaluation System - Marian College Kuttikkanam. Competition Policy and Verification Workflow details.">
+  <title>Policy — Marian Best Class</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #4f46e5; /* Indigo */
+      --primary-hover: #3730a3;
+      --secondary: #db2777; /* Pink */
+      --secondary-hover: #be185d;
+      --bg-dark: #f8fafc; /* Clean off-white background */
+      --bg-light: #f1f5f9;
+      --text-main: #0f172a; /* Slate-900 */
+      --text-muted: #64748b; /* Slate-500 */
+      --glass-card: rgba(255, 255, 255, 0.8);
+      --glass-border: rgba(15, 23, 42, 0.08);
+      --glass-input: #ffffff;
+      --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.08);
+      --radius: 24px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Outfit', 'Segoe UI', Tahoma, sans-serif;
+      min-height: 100vh;
+      color: var(--text-main);
+      background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.03) 0%, transparent 40%),
+                  linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 50%, var(--bg-dark) 100%);
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: relative;
+      padding: 40px 24px 80px;
+    }
+
+    /* Top-Left Navigation Sidebar (Always visible & prominent) */
+    .nav-sidebar {
+      position: fixed;
+      top: 40px;
+      left: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      z-index: 1000;
+      padding: 14px 10px;
+      border-radius: 35px;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid var(--glass-border);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+
+    .nav-line {
+      position: absolute;
+      top: 40px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), var(--secondary));
+      z-index: -1;
+      height: 150px;
+      opacity: 0.65;
+    }
+
+    /* Regular icon buttons (Login, About) */
+    .nav-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1.5px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s, border-color 0.3s;
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+      overflow: hidden;
+      position: relative;
+      text-decoration: none;
+    }
+
+    /* Home button — larger, image fills it like an avatar */
+    #btn-nav-home {
+      width: 68px;
+      height: 68px;
+      padding: 0;
+      background: transparent;
+      border: 2.5px solid rgba(139, 35, 35, 0.25);
+      box-shadow: 0 6px 20px rgba(139, 35, 35, 0.15);
+    }
+
+    #btn-nav-home img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    #btn-nav-home:hover {
+      transform: scale(1.08) !important;
+      border-color: rgba(139, 35, 35, 0.6);
+      box-shadow: 0 8px 28px rgba(139, 35, 35, 0.25);
+    }
+
+    #btn-nav-home.active {
+      border-color: rgba(139, 35, 35, 0.8);
+      box-shadow: 0 0 22px rgba(139, 35, 35, 0.3);
+    }
+
+    .nav-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--text-muted);
+      stroke-width: 2.5;
+      fill: none;
+      transition: stroke var(--transition);
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.1) !important;
+      border-color: var(--primary);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+    }
+
+    .nav-btn:hover svg {
+      stroke: var(--primary);
+    }
+
+    .nav-btn.active {
+      border-color: var(--primary);
+      border-width: 2.5px;
+      box-shadow: 0 0 18px rgba(99, 102, 241, 0.25);
+      background: #ffffff;
+    }
+
+    .nav-btn.active svg {
+      stroke: var(--primary);
+    }
+
+    /* Premium tooltips on hover */
+    .nav-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 76px;
+      top: 50%;
+      transform: translateY(-50%) translateX(-8px);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      z-index: 1001;
+    }
+
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      left: 70px;
+      top: 50%;
+      transform: translateY(-50%) translateX(-4px);
+      border-width: 5px 6px 5px 0;
+      border-style: solid;
+      border-color: transparent rgba(15, 23, 42, 0.95) transparent transparent;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      z-index: 1001;
+    }
+
+    .nav-btn:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) translateX(0);
+    }
+
+    .nav-btn:hover::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) translateX(0);
+    }
+
+    /* View Routing Structure */
+    .content-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 20px auto;
+      z-index: 1;
+    }
+
+    /* ------------------------------ */
+    /* ABOUT / POLICY VIEW STYLES     */
+    /* ------------------------------ */
+    .about-container {
+      background: var(--glass-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.04);
+      animation: pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .about-title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--text-main), #475569);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .about-lead {
+      text-align: center;
+      max-width: 780px;
+      margin: 0 auto 36px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-size: 1.05rem;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      margin-bottom: 20px;
+    }
+
+    .about-card {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(15, 23, 42, 0.04);
+      border-radius: 18px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(15, 23, 42, 0.01);
+    }
+
+    .about-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text-main);
+      border-left: 4px solid var(--primary);
+      padding-left: 12px;
+    }
+
+    .about-card ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .about-card li {
+      color: var(--text-main);
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    .about-card li strong {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .workflow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .workflow-step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+    }
+
+    .step-details h4 {
+      font-size: 0.98rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-main);
+    }
+
+    .step-details p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .card-accent {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .accent-line {
+      display: inline-block;
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--glass-border), transparent);
+    }
+
+    .accent-diamond {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--secondary);
+      transform: rotate(45deg);
+      opacity: 0.6;
+    }
+
+    .login-footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 40px;
+      line-height: 1.5;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 980px) {
+      .nav-sidebar {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        width: auto;
+        padding: 10px 14px;
+        border-radius: 35px;
+        gap: 20px;
+        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+      }
+      
+      .nav-line {
+        position: absolute;
+        top: 50%;
+        left: 36px;
+        right: 36px;
+        height: 2px;
+        width: auto;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        z-index: -1;
+      }
+
+      .content-container {
+        margin-top: 100px;
+      }
+
+      .about-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .nav-btn::after {
+        left: 50%;
+        top: 68px;
+        transform: translateX(-50%) translateY(-8px);
+      }
+      .nav-btn::before {
+        left: 50%;
+        top: 62px;
+        transform: translateX(-50%) translateY(-4px);
+        border-width: 0 5px 6px 5px;
+        border-color: transparent transparent rgba(15, 23, 42, 0.95) transparent;
+      }
+      .nav-btn:hover::after {
+        transform: translateX(-50%) translateY(0);
+      }
+      .nav-btn:hover::before {
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Floating Navigation Sidebar -->
+  <nav class="nav-sidebar" id="nav-sidebar">
+    <div class="nav-line"></div>
+    <a class="nav-btn" id="btn-nav-home" href="index.html" data-tooltip="Home">
+      <img src="Assets/Images/hands_logo.png" alt="Marian Logo">
+    </a>
+    <a class="nav-btn" id="btn-nav-login" href="login.html" data-tooltip="Logout">
+      <svg viewBox="0 0 24 24">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
+      </svg>
+    </a>
+    <a class="nav-btn active" id="btn-nav-about" href="policy.html" data-tooltip="Policy">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+    </a>
+  </nav>
+
+  <!-- Content Container -->
+  <div class="content-container">
+    
+    <!-- POLICY VIEW SECTION -->
+    <section id="about-view" class="about-container">
+      <h2 class="about-title">Policy & Guidelines</h2>
+      <p class="about-lead">
+        The Best Class Competition is a prestigious annual event designed to foster academic excellence, leadership skills, community responsibility, and career growth among students across all departments.
+      </p>
+
+      <div class="about-grid">
+        <!-- Column 1: Evaluation Metrics -->
+        <div class="about-card">
+          <h3>Evaluation Criteria</h3>
+          <ul>
+            <li><strong>Academics & Performance</strong>: Classroom pass percentages, high academic grades, and academic improvements.</li>
+            <li><strong>Skill Upgradation</strong>: NPTEL, Coursera, MOOCs, and external professional certifications completed by class students.</li>
+            <li><strong>Professional Experience</strong>: Industry internships (both offline and online) and placement records.</li>
+            <li><strong>Research & Innovations</strong>: Student publications, patent filings, and institutionally funded projects.</li>
+            <li><strong>Social Responsibility</strong>: Direct active student participation in NCC, NSS, and local community outreach drives.</li>
+          </ul>
+        </div>
+
+        <!-- Column 2: System Workflow -->
+        <div class="about-card">
+          <h3>Verification Workflow</h3>
+          <div class="workflow-steps">
+            <div class="workflow-step">
+              <div class="step-num">1</div>
+              <div class="step-details">
+                <h4>Submission</h4>
+                <p>Students upload academic and co-curricular achievements with valid PDF certificates/proof.</p>
+              </div>
+            </div>
+            <div class="workflow-step">
+              <div class="step-num">2</div>
+              <div class="step-details">
+                <h4>Teacher Verification</h4>
+                <p>Class Teachers review submissions, either verifying them or requesting edits/clarification.</p>
+              </div>
+            </div>
+            <div class="workflow-step">
+              <div class="step-num">3</div>
+              <div class="step-details">
+                <h4>Evaluation & Marks</h4>
+                <p>The institutional Evaluation Team awards scores according to strict criteria parameters.</p>
+              </div>
+            </div>
+            <div class="workflow-step">
+              <div class="step-num">4</div>
+              <div class="step-details">
+                <h4>IQAC/HOD Monitoring</h4>
+                <p>HODs and IQAC officers monitor real-time class metrics, stand-wise rankings, and analytics.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-accent" style="margin-top: 10px;">
+        <span class="accent-line" style="width: 80px;"></span>
+        <span class="accent-diamond"></span>
+        <span class="accent-line accent-line-right" style="width: 80px;"></span>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="login-footer">
+    Made by MCA 2025<br>
+    Santhosh Kannan, Amal Thomas
+  </footer>
+
+</body>
+
+</html>
