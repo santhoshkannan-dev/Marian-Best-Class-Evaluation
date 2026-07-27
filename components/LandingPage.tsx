@@ -413,7 +413,7 @@ export const LandingPage: React.FC = () => {
         {/* Top bar with Interactive Search (Feature 9) */}
         <div className="search-header-container">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/Assets/Images/marian-best-logo.png" alt="Marian Best Logo" style={{ height: '32px', objectFit: 'contain' }} />
+            <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Best Logo" style={{ height: '42px', objectFit: 'contain' }} />
             <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em', color: 'var(--text-main)' }}>Marian Excellence Grid Portal</span>
           </div>
 
