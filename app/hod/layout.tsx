@@ -33,7 +33,7 @@ export default function HodLayout({ children }: { children: React.ReactNode }) {
       <aside className="portal-sidebar">
         <div>
           <div className="portal-brand">
-            <div className="portal-brand-badge" style={{ background: '#f59e0b', color: '#fff' }}>HOD</div>
+            <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Logo" style={{ width: '38px', height: '38px', objectFit: 'contain' }} />
             <div>
               <h2 className="portal-brand-title">Excellence Grid</h2>
               <p className="portal-brand-sub">HOD Analytics Panel</p>

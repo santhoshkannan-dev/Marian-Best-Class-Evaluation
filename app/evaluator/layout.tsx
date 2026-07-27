@@ -34,7 +34,7 @@ export default function EvaluatorLayout({ children }: { children: React.ReactNod
       <aside className="portal-sidebar">
         <div>
           <div className="portal-brand">
-            <div className="portal-brand-badge">BC</div>
+            <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Logo" style={{ width: '38px', height: '38px', objectFit: 'contain' }} />
             <div>
               <h2 className="portal-brand-title">Excellence Grid</h2>
               <p className="portal-brand-sub">Evaluation Panel</p>
