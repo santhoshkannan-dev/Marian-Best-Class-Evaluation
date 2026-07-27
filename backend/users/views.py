@@ -87,24 +87,18 @@ class GoogleLoginView(APIView):
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
-                # Automatically create account with detected role (student for name.number, faculty for name.name)
-                names = full_name.split(" ", 1) if full_name else [email.split("@")[0], ""]
-                user = User.objects.create(
-                    username=email,
-                    email=email,
-                    first_name=names[0],
-                    last_name=names[1] if len(names) > 1 else "",
-                    role=detected_role,
-                    google_id=google_id
+                return Response(
+                    {"error": "Access denied. Your email is not registered in the system. Please contact your HOD or Administrator."},
+                    status=status.HTTP_403_FORBIDDEN
                 )
 
+            # Store google_id and other details on first-time login
             if not user.google_id:
                 user.google_id = google_id
 
             if full_name:
                 names = full_name.split(" ", 1)
                 user.first_name = names[0]
-
                 if len(names) > 1:
                     user.last_name = names[1]
 
