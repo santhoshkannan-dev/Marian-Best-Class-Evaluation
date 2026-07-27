@@ -483,7 +483,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     >
                       {currentCategory?.items.map((item) => (
                         <option key={item.id} value={item.id}>
-                          {item.title} ({item.marks > 0 ? `+${item.marks}` : item.marks} pts)
+                          {item.title}
                         </option>
                       ))}
                     </select>
@@ -497,9 +497,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       {currentItem.type.toUpperCase()} BASED
                     </span>
                     <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
-                    <p className="muted" style={{ fontSize: '0.88rem', marginTop: '4px' }}>
-                      Points rule: {currentItem.marks > 0 ? `+${currentItem.marks}` : currentItem.marks} pts per entry claim
-                    </p>
                   </div>
                 )}
 
@@ -671,8 +668,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       <th>Proof File</th>
                       <th>Description</th>
                       <th>Status</th>
-                      <th>Rule Marks</th>
-                      <th>Final Marks</th>
                       <th>Action</th>
                     </tr>
                   </thead>
@@ -691,7 +686,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           <td style={{ fontWeight: 700 }}>{cat?.category || 'General'}</td>
                           <td>{item?.title || 'Activity'}</td>
                           <td>
-                            {sub.evidence?.count ? `${sub.evidence.count} x ${item?.marks || 0} = ${rulePts.toFixed(1)}` : '-'}
+                            {sub.evidence?.count ? `${sub.evidence.count}` : '-'}
                           </td>
                           <td>
                             {isEventId ? (
@@ -727,10 +722,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           </td>
                           <td style={{ maxWidth: '240px' }}>{sub.description}</td>
                           <td>{getStatusBadge(sub.status)}</td>
-                          <td>{rulePts.toFixed(1)}</td>
-                          <td style={{ fontWeight: 700, color: 'var(--primary)' }}>
-                            {sub.marks !== null && sub.marks !== undefined ? sub.marks.toFixed(1) : '-'}
-                          </td>
                           <td>
                             {!isLocked ? (
                               <div style={{ display: 'flex', gap: '6px' }}>
