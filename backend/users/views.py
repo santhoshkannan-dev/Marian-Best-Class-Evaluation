@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
-from .models import User, Class, Department
+from .models import User, Class, Department, Submission
 
 
 def get_tokens_for_user(user):
@@ -258,3 +258,150 @@ class ClassListView(APIView):
             }
             for c in classes
         ])
+
+class SubmissionListView(APIView):
+    def get(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        if user.role == 'student':
+            queryset = Submission.objects.filter(user=user)
+        else:
+            queryset = Submission.objects.all()
+            
+        academic_year = request.query_params.get('academicYear')
+        if academic_year:
+            queryset = queryset.filter(academic_year=academic_year)
+            
+        data = []
+        for s in queryset:
+            data.append({
+                "id": s.id,
+                "studentId": s.user.id,
+                "criteriaId": s.criteria_id,
+                "academicYear": s.academic_year,
+                "description": s.description,
+                "status": s.status,
+                "remarks": s.remarks,
+                "marks": s.marks,
+                "proof": s.proof,
+                "eventId": s.event_id,
+                "evaluatorVerified": s.evaluator_verified,
+                "evidence": s.evidence
+            })
+        return Response(data)
+
+    def post(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        criteria_id = request.data.get('criteriaId')
+        academic_year = request.data.get('academicYear')
+        description = request.data.get('description', '')
+        status_val = request.data.get('status', 'Draft')
+        remarks = request.data.get('remarks', '')
+        marks = request.data.get('marks')
+        proof = request.data.get('proof', '')
+        event_id = request.data.get('eventId', '')
+        evidence = request.data.get('evidence')
+        
+        if not criteria_id:
+            return Response({"error": "criteriaId is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        submission = Submission.objects.create(
+            user=user,
+            criteria_id=int(criteria_id),
+            academic_year=academic_year,
+            description=description,
+            status=status_val,
+            remarks=remarks,
+            marks=marks,
+            proof=proof,
+            event_id=event_id,
+            evidence=evidence
+        )
+        
+        return Response({
+            "id": submission.id,
+            "studentId": submission.user.id,
+            "criteriaId": submission.criteria_id,
+            "academicYear": submission.academic_year,
+            "description": submission.description,
+            "status": submission.status,
+            "remarks": submission.remarks,
+            "marks": submission.marks,
+            "proof": submission.proof,
+            "eventId": submission.event_id,
+            "evaluatorVerified": submission.evaluator_verified,
+            "evidence": submission.evidence
+        }, status=status.HTTP_201_CREATED)
+
+class SubmissionDetailView(APIView):
+    def put(self, request, pk):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            if user.role == 'student':
+                submission = Submission.objects.get(pk=pk, user=user)
+            else:
+                submission = Submission.objects.get(pk=pk)
+        except Submission.DoesNotExist:
+            return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        if 'criteriaId' in request.data:
+            submission.criteria_id = int(request.data.get('criteriaId'))
+        if 'academicYear' in request.data:
+            submission.academic_year = request.data.get('academicYear')
+        if 'description' in request.data:
+            submission.description = request.data.get('description')
+        if 'status' in request.data:
+            submission.status = request.data.get('status')
+        if 'remarks' in request.data:
+            submission.remarks = request.data.get('remarks')
+        if 'marks' in request.data:
+            submission.marks = request.data.get('marks')
+        if 'proof' in request.data:
+            submission.proof = request.data.get('proof')
+        if 'eventId' in request.data:
+            submission.event_id = request.data.get('eventId')
+        if 'evidence' in request.data:
+            submission.evidence = request.data.get('evidence')
+        if 'evaluatorVerified' in request.data:
+            submission.evaluator_verified = bool(request.data.get('evaluatorVerified'))
+            
+        submission.save()
+        
+        return Response({
+            "id": submission.id,
+            "studentId": submission.user.id,
+            "criteriaId": submission.criteria_id,
+            "academicYear": submission.academic_year,
+            "description": submission.description,
+            "status": submission.status,
+            "remarks": submission.remarks,
+            "marks": submission.marks,
+            "proof": submission.proof,
+            "eventId": submission.event_id,
+            "evaluatorVerified": submission.evaluator_verified,
+            "evidence": submission.evidence
+        })
+
+    def delete(self, request, pk):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            if user.role == 'student':
+                submission = Submission.objects.get(pk=pk, user=user)
+            else:
+                submission = Submission.objects.get(pk=pk)
+        except Submission.DoesNotExist:
+            return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        submission.delete()
+        return Response({"success": True}, status=status.HTTP_200_OK)
