@@ -50,3 +50,36 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.email} - {self.get_role_display()}"
+
+class Submission(models.Model):
+    STATUS_CHOICES = [
+        ('Approved', 'Approved'),
+        ('Pending', 'Pending'),
+        ('Pending Rep Verification', 'Pending Rep Verification'),
+        ('Student Rep Verified', 'Student Rep Verified'),
+        ('Correction Requested', 'Correction Requested'),
+        ('Rejected', 'Rejected'),
+        ('Draft', 'Draft'),
+        ('Submitted', 'Submitted'),
+        ('Verified', 'Verified'),
+        ('Evaluated', 'Evaluated'),
+        ('Locked', 'Locked'),
+        ('Correction', 'Correction'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submissions')
+    criteria_id = models.IntegerField()
+    academic_year = models.CharField(max_length=50, blank=True, null=True)
+    description = models.TextField()
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Draft')
+    remarks = models.TextField(blank=True, null=True)
+    marks = models.IntegerField(blank=True, null=True)
+    proof = models.CharField(max_length=255, blank=True, null=True)
+    event_id = models.CharField(max_length=100, blank=True, null=True)
+    evaluator_verified = models.BooleanField(default=False)
+    evidence = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Submission {self.id} - {self.user.email} - {self.status}"

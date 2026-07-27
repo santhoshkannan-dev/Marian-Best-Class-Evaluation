@@ -297,12 +297,38 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const fetchSubmissions = async () => {
+    try {
+      const token = jwtToken || localStorage.getItem('bc_access_token');
+      if (!token) return;
+
+      const res = await fetch('http://localhost:8000/api/submissions/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSubmissions(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch submissions:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (loggedIn) {
+      fetchSubmissions();
+    }
+  }, [loggedIn, jwtToken]);
+
   const logout = () => {
     setLoggedIn(false);
     setCurrentRole('');
     setCurrentUserId(null);
     setJwtToken(null);
     setCurrentUserInfo(null);
+    setSubmissions(defaultSubmissions);
     localStorage.removeItem('bc_access_token');
     localStorage.removeItem('bc_refresh_token');
   };
@@ -312,24 +338,92 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setActiveAcademicYear(year);
   };
 
-  const addSubmission = (newSub: Omit<Submission, 'id'>) => {
-    const nextId = submissions.reduce((max, s) => Math.max(max, s.id), 0) + 1;
-    const item: Submission = {
-      ...newSub,
-      id: nextId,
-      academicYear: selectedAcademicYear
-    };
-    setSubmissions((prev) => [item, ...prev]);
+  const addSubmission = async (newSub: Omit<Submission, 'id'>) => {
+    try {
+      const token = jwtToken || localStorage.getItem('bc_access_token');
+      const res = await fetch('http://localhost:8000/api/submissions/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          criteriaId: newSub.criteriaId,
+          academicYear: selectedAcademicYear,
+          description: newSub.description,
+          status: newSub.status,
+          remarks: newSub.remarks || '',
+          marks: newSub.marks || null,
+          proof: newSub.proof || '',
+          eventId: newSub.eventId || '',
+          evidence: newSub.evidence || null
+        })
+      });
+      if (res.ok) {
+        const createdSub = await res.json();
+        setSubmissions((prev) => [createdSub, ...prev]);
+      } else {
+        const data = await res.json();
+        console.error('Failed to create submission:', data.error);
+      }
+    } catch (err: any) {
+      console.error('Server connection failed during submission creation:', err);
+    }
   };
 
-  const updateSubmission = (id: number, updates: Partial<Submission>) => {
-    setSubmissions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
-    );
+  const updateSubmission = async (id: number, updates: Partial<Submission>) => {
+    try {
+      const token = jwtToken || localStorage.getItem('bc_access_token');
+      const res = await fetch(`http://localhost:8000/api/submissions/${id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          criteriaId: updates.criteriaId,
+          academicYear: updates.academicYear,
+          description: updates.description,
+          status: updates.status,
+          remarks: updates.remarks,
+          marks: updates.marks,
+          proof: updates.proof,
+          eventId: updates.eventId,
+          evidence: updates.evidence,
+          evaluatorVerified: updates.evaluatorVerified
+        })
+      });
+      if (res.ok) {
+        const updatedSub = await res.json();
+        setSubmissions((prev) =>
+          prev.map((s) => (s.id === id ? updatedSub : s))
+        );
+      } else {
+        const data = await res.json();
+        console.error('Failed to update submission:', data.error);
+      }
+    } catch (err: any) {
+      console.error('Server connection failed during submission update:', err);
+    }
   };
 
-  const deleteSubmission = (id: number) => {
-    setSubmissions((prev) => prev.filter((s) => s.id !== id));
+  const deleteSubmission = async (id: number) => {
+    try {
+      const token = jwtToken || localStorage.getItem('bc_access_token');
+      const res = await fetch(`http://localhost:8000/api/submissions/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+      if (res.ok) {
+        setSubmissions((prev) => prev.filter((s) => s.id !== id));
+      } else {
+        console.error('Failed to delete submission');
+      }
+    } catch (err: any) {
+      console.error('Server connection failed during submission deletion:', err);
+    }
   };
 
   const addCriteriaItem = (categoryId: string, item: Omit<CriteriaItem, 'id'>) => {
