@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
-from .models import User
+from .models import User, Class, Department
 
 
 def get_tokens_for_user(user):
@@ -211,3 +211,56 @@ class UserProfileView(APIView):
                 "class_name": user.class_name.name if user.class_name else None,
             }
         )
+
+    def put(self, request):
+        user = request.user
+        name = request.data.get('name')
+        class_name_str = request.data.get('class_name')
+
+        if name:
+            parts = name.strip().split(' ', 1)
+            user.first_name = parts[0]
+            if len(parts) > 1:
+                user.last_name = parts[1]
+            else:
+                user.last_name = ""
+
+        if class_name_str:
+            try:
+                cls_obj = Class.objects.get(name__iexact=class_name_str)
+                user.class_name = cls_obj
+                user.department = cls_obj.department
+            except Class.DoesNotExist:
+                return Response(
+                    {"error": f"Class '{class_name_str}' does not exist."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        user.save()
+
+        return Response(
+            {
+                "id": user.id,
+                "email": user.email,
+                "name": user.get_full_name() or user.username,
+                "role": user.role,
+                "department": user.department.name if user.department else None,
+                "department_code": user.department.code if user.department else None,
+                "class_name": user.class_name.name if user.class_name else None,
+            }
+        )
+
+
+class ClassListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        classes = Class.objects.select_related('department').all()
+        return Response([
+            {
+                "name": c.name,
+                "department": c.department.name,
+                "department_code": c.department.code
+            }
+            for c in classes
+        ])

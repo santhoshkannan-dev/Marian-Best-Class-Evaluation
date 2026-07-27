@@ -68,6 +68,7 @@ interface AppContextType {
   toggleStudentRepMode: () => void;
   addUserToGroup: (groupId: string, email: string) => boolean;
   removeUserFromGroup: (groupId: string, email: string) => void;
+  updateUserProfile: (name: string, className: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -260,6 +261,39 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message || 'Connection to development authentication server failed' };
+    }
+  };
+
+  const updateUserProfile = async (name: string, className: string) => {
+    try {
+      const token = jwtToken || localStorage.getItem('bc_access_token');
+      const res = await fetch('http://localhost:8000/api/auth/profile/', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, class_name: className }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Failed to update profile' };
+      }
+
+      setCurrentUserInfo(data);
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.email.toLowerCase() === data.email.toLowerCase()
+            ? { ...u, name: data.name, className: data.class_name, department: data.department }
+            : u
+        )
+      );
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Server connection failed' };
     }
   };
 
@@ -477,7 +511,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         isStudentRep,
         toggleStudentRepMode,
         addUserToGroup,
-        removeUserFromGroup
+        removeUserFromGroup,
+        updateUserProfile
       }}
     >
       {children}

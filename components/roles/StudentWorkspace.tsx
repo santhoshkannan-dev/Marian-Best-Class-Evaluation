@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { Submission, CriteriaItem } from '@/data/initialData';
 
 interface StudentWorkspaceProps {
-  view?: 'dashboard' | 'submit' | 'submissions' | 'verification';
+  view?: 'dashboard' | 'submit' | 'submissions' | 'verification' | 'profile';
 }
 
 export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
@@ -19,7 +19,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     students,
     activePage,
     setActivePage,
-    isStudentRep
+    isStudentRep,
+    currentUserInfo,
+    updateUserProfile
   } = useApp();
 
   const activeTab = view || activePage || 'dashboard';
@@ -73,6 +75,52 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [repStatusFilter, setRepStatusFilter] = useState('all');
   const [repPage, setRepPage] = useState(1);
   const repPageSize = 5;
+
+  // Profile View States
+  const [profileName, setProfileName] = useState(currentUserInfo?.name || '');
+  const [profileClass, setProfileClass] = useState(currentUserInfo?.class_name || '');
+  const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
+  const [profileErrorMsg, setProfileErrorMsg] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [classList, setClassList] = useState<{name: string, department: string}[]>([]);
+
+  // Sync state if currentUserInfo changes
+  React.useEffect(() => {
+    if (currentUserInfo) {
+      setProfileName(currentUserInfo.name);
+      setProfileClass(currentUserInfo.class_name || '');
+    }
+  }, [currentUserInfo]);
+
+  // Fetch classes dynamically from backend when profile tab is active
+  React.useEffect(() => {
+    if (activeTab === 'profile') {
+      fetch('http://localhost:8000/api/auth/classes/')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setClassList(data);
+          }
+        })
+        .catch(err => console.error("Failed to fetch classes:", err));
+    }
+  }, [activeTab]);
+
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSuccessMsg('');
+    setProfileErrorMsg('');
+    setProfileSaving(true);
+
+    const result = await updateUserProfile(profileName, profileClass);
+    setProfileSaving(false);
+
+    if (result.success) {
+      setProfileSuccessMsg('Profile updated successfully in database!');
+    } else {
+      setProfileErrorMsg(result.error || 'Failed to update profile.');
+    }
+  };
 
   // Category Checklist Pagination
   const [checklistPage, setChecklistPage] = useState(1);
@@ -955,6 +1003,170 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 >
                   Next
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ---------------------------------------------------- */}
+        {/* TAB 5: MY PROFILE                                    */}
+        {/* ---------------------------------------------------- */}
+        {activeTab === 'profile' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>My Profile</h1>
+              <p className="muted" style={{ fontSize: '0.88rem' }}>
+                View and update your personal student profile details. Any changes will be synchronized directly to the database.
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '24px', alignItems: 'start' }}>
+              {/* Profile Card Summary */}
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '32px' }}>
+                <div
+                  style={{
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, var(--primary, #3b82f6), #1d4ed8)',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '2.5rem',
+                    fontWeight: 800,
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)'
+                  }}
+                >
+                  {currentUserInfo?.name ? currentUserInfo.name.charAt(0).toUpperCase() : 'S'}
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                  <h2 style={{ fontSize: '1.24rem', fontWeight: 800 }}>{currentUserInfo?.name || 'Student'}</h2>
+                  <p className="muted" style={{ fontSize: '0.84rem' }}>{currentUserInfo?.email}</p>
+                </div>
+
+                <div style={{ width: '100%', height: '1px', background: '#e2e8f0' }} />
+
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+                    <span className="muted">Role</span>
+                    <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{currentUserInfo?.role || 'Student'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+                    <span className="muted">Department</span>
+                    <span style={{ fontWeight: 700 }}>{currentUserInfo?.department || 'Not Assigned'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
+                    <span className="muted">Current Class</span>
+                    <span style={{ fontWeight: 700 }}>{currentUserInfo?.class_name || 'Not Assigned'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Edit Form */}
+              <div className="card" style={{ padding: '32px' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '20px' }}>Edit Profile Information</h3>
+
+                {profileSuccessMsg && (
+                  <div
+                    style={{
+                      background: '#ecfdf5',
+                      color: '#047857',
+                      border: '1px solid #a7f3d0',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      fontSize: '0.88rem',
+                      fontWeight: 600,
+                      marginBottom: '20px'
+                    }}
+                  >
+                    ✓ {profileSuccessMsg}
+                  </div>
+                )}
+
+                {profileErrorMsg && (
+                  <div
+                    style={{
+                      background: '#fef2f2',
+                      color: '#b91c1c',
+                      border: '1px solid #fecaca',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
+                      fontSize: '0.88rem',
+                      fontWeight: 600,
+                      marginBottom: '20px'
+                    }}
+                  >
+                    ⚠ {profileErrorMsg}
+                  </div>
+                )}
+
+                <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Full Name</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Registered Class</label>
+                    <select
+                      className="select"
+                      value={profileClass}
+                      onChange={(e) => setProfileClass(e.target.value)}
+                      required
+                    >
+                      <option value="">Select your class...</option>
+                      {classList.length > 0 ? (
+                        classList.map((cls) => (
+                          <option key={cls.name} value={cls.name}>
+                            {cls.name} ({cls.department})
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="BSc CS A">BSc CS A</option>
+                          <option value="BSc CS B">BSc CS B</option>
+                          <option value="BCA A">BCA A</option>
+                          <option value="BCA B">BCA B</option>
+                          <option value="MCA">MCA</option>
+                        </>
+                      )}
+                    </select>
+                    <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
+                      Updating your class will automatically synchronize and map your department.
+                    </p>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Email Address (Managed via Google)</label>
+                    <input
+                      type="email"
+                      className="input"
+                      value={currentUserInfo?.email || ''}
+                      disabled
+                      style={{ background: '#f1f5f9', cursor: 'not-allowed', color: '#64748b' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '8px' }}>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={profileSaving}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '10px', fontWeight: 700 }}
+                    >
+                      {profileSaving ? 'Saving Changes...' : 'Save Profile Details'}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

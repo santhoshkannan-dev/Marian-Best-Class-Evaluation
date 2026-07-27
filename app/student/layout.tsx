@@ -28,6 +28,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     ...(isStudentRep
       ? [{ id: 'verification', label: 'Group Verification', href: '/student/verification' }]
       : []),
+    { id: 'profile', label: 'My Profile', href: '/student/profile' },
   ];
 
   const currentNav = studentNav.find((i) => pathname === i.href);

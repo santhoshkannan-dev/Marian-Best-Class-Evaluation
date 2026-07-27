@@ -21,3 +21,12 @@ pnpm-debug.log*
 # System files
 .DS_Store
 Thumbs.db
+
+# Python Virtual Environment and caches
+backend/venv/
+backend/__pycache__/
+backend/users/__pycache__/
+backend/marian_backend/__pycache__/
+*.pyc
+*.sqlite3
+
