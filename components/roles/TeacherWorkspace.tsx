@@ -18,7 +18,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     addStudent,
     deleteStudent,
     activePage,
-    setActivePage
+    setActivePage,
+    criteriaCatalog
   } = useApp();
 
   const activeTab = view || activePage || 'dashboard';
@@ -76,6 +77,10 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
       stats
     };
   });
+
+  const pendingVerificationSubmissions = submissions.filter((s) =>
+    ['Pending', 'Submitted', 'Student Rep Verified', 'Pending Rep Verification'].includes(s.status)
+  );
 
   // ----------------------------------------------------
   // FILTERED STUDENT LIST FOR VERIFICATION DESK
@@ -234,41 +239,131 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
               </div>
             </div>
 
-            {/* Recent Student Progress Card */}
-            <div className="card">
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '20px' }}>Recent Student Progress</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
-                {recentProgressStudents.map((s) => {
-                  return (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--glass-border)' }}>
-                      <div>
-                        <h3 style={{ fontSize: '0.96rem', fontWeight: 700, color: 'var(--text-main)' }}>{s.name}</h3>
-                        <p style={{ fontSize: '0.8rem', color: '#ea580c', fontWeight: 700, margin: 0 }}>Pending</p>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '200px' }}>
-                        <div style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${s.stats.percent}%`, background: 'var(--primary)', borderRadius: '4px' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px', alignItems: 'start' }}>
+              {/* Recent Student Progress Card */}
+              <div className="card" style={{ height: '100%' }}>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '20px' }}>Recent Student Progress</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+                  {recentProgressStudents.map((s) => {
+                    return (
+                      <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--glass-border)' }}>
+                        <div>
+                          <h3 style={{ fontSize: '0.96rem', fontWeight: 700, color: 'var(--text-main)' }}>{s.name}</h3>
+                          <p style={{ fontSize: '0.8rem', color: '#ea580c', fontWeight: 700, margin: 0 }}>Pending</p>
                         </div>
-                        <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)', minWidth: '36px', textAlign: 'right' }}>
-                          {s.stats.percent}%
-                        </span>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '200px' }}>
+                          <div style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${s.stats.percent}%`, background: 'var(--primary)', borderRadius: '4px' }} />
+                          </div>
+                          <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)', minWidth: '36px', textAlign: 'right' }}>
+                            {s.stats.percent}%
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+
+                <button
+                  className="btn btn-primary"
+                  style={{ background: '#ea580c', border: 'none', color: '#ffffff', padding: '12px 24px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}
+                  onClick={() => {
+                    setActivePage('verification');
+                    router.push('/teacher/verification');
+                  }}
+                >
+                  ✓ Open Class Verification Desk
+                </button>
               </div>
 
-              <button
-                className="btn btn-primary"
-                style={{ background: '#ea580c', border: 'none', color: '#ffffff', padding: '12px 24px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}
-                onClick={() => {
-                  setActivePage('verification');
-                  router.push('/teacher/verification');
-                }}
-              >
-                ✓ Open Class Verification Desk
-              </button>
+              {/* Uploaded Documents Awaiting Verification */}
+              <div className="card" style={{ height: '100%' }}>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px' }}>Uploaded Documents Awaiting Verification</h2>
+                {pendingVerificationSubmissions.length === 0 ? (
+                  <p className="muted" style={{ fontSize: '0.9rem' }}>No pending documents to verify at this time.</p>
+                ) : (
+                  <div className="table-container" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Student</th>
+                          <th>Activity / Item</th>
+                          <th>Proof File</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingVerificationSubmissions.map((sub) => {
+                          const studentObj = students.find((s) => s.id === sub.studentId);
+                          const itemObj = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
+                          const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
+                          const isEventId = sub.eventId || sub.proof?.startsWith('Event ID:');
+                          const displayEventId = sub.eventId || (sub.proof?.startsWith('Event ID:') ? sub.proof.replace('Event ID: ', '') : sub.proof);
+
+                          return (
+                            <tr key={sub.id}>
+                              <td style={{ fontWeight: 700 }}>
+                                {studentObj ? studentObj.name : `Student #${sub.studentId}`}
+                              </td>
+                              <td style={{ fontSize: '0.88rem' }}>{itemObj?.title || 'Activity'}</td>
+                              <td>
+                                {isEventId ? (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      background: '#eff6ff',
+                                      color: '#1d4ed8',
+                                      padding: '4px 10px',
+                                      borderRadius: '8px',
+                                      fontWeight: 700,
+                                      fontSize: '0.82rem',
+                                      border: '1px solid #bfdbfe'
+                                    }}
+                                  >
+                                    🎫 Event ID: {displayEventId}
+                                  </span>
+                                ) : sub.proof ? (
+                                  <a
+                                    href={isDriveUrl ? sub.proof : 'https://drive.google.com/'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'none' }}
+                                  >
+                                    📁 {sub.proof.length > 15 ? sub.proof.substring(0, 15) + '...' : sub.proof}
+                                  </a>
+                                ) : (
+                                  <span className="muted">-</span>
+                                )}
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  <button
+                                    className="btn btn-sm btn-primary"
+                                    onClick={() => handleVerifySubmission(sub.id, 'Approved')}
+                                    style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-secondary"
+                                    onClick={() => handleVerifySubmission(sub.id, 'Correction Requested')}
+                                    style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                                  >
+                                    Correction
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
