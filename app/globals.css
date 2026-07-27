@@ -82,7 +82,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background-image: url("/Assets/Images/College-logo.png");
+  background-image: url("/Assets/Images/marian-best-logo.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: min(500px, 70vw);

@@ -30,7 +30,7 @@ export const NavSidebar: React.FC = () => {
         data-tooltip="Home/Dashboard"
         aria-label="Home/Dashboard"
       >
-        <img src="/Assets/Images/hands_logo.png" alt="Marian Logo" />
+        <img src="/Assets/Images/marian-best-logo.png" alt="Marian Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
       </Link>
 
       {/* 2. Login */}

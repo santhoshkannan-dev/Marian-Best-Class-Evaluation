@@ -108,7 +108,7 @@ export default function LoginPage() {
         {/* Right Form Card */}
         <section className="login-panel">
           <div className="login-card" style={{ padding: '40px 30px' }}>
-            <img className="card-logo" src="/Assets/Images/College-logo.png" alt="Marian College Logo" style={{ maxHeight: '80px', margin: '0 auto 20px auto' }} />
+            <img className="card-logo" src="/Assets/Images/marian-best-logo.png" alt="Marian Best Logo" style={{ maxHeight: '80px', margin: '0 auto 20px auto', objectFit: 'contain' }} />
 
             <div className="card-heading" style={{ marginBottom: '24px' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '6px' }}>Portal Access</h2>
