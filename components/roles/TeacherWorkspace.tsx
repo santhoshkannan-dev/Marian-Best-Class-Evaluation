@@ -57,7 +57,15 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
 
   // Student list performance stats calculation
   const getStudentStats = (studentId: number) => {
-    const studentSubs = submissions.filter((s) => s.studentId === studentId);
+    let studentSubs = submissions.filter((s) => s.studentId === studentId);
+    if (selectedCategoryFilter !== 'all') {
+      studentSubs = studentSubs.filter((s) => {
+        const cat = criteriaCatalog.find((c) =>
+          c.items.some((i) => i.id === s.criteriaId)
+        );
+        return cat ? cat.category.toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim() : false;
+      });
+    }
     const verified = studentSubs.filter((s) => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)).length;
     const total = studentSubs.length;
     const pending = studentSubs.filter((s) => ['Student Rep Verified', 'Pending Rep Verification', 'Pending'].includes(s.status)).length;
@@ -389,7 +397,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
             </div>
 
             {/* Filter Section */}
-            <div className="card" style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+            <div className="card" style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Search Students</label>
                 <input
@@ -411,6 +419,29 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   <option value="all">All</option>
                   <option value="pending">Pending</option>
                   <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Filter Category</label>
+                <select
+                  className="select"
+                  value={selectedCategoryFilter}
+                  onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                >
+                  <option value="all">All Categories</option>
+                  <option value="Academics">Academics</option>
+                  <option value="Online Courses">Online Courses</option>
+                  <option value="Internships">Internships</option>
+                  <option value="Competitive Exams">Competitive Exams</option>
+                  <option value="Scholarships">Scholarships</option>
+                  <option value="Research">Research</option>
+                  <option value="Prizes">Prizes</option>
+                  <option value="Leadership">Leadership</option>
+                  <option value="Programs Organized">Programs Organized</option>
+                  <option value="Social Responsibility">Social Responsibility</option>
+                  <option value="Career Advancement">Career Advancement</option>
+                  <option value="Documentation">Documentation</option>
                 </select>
               </div>
             </div>
