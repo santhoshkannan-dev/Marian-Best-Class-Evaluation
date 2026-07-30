@@ -32,8 +32,8 @@ export const WorkflowTimeline: React.FC = () => {
     {
       id: 4,
       title: 'Moderation',
-      subtitle: 'IQAC & HOD signoff',
-      desc: 'HODs and IQAC team review metrics, suggest adjustments, and lock indexes.'
+      subtitle: 'IQAC Signoff',
+      desc: 'IQAC team reviews metrics, suggests adjustments, and locks indexes.'
     },
     {
       id: 5,

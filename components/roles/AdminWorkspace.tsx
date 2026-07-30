@@ -284,7 +284,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     if (!name) return;
     const email = prompt('Enter User Email:');
     if (!email) return;
-    const role = prompt('Enter Role (Student / Teacher / HOD / IQAC / Admin):') || 'Student';
+    const role = prompt('Enter Role (Student / Teacher / IQAC / Admin):') || 'Student';
     const department = prompt('Enter Department:') || 'Computer Science';
     const className = prompt('Enter Class Name:') || 'BSc CS A';
 
