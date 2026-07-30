@@ -1,9 +1,13 @@
 'use client';
 
 import React from 'react';
-import { policyCategories } from './policyData';
+import { policyCategories, PolicyCategory } from './policyData';
 
-export const EvaluationGrid: React.FC = () => {
+interface EvaluationGridProps {
+  onViewDetails?: (category: PolicyCategory) => void;
+}
+
+export const EvaluationGrid: React.FC<EvaluationGridProps> = ({ onViewDetails }) => {
   // Duplicate categories to ensure a seamless infinite scrolling loop
   const duplicatedCategories = [...policyCategories, ...policyCategories];
 
@@ -63,7 +67,7 @@ export const EvaluationGrid: React.FC = () => {
                       borderRadius: '12px'
                     }}
                   >
-                    Max: {c.maxMarks}
+                    {c.detailsLabel}
                   </span>
                 </div>
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 8px 0' }}>{c.title}</h3>
@@ -72,7 +76,14 @@ export const EvaluationGrid: React.FC = () => {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--color-border)', paddingTop: '14px' }}>
                 <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-muted)' }}>Interactive Metrics</span>
-                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#4f46e5', cursor: 'pointer' }}>View Details &rarr;</span>
+                <span
+                  style={{ fontSize: '0.82rem', fontWeight: 800, color: '#4f46e5', cursor: 'pointer' }}
+                  onClick={() => {
+                    if (onViewDetails) onViewDetails(c);
+                  }}
+                >
+                  View Details &rarr;
+                </span>
               </div>
             </div>
           ))}
