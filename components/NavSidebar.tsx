@@ -10,7 +10,7 @@ export const NavSidebar: React.FC = () => {
   const { loggedIn } = useApp();
 
   // Hide floating sidebar inside portal workspaces to prevent double sidebar overlap
-  const isPortalRoute = ['/student', '/teacher', '/admin', '/hod', '/evaluator', '/iqac'].some(
+  const isPortalRoute = ['/student', '/teacher', '/admin', '/evaluator', '/iqac'].some(
     (prefix) => pathname.startsWith(prefix)
   );
 

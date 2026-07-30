@@ -23,7 +23,6 @@ class User(AbstractUser):
         ("student", "Student"),
         ("faculty", "Faculty"),
         ("evaluation", "Evaluation Team"),
-        ("hod", "HOD"),
         ("iqac", "IQAC"),
         ("admin", "Admin"),
     ]

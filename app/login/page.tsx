@@ -25,8 +25,6 @@ export default function LoginPage() {
         router.push('/admin/academic-years');
       } else if (role === 'evaluator') {
         router.push('/evaluator/dashboard');
-      } else if (role === 'hod') {
-        router.push('/hod/dashboard');
       }
     }
   }, [loggedIn, currentRole, router]);
@@ -161,7 +159,6 @@ export default function LoginPage() {
                     <option value="santhosh.25pmc152@mariancollege.org">Student/DQC Member</option>
                     <option value="kochumol.abraham@mariancollege.org">Class Teacher</option>
                     <option value="allen.george@mariancollege.org">Evaluator</option>
-                    <option value="hod.cs@mariancollege.org">HOD</option>
                     <option value="iqac@mariancollege.org">IQAC</option>
                     <option value="admin@mariancollege.org">Admin</option>
                   </select>

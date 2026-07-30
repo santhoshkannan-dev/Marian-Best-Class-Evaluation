@@ -22,8 +22,6 @@ export default function HomePage() {
         router.push('/admin/academic-years');
       } else if (role === 'evaluator') {
         router.push('/evaluator/dashboard');
-      } else if (role === 'hod') {
-        router.push('/hod/dashboard');
       }
     }
   }, [loggedIn, currentRole, router]);

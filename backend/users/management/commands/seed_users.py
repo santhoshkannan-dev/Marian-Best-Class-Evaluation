@@ -44,7 +44,6 @@ class Command(BaseCommand):
             ("amal.25pmc141@mariancollege.org", "student", "MCA", "MCA", False, False, "Amal", "Joseph"),
             ("kochumol.abraham@mariancollege.org", "faculty", "MCA", None, True, False, "Kochumol", "Abraham"),
             ("allen.george@mariancollege.org", "evaluation", "CS", None, True, False, "Allen", "George"),
-            ("hod.cs@mariancollege.org", "hod", "CS", None, True, False, "HOD", "Computer Science"),
             ("iqac@mariancollege.org", "iqac", "IQAC", None, True, False, "IQAC", "Coordinator"),
             ("admin@mariancollege.org", "admin", "ADMIN", None, True, True, "System", "Administrator"),
         ]
