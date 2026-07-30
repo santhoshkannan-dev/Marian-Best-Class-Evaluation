@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { policyCategories, PolicyCategory } from './policyData';
 
-export const PolicyCarousel: React.FC = () => {
+interface PolicyCarouselProps {
+  onViewDetails?: (category: PolicyCategory) => void;
+}
+
+export const PolicyCarousel: React.FC<PolicyCarouselProps> = ({ onViewDetails }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
@@ -145,7 +149,7 @@ export const PolicyCarousel: React.FC = () => {
                       textTransform: 'uppercase'
                     }}
                   >
-                    {card.badge}
+                    {String(index + 1).padStart(2, '0')}
                   </span>
                   <span style={{ fontSize: '1.8rem' }}>{card.icon}</span>
                 </div>
@@ -157,14 +161,11 @@ export const PolicyCarousel: React.FC = () => {
                 </p>
               </div>
 
-              {/* Card Center (Highlights) */}
+              {/* Card Center (Minimal) */}
               <div style={{ flex: 1, margin: '20px 0', display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
-                {card.highlights.map((highlight, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '0.78rem', opacity: 0.9 }}>
-                    <span>✔</span>
-                    <span style={{ lineHeight: 1.4 }}>{highlight}</span>
-                  </div>
-                ))}
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.75 }}>
+                  {card.detailsLabel}
+                </span>
               </div>
 
               {/* Card Bottom */}
@@ -177,8 +178,16 @@ export const PolicyCarousel: React.FC = () => {
                   alignItems: 'center'
                 }}
               >
-                <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', opacity: 0.7, fontWeight: 700 }}>Max Score</span>
-                <span style={{ fontSize: '1rem', fontWeight: 800 }}>{card.maxMarks}</span>
+                <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', opacity: 0.7, fontWeight: 700 }}>Interactive Metrics</span>
+                <span
+                  style={{ fontSize: '0.86rem', fontWeight: 800, color: '#ffffff', cursor: 'pointer', textDecoration: 'underline' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onViewDetails) onViewDetails(card);
+                  }}
+                >
+                  View Details &rarr;
+                </span>
               </div>
             </div>
           );

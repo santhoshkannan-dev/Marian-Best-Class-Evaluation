@@ -2,38 +2,43 @@
 
 import React from 'react';
 
-interface OutcomeCard {
+interface OutcomeItem {
   title: string;
-  desc: string;
   icon: string;
   color: string;
 }
 
 export const OutcomesGrid: React.FC = () => {
-  const outcomes: OutcomeCard[] = [
-    { title: 'Academic Excellence', desc: 'Promoting a culture of consistent grades and higher pass rates.', icon: '🎓', color: '#3b82f6' },
-    { title: 'Leadership Development', desc: 'Fostering organization capabilities, representation, and public speaking.', icon: '👨‍💼', color: '#06b6d4' },
-    { title: 'Library Usage', desc: 'Rewarding extensive book borrowings and self-study hours.', icon: '📚', color: '#8b5cf6' },
-    { title: 'Teamwork & Synergy', desc: 'Supporting group competitions, projects, and collaborative seminars.', icon: '🤝', color: '#ec4899' },
-    { title: 'Research & Innovation', desc: 'Inspiring conference publications, scientific research, and patents.', icon: '🔬', color: '#14b8a6' },
-    { title: 'Institution Branding', desc: 'Spreading visibility through state, national, and external awards.', icon: '🏆', color: '#f43f5e' },
-    { title: 'Faculty Collaboration', desc: 'Bridging teachers and students to streamline profile verifications.', icon: '📅', color: '#e11d48' },
-    { title: 'Digital Repository', desc: 'Centralizing proof records and ABC credits in Digilocker.', icon: '📂', color: '#6b7280' },
-    { title: 'Student Responsibility', desc: 'Encouraging self-discipline, NSS participation, and community camp values.', icon: '❤️', color: '#10b981' }
+  const outcomes: OutcomeItem[] = [
+    { title: 'Enhanced Academic Responsibility', icon: '🎓', color: '#3b82f6' },
+    { title: 'Strengthened Teamwork and Collective Ownership', icon: '🤝', color: '#ec4899' },
+    {
+      title: 'Reduced behavioral issues and increased engagement in curricular and co-curricular activities',
+      icon: '❤️',
+      color: '#10b981'
+    },
+    { title: 'Increased Participation in Institutional Activities', icon: '🏆', color: '#f43f5e' },
+    { title: 'Higher Library and Repository Engagement', icon: '📚', color: '#8b5cf6' },
+    { title: 'Development of Leadership and Responsibility Roles', icon: '👨‍💼', color: '#06b6d4' },
+    { title: 'Recognition of Quality Improvement Initiatives', icon: '💡', color: '#f59e0b' },
+    { title: 'Strengthened Faculty–Student Collaboration', icon: '📅', color: '#14b8a6' },
+    { title: 'Institutional Branding and Good Practices', icon: '🏢', color: '#6b7280' },
+    { title: 'Enhanced overall academic reputation of the institution', icon: '📈', color: '#3b82f6' }
   ];
 
   return (
     <section style={{ padding: '60px 24px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>Expected Outcomes</h2>
-        <p className="muted" style={{ fontSize: '0.96rem', marginTop: '6px' }}>What this evaluation system accomplishes for the student cohort.</p>
+        <p className="muted" style={{ fontSize: '0.96rem', marginTop: '6px' }}>Impact and benefits generated across the student cohort.</p>
       </div>
 
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '20px'
+          gap: '20px',
+          marginBottom: '50px'
         }}
       >
         {outcomes.map((item, index) => (
@@ -48,7 +53,7 @@ export const OutcomesGrid: React.FC = () => {
               transition: 'transform 0.3s ease, box-shadow 0.3s ease',
               display: 'flex',
               gap: '16px',
-              alignItems: 'flex-start'
+              alignItems: 'center'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
@@ -77,11 +82,28 @@ export const OutcomesGrid: React.FC = () => {
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 6px 0' }}>{item.title}</h3>
-              <p className="muted" style={{ fontSize: '0.8rem', lineHeight: 1.5, margin: 0 }}>{item.desc}</p>
+              <h3 style={{ fontSize: '0.96rem', fontWeight: 800, color: '#0f172a', margin: 0, lineHeight: 1.4 }}>{item.title}</h3>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Quote Banner */}
+      <div
+        style={{
+          textAlign: 'center',
+          padding: '30px 40px',
+          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          color: '#ffffff',
+          borderRadius: '24px',
+          boxShadow: '0 10px 30px rgba(15, 23, 42, 0.1)',
+          maxWidth: '800px',
+          margin: '0 auto'
+        }}
+      >
+        <p style={{ fontStyle: 'italic', fontSize: '1.15rem', lineHeight: 1.6, margin: 0 }}>
+          “A class becomes the best not by chance, but by the strength of its unity, discipline, and determination to grow together…”
+        </p>
       </div>
     </section>
   );
