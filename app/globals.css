@@ -165,7 +165,7 @@ h1, h2, h3, h4, p {
   width: 62px;
   height: 62px;
   padding: 0;
-  background: transparent;
+  background: #ffffff;
   border: 2.5px solid rgba(139, 35, 35, 0.25);
   box-shadow: 0 6px 20px rgba(139, 35, 35, 0.15);
 }

@@ -22,7 +22,6 @@ export const NavSidebar: React.FC = () => {
     <aside className="nav-sidebar" aria-label="Quick Navigation">
       <div className="nav-line" aria-hidden="true"></div>
 
-      {/* 1. Home */}
       <Link
         href="/"
         id="btn-nav-home"
@@ -30,7 +29,7 @@ export const NavSidebar: React.FC = () => {
         data-tooltip="Home/Dashboard"
         aria-label="Home/Dashboard"
       >
-        <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Logo" style={{ width: '38px', height: '38px', objectFit: 'contain' }} />
+        <img src="/Assets/Images/hands_logo.png" alt="Marian Logo" />
       </Link>
 
       {/* 2. Login */}
