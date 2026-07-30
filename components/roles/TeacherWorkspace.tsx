@@ -30,6 +30,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   // Verification Desk Search & Filter
   const [studentSearch, setStudentSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [verificationPage, setVerificationPage] = useState(1);
   const verificationPageSize = 5;
@@ -111,7 +112,16 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   // SUBMISSIONS REVIEW ACTIONS FOR A STUDENT
   // ----------------------------------------------------
   const selectedStudentSubmissions = selectedStudent
-    ? submissions.filter((s) => s.studentId === selectedStudent.id)
+    ? submissions.filter((s) => {
+        const matchesStudent = s.studentId === selectedStudent.id;
+        if (!matchesStudent) return false;
+        if (selectedCategoryFilter === 'all') return true;
+
+        const cat = criteriaCatalog.find((c) =>
+          c.items.some((i) => i.id === s.criteriaId)
+        );
+        return cat ? cat.category.toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim() : false;
+      })
     : [];
 
   const handleVerifySubmission = (subId: number, status: 'Approved' | 'Rejected' | 'Correction Requested') => {
@@ -500,6 +510,29 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   >
                     Close Review
                   </button>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '20px', maxWidth: '320px' }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Category</label>
+                  <select
+                    className="select"
+                    value={selectedCategoryFilter}
+                    onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="Academics">Academics</option>
+                    <option value="Online Courses">Online Courses</option>
+                    <option value="Internships">Internships</option>
+                    <option value="Competitive Exams">Competitive Exams</option>
+                    <option value="Scholarships">Scholarships</option>
+                    <option value="Research">Research</option>
+                    <option value="Prizes">Prizes</option>
+                    <option value="Leadership">Leadership</option>
+                    <option value="Programs Organized">Programs Organized</option>
+                    <option value="Social Responsibility">Social Responsibility</option>
+                    <option value="Career Advancement">Career Advancement</option>
+                    <option value="Documentation">Documentation</option>
+                  </select>
                 </div>
 
                 <div className="table-container">

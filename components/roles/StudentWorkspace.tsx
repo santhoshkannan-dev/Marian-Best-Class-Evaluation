@@ -1055,109 +1055,32 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 </div>
               </div>
 
-              {/* Edit Form */}
+              {/* Profile Details (Read Only) */}
               <div className="card" style={{ padding: '32px' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '20px' }}>Edit Profile Information</h3>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '20px' }}>Profile Details</h3>
 
-                {profileSuccessMsg && (
-                  <div
-                    style={{
-                      background: '#ecfdf5',
-                      color: '#047857',
-                      border: '1px solid #a7f3d0',
-                      padding: '12px 16px',
-                      borderRadius: '10px',
-                      fontSize: '0.88rem',
-                      fontWeight: 600,
-                      marginBottom: '20px'
-                    }}
-                  >
-                    ✓ {profileSuccessMsg}
-                  </div>
-                )}
-
-                {profileErrorMsg && (
-                  <div
-                    style={{
-                      background: '#fef2f2',
-                      color: '#b91c1c',
-                      border: '1px solid #fecaca',
-                      padding: '12px 16px',
-                      borderRadius: '10px',
-                      fontSize: '0.88rem',
-                      fontWeight: 600,
-                      marginBottom: '20px'
-                    }}
-                  >
-                    ⚠ {profileErrorMsg}
-                  </div>
-                )}
-
-                <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div className="form-group">
-                    <label className="form-label">Full Name</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={profileName}
-                      onChange={(e) => setProfileName(e.target.value)}
-                      placeholder="Enter your full name"
-                      required
-                    />
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Full Name</label>
+                    <div style={{ padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: 600, color: 'var(--text-main)' }}>
+                      {currentUserInfo?.name || 'Not Set'}
+                    </div>
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Registered Class</label>
-                    <select
-                      className="select"
-                      value={profileClass}
-                      onChange={(e) => setProfileClass(e.target.value)}
-                      required
-                    >
-                      <option value="">Select your class...</option>
-                      {classList.length > 0 ? (
-                        classList.map((cls) => (
-                          <option key={cls.name} value={cls.name}>
-                            {cls.name} ({cls.department})
-                          </option>
-                        ))
-                      ) : (
-                        <>
-                          <option value="BSc CS A">BSc CS A</option>
-                          <option value="BSc CS B">BSc CS B</option>
-                          <option value="BCA A">BCA A</option>
-                          <option value="BCA B">BCA B</option>
-                          <option value="MCA">MCA</option>
-                        </>
-                      )}
-                    </select>
-                    <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
-                      Updating your class will automatically synchronize and map your department.
-                    </p>
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Registered Class</label>
+                    <div style={{ padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: 600, color: 'var(--text-main)' }}>
+                      {currentUserInfo?.class_name || 'Not Assigned'}
+                    </div>
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Email Address (Managed via Google)</label>
-                    <input
-                      type="email"
-                      className="input"
-                      value={currentUserInfo?.email || ''}
-                      disabled
-                      style={{ background: '#f1f5f9', cursor: 'not-allowed', color: '#64748b' }}
-                    />
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Email Address</label>
+                    <div style={{ padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: 600, color: 'var(--text-main)' }}>
+                      {currentUserInfo?.email || 'Not Set'}
+                    </div>
                   </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '8px' }}>
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={profileSaving}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '10px', fontWeight: 700 }}
-                    >
-                      {profileSaving ? 'Saving Changes...' : 'Save Profile Details'}
-                    </button>
-                  </div>
-                </form>
+                </div>
               </div>
             </div>
           </div>
