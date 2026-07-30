@@ -87,10 +87,21 @@ class GoogleLoginView(APIView):
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
-                return Response(
-                    {"error": "Access denied. Your email is not registered in the system. Please contact your HOD or Administrator."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+                if detected_role == 'student':
+                    names = full_name.split(" ", 1) if full_name else [email.split("@")[0], ""]
+                    user = User.objects.create(
+                        username=email,
+                        email=email,
+                        first_name=names[0],
+                        last_name=names[1] if len(names) > 1 else "",
+                        role='student',
+                        google_id=google_id
+                    )
+                else:
+                    return Response(
+                        {"error": "Access denied. Your email is not registered in the system. Please contact your HOD or Administrator."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
 
             # Store google_id and other details on first-time login
             if not user.google_id:
@@ -163,29 +174,39 @@ class DevBypassLoginView(APIView):
 
         try:
             user = User.objects.get(email=email)
-
-            tokens = get_tokens_for_user(user)
-
-            return Response(
-                {
-                    "tokens": tokens,
-                    "user": {
-                        "id": user.id,
-                        "email": user.email,
-                        "name": user.get_full_name() or user.username,
-                        "role": user.role,
-                        "department": user.department.name if user.department else None,
-                        "department_code": user.department.code if user.department else None,
-                        "class_name": user.class_name.name if user.class_name else None,
-                    }
-                }
-            )
-
         except User.DoesNotExist:
-            return Response(
-                {"error": "User not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            detected_role = determine_role_from_email(email)
+            if detected_role == 'student':
+                names = [email.split("@")[0], ""]
+                user = User.objects.create(
+                    username=email,
+                    email=email,
+                    first_name=names[0],
+                    last_name=names[1] if len(names) > 1 else "",
+                    role='student'
+                )
+            else:
+                return Response(
+                    {"error": "User not found. Only student accounts can be auto-created."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        tokens = get_tokens_for_user(user)
+
+        return Response(
+            {
+                "tokens": tokens,
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": user.get_full_name() or user.username,
+                    "role": user.role,
+                    "department": user.department.name if user.department else None,
+                    "department_code": user.department.code if user.department else None,
+                    "class_name": user.class_name.name if user.class_name else None,
+                }
+            }
+        )
 
 
 class UserProfileView(APIView):
