@@ -77,6 +77,7 @@ class Submission(models.Model):
     event_id = models.CharField(max_length=100, blank=True, null=True)
     evaluator_verified = models.BooleanField(default=False)
     evidence = models.JSONField(blank=True, null=True)
+    verified_by_name = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
