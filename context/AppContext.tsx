@@ -80,7 +80,7 @@ const mapBackendRoleToFrontend = (backendRole: string): string => {
   const role = backendRole.toLowerCase();
   if (role === 'faculty') return 'teacher';
   if (role === 'evaluation') return 'evaluator';
-  return role; // student, hod, iqac, admin
+  return role; // student, iqac, admin
 };
 
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

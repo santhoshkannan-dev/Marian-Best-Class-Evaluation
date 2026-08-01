@@ -336,7 +336,6 @@ export const defaultUsers: AppUser[] = [
   { id: 2, name: "Prof. Rajesh Kumar", email: "rajesh@marian.ac.in", role: "teacher", className: "BSc CS A", department: "Computer Science", isApproved: true },
   { id: 3, name: "Dr. Elizabeth Varghese", email: "elizabeth@marian.ac.in", role: "evaluator", department: "Computer Science", isApproved: true },
   { id: 4, name: "Admin Officer", email: "admin@marian.ac.in", role: "admin", isApproved: true },
-  { id: 5, name: "Dr. Thomas Philip", email: "hod.cs@marian.ac.in", role: "hod", department: "Computer Science", isApproved: true },
   { id: 6, name: "IQAC Coordinator", email: "iqac@marian.ac.in", role: "iqac", isApproved: true }
 ];
 
