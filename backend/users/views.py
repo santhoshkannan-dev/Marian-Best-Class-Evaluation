@@ -309,7 +309,8 @@ class SubmissionListView(APIView):
                 "proof": s.proof,
                 "eventId": s.event_id,
                 "evaluatorVerified": s.evaluator_verified,
-                "evidence": s.evidence
+                "evidence": s.evidence,
+                "verifiedByName": s.verified_by_name
             })
         return Response(data)
 
@@ -356,7 +357,8 @@ class SubmissionListView(APIView):
             "proof": submission.proof,
             "eventId": submission.event_id,
             "evaluatorVerified": submission.evaluator_verified,
-            "evidence": submission.evidence
+            "evidence": submission.evidence,
+            "verifiedByName": submission.verified_by_name
         }, status=status.HTTP_201_CREATED)
 
 class SubmissionDetailView(APIView):
@@ -381,6 +383,8 @@ class SubmissionDetailView(APIView):
             submission.description = request.data.get('description')
         if 'status' in request.data:
             submission.status = request.data.get('status')
+            if user.role != 'student':
+                submission.verified_by_name = user.get_full_name() or user.username
         if 'remarks' in request.data:
             submission.remarks = request.data.get('remarks')
         if 'marks' in request.data:
@@ -408,7 +412,8 @@ class SubmissionDetailView(APIView):
             "proof": submission.proof,
             "eventId": submission.event_id,
             "evaluatorVerified": submission.evaluator_verified,
-            "evidence": submission.evidence
+            "evidence": submission.evidence,
+            "verifiedByName": submission.verified_by_name
         })
 
     def delete(self, request, pk):

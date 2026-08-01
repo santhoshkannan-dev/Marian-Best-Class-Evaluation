@@ -721,7 +721,38 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             )}
                           </td>
                           <td style={{ maxWidth: '240px' }}>{sub.description}</td>
-                          <td>{getStatusBadge(sub.status)}</td>
+                          <td>
+                            {getStatusBadge(sub.status)}
+                            {sub.verifiedByName && (
+                              <div style={{
+                                fontSize: '0.78rem',
+                                color: ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) ? '#16a34a' : sub.status === 'Rejected' ? '#dc2626' : '#ea580c',
+                                fontWeight: 700,
+                                marginTop: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}>
+                                👤 {['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) ? 'Approved' : sub.status === 'Rejected' ? 'Rejected' : 'Reviewed'} by {sub.verifiedByName}
+                              </div>
+                            )}
+                            {sub.remarks && (
+                              <div style={{
+                                fontSize: '0.76rem',
+                                color: 'var(--text-muted)',
+                                marginTop: '4px',
+                                fontStyle: 'italic',
+                                background: '#f8fafc',
+                                padding: '6px 8px',
+                                borderRadius: '6px',
+                                border: '1px dashed #e2e8f0',
+                                maxWidth: '180px',
+                                wordBreak: 'break-word'
+                              }}>
+                                💬 &ldquo;{sub.remarks}&rdquo;
+                              </div>
+                            )}
+                          </td>
                           <td>
                             {!isLocked ? (
                               <div style={{ display: 'flex', gap: '6px' }}>

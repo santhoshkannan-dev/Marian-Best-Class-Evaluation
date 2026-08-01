@@ -45,6 +45,7 @@ export interface Submission {
   eventId?: string;
   evaluatorVerified?: boolean;
   evidence?: SubmissionEvidence;
+  verifiedByName?: string;
 }
 
 export interface AppUser {
