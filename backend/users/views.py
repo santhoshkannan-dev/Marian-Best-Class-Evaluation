@@ -99,7 +99,7 @@ class GoogleLoginView(APIView):
                     )
                 else:
                     return Response(
-                        {"error": "Access denied. Your email is not registered in the system. Please contact your HOD or Administrator."},
+                        {"error": "Access denied. Your email is not registered in the system. Please contact your Administrator."},
                         status=status.HTTP_403_FORBIDDEN
                     )
 
