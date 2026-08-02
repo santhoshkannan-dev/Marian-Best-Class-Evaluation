@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
-from .models import User, Class, Department, Submission
+from .models import User, Class, Department, Submission, AcademicYear
 
 
 def get_tokens_for_user(user):
@@ -266,19 +266,219 @@ class UserProfileView(APIView):
         )
 
 
+class AcademicYearListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        years = AcademicYear.objects.all().order_by('-year')
+        return Response([
+            {"year": y.year, "status": "Active" if y.is_active else "Inactive"}
+            for y in years
+        ])
+
+    def post(self, request):
+        year_str = request.data.get('year')
+        is_active = request.data.get('status') == 'Active' or request.data.get('is_active') == True
+
+        if not year_str:
+            return Response({"error": "year is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        ay, created = AcademicYear.objects.get_or_create(year=year_str)
+        if is_active:
+            AcademicYear.objects.all().update(is_active=False)
+            ay.is_active = True
+            ay.save()
+        
+        return Response({"year": ay.year, "status": "Active" if ay.is_active else "Inactive"})
+
+    def put(self, request):
+        year_str = request.data.get('year')
+        if not year_str:
+            return Response({"error": "year is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        AcademicYear.objects.all().update(is_active=False)
+        try:
+            ay = AcademicYear.objects.get(year=year_str)
+            ay.is_active = True
+            ay.save()
+        except AcademicYear.DoesNotExist:
+            ay = AcademicYear.objects.create(year=year_str, is_active=True)
+
+        return Response({"year": ay.year, "status": "Active"})
+
+class DepartmentListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        depts = Department.objects.all().order_by('name')
+        return Response([
+            {"name": d.name, "code": d.code}
+            for d in depts
+        ])
+
+    def post(self, request):
+        name = request.data.get('name')
+        code = request.data.get('code')
+        if not name or not code:
+            return Response({"error": "name and code are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        dept, created = Department.objects.get_or_create(code=code, defaults={"name": name})
+        return Response({"name": dept.name, "code": dept.code})
+
+    def delete(self, request):
+        code = request.data.get('code')
+        if not code:
+            return Response({"error": "code is required"}, status=status.HTTP_400_BAD_REQUEST)
+        Department.objects.filter(code=code).delete()
+        return Response({"success": True})
+
 class ClassListView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        classes = Class.objects.select_related('department').all()
+        classes = Class.objects.select_related('department', 'class_teacher', 'dqc_member').all()
         return Response([
             {
+                "id": c.id,
                 "name": c.name,
                 "department": c.department.name,
-                "department_code": c.department.code
+                "department_code": c.department.code,
+                "classTeacher": c.class_teacher.email if c.class_teacher else None,
+                "classTeacherName": c.class_teacher.get_full_name() or c.class_teacher.username if c.class_teacher else None,
+                "dqcMember": c.dqc_member.email if c.dqc_member else None,
+                "dqcMemberName": c.dqc_member.get_full_name() or c.dqc_member.username if c.dqc_member else None,
             }
             for c in classes
         ])
+
+    def post(self, request):
+        name = request.data.get('name')
+        dept_code = request.data.get('department_code')
+        if not name or not dept_code:
+            return Response({"error": "name and department_code are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            dept = Department.objects.get(code=dept_code)
+        except Department.DoesNotExist:
+            return Response({"error": f"Department '{dept_code}' not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        cls, created = Class.objects.get_or_create(name=name, defaults={"department": dept})
+        return Response({
+            "id": cls.id,
+            "name": cls.name,
+            "department": cls.department.name,
+            "department_code": cls.department.code
+        })
+
+    def put(self, request):
+        name = request.data.get('name')
+        teacher_email = request.data.get('classTeacher')
+        dqc_email = request.data.get('dqcMember')
+
+        if not name:
+            return Response({"error": "Class name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            cls = Class.objects.get(name=name)
+        except Class.DoesNotExist:
+            return Response({"error": f"Class '{name}' not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if teacher_email is not None:
+            if teacher_email == "":
+                cls.class_teacher = None
+            else:
+                try:
+                    cls.class_teacher = User.objects.get(email=teacher_email)
+                except User.DoesNotExist:
+                    return Response({"error": f"Teacher with email '{teacher_email}' not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if dqc_email is not None:
+            if dqc_email == "":
+                cls.dqc_member = None
+            else:
+                try:
+                    cls.dqc_member = User.objects.get(email=dqc_email)
+                except User.DoesNotExist:
+                    return Response({"error": f"Student with email '{dqc_email}' not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        cls.save()
+
+        return Response({
+            "id": cls.id,
+            "name": cls.name,
+            "department": cls.department.name,
+            "department_code": cls.department.code,
+            "classTeacher": cls.class_teacher.email if cls.class_teacher else None,
+            "classTeacherName": cls.class_teacher.get_full_name() or cls.class_teacher.username if cls.class_teacher else None,
+            "dqcMember": cls.dqc_member.email if cls.dqc_member else None,
+            "dqcMemberName": cls.dqc_member.get_full_name() or cls.dqc_member.username if cls.dqc_member else None,
+        })
+
+class UserManagementView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        users = User.objects.select_related('department', 'class_name').all().order_by('id')
+        return Response([
+            {
+                "id": u.id,
+                "name": u.get_full_name() or u.username,
+                "email": u.email,
+                "role": u.role,
+                "department": u.department.name if u.department else None,
+                "department_code": u.department.code if u.department else None,
+                "className": u.class_name.name if u.class_name else None,
+                "isApproved": u.is_active
+            }
+            for u in users
+        ])
+
+    def post(self, request):
+        email = request.data.get('email')
+        role = request.data.get('role', 'student').lower()
+        name = request.data.get('name', '')
+        dept_code = request.data.get('department_code')
+        class_name_str = request.data.get('class_name')
+
+        if not email:
+            return Response({"error": "email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        username = email.split('@')[0]
+        dept = Department.objects.filter(code=dept_code).first() if dept_code else None
+        cls = Class.objects.filter(name=class_name_str).first() if class_name_str else None
+
+        names = name.split(' ', 1)
+        first_name = names[0]
+        last_name = names[1] if len(names) > 1 else ""
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "username": username,
+                "role": role,
+                "department": dept,
+                "class_name": cls,
+                "first_name": first_name,
+                "last_name": last_name,
+                "is_active": True
+            }
+        )
+        if not created:
+            user.role = role
+            user.department = dept
+            user.class_name = cls
+            user.first_name = first_name
+            user.last_name = last_name
+            user.save()
+
+        return Response({
+            "id": user.id,
+            "email": user.email,
+            "name": user.get_full_name() or user.username,
+            "role": user.role,
+            "department": user.department.name if user.department else None,
+            "className": user.class_name.name if user.class_name else None,
+        })
 
 class SubmissionListView(APIView):
     def get(self, request):
