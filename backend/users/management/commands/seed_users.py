@@ -1,13 +1,27 @@
 from django.core.management.base import BaseCommand
-from users.models import Department, Class, User
+from users.models import Department, Class, User, AcademicYear
 
 class Command(BaseCommand):
-    help = 'Seeds departments, classes, and pre-mapped users with roles'
+    help = 'Seeds departments, classes, academic years, and pre-mapped users'
 
     def handle(self, *args, **kwargs):
         self.stdout.write("Seeding database...")
 
-        # 1. Seed Departments
+        # 1. Seed Academic Years
+        academic_years_data = [
+            {"year": "2025-2026", "is_active": True},
+            {"year": "2024-2025", "is_active": False},
+            {"year": "2023-2024", "is_active": False},
+        ]
+        for ay in academic_years_data:
+            obj, created = AcademicYear.objects.get_or_create(year=ay["year"], defaults={"is_active": ay["is_active"]})
+            if created:
+                self.stdout.write(f"Created Academic Year: {obj.year}")
+            else:
+                obj.is_active = ay["is_active"]
+                obj.save()
+
+        # 2. Seed Departments
         departments_data = [
             {"name": "Master of Computer Applications", "code": "MCA"},
             {"name": "Computer Science", "code": "CS"},
@@ -22,7 +36,7 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(f"Created Department: {obj.name}")
 
-        # 2. Seed Classes
+        # 3. Seed Classes
         classes_data = [
             {"name": "BCA A", "dept_code": "CS"},
             {"name": "BSc CS B", "dept_code": "CS"},
@@ -37,7 +51,7 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(f"Created Class: {obj.name}")
 
-        # 3. Seed Users
+        # 4. Seed Users
         # Format: (email, role, dept_code, class_name, is_staff, is_superuser, first, last)
         users_data = [
             ("santhosh.25pmc152@mariancollege.org", "student", "MCA", "MCA", False, False, "Santhosh", "Kannan"),
@@ -48,13 +62,13 @@ class Command(BaseCommand):
             ("admin@mariancollege.org", "admin", "ADMIN", None, True, True, "System", "Administrator"),
         ]
 
+        seeded_users = {}
         for email, role, dept_code, class_name, is_staff, is_superuser, first, last in users_data:
             dept = departments.get(dept_code)
             cls = classes.get(class_name) if class_name else None
 
             username = email.split('@')[0]
 
-            # Check if user already exists
             user = User.objects.filter(email=email).first()
             if not user:
                 user = User.objects.create_user(
@@ -81,5 +95,14 @@ class Command(BaseCommand):
                 user.set_password("MarianPassword@123")
                 user.save()
                 self.stdout.write(f"Updated pre-registered user: {email} ({role})")
+            seeded_users[email] = user
+
+        # 5. Set Class Teacher & DQC member for classes
+        mca_class = classes.get("MCA")
+        if mca_class:
+            mca_class.class_teacher = seeded_users.get("kochumol.abraham@mariancollege.org")
+            mca_class.dqc_member = seeded_users.get("santhosh.25pmc152@mariancollege.org")
+            mca_class.save()
+            self.stdout.write("Configured MCA Class Teacher and DQC member links")
 
         self.stdout.write(self.style.SUCCESS("Database seeding completed successfully!"))

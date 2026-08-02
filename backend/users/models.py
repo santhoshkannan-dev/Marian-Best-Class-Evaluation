@@ -1,6 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+class AcademicYear(models.Model):
+    year = models.CharField(max_length=20, unique=True) # e.g. "2025-2026"
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.year} {'(Active)' if self.is_active else ''}"
+
 class Department(models.Model):
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=20, unique=True) # e.g. MCA, CS, IQAC, ADMIN
@@ -11,6 +18,8 @@ class Department(models.Model):
 class Class(models.Model):
     name = models.CharField(max_length=100, unique=True) # e.g. BCA A, BSc CS B, MCA
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='classes')
+    class_teacher = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='advisor_classes')
+    dqc_member = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='rep_classes')
 
     class Meta:
         verbose_name_plural = "Classes"

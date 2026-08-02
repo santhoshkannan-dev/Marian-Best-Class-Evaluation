@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 
 interface AdminWorkspaceProps {
@@ -38,15 +38,38 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
   const { activePage } = useApp();
   const activeTab = view || activePage || 'years';
 
+  const {
+    academicYears: globalYears,
+    activeAcademicYear: globalActiveYear,
+    addAcademicYearGlobal,
+    setActiveAcademicYearGlobal,
+    departments,
+    classes,
+    addDepartmentGlobal,
+    deleteDepartmentGlobal,
+    addClassGlobal,
+    updateClassMapping,
+    users,
+    addUserGlobal
+  } = useApp();
+
   // ----------------------------------------------------
   // DATASET 1: ACADEMIC YEARS
   // ----------------------------------------------------
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([
-    { year: '2025-2026', status: 'Active' },
-    { year: '2024-2025', status: 'Inactive' },
-    { year: '2023-2024', status: 'Inactive' }
-  ]);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [newYearInput, setNewYearInput] = useState('');
+
+  // Synchronize Academic Years from global AppContext
+  useEffect(() => {
+    if (globalYears && globalYears.length > 0) {
+      setAcademicYears(
+        globalYears.map((y) => ({
+          year: y,
+          status: y === globalActiveYear ? 'Active' : 'Inactive'
+        }))
+      );
+    }
+  }, [globalYears, globalActiveYear]);
 
   const handleAddYear = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,17 +82,12 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
       alert('This academic year already exists.');
       return;
     }
-    setAcademicYears((prev) => [...prev, { year: newYearInput.trim(), status: 'Inactive' }]);
+    addAcademicYearGlobal(newYearInput.trim());
     setNewYearInput('');
   };
 
   const handleSetActiveYear = (targetYear: string) => {
-    setAcademicYears((prev) =>
-      prev.map((y) => ({
-        ...y,
-        status: y.year === targetYear ? 'Active' : 'Inactive'
-      }))
-    );
+    setActiveAcademicYearGlobal(targetYear);
   };
 
   // ----------------------------------------------------
@@ -246,15 +264,24 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
   // ----------------------------------------------------
   // DATASET 3: USER MANAGEMENT
   // ----------------------------------------------------
-  const [usersList, setUsersList] = useState<AdminUser[]>([
-    { id: 1, name: 'Aarav Bose', email: 'aarav.bose@college.edu', role: 'Student', department: 'Mathematics', className: 'BSc Math B', approval: 'Approved' },
-    { id: 2, name: 'Aarav Chauhan', email: 'aarav.chauhan@college.edu', role: 'Student', department: 'Mathematics', className: 'BSc Math B', approval: 'Approved' },
-    { id: 3, name: 'Aarav Das', email: 'aarav.das@college.edu', role: 'Student', department: 'Commerce', className: 'BCom A', approval: 'Approved' },
-    { id: 4, name: 'Aarav Gupta', email: 'aarav.gupta@college.edu', role: 'Student', department: 'Commerce', className: 'BCom C', approval: 'Approved' },
-    { id: 5, name: 'Aarav Iyer', email: 'aarav.iyer@college.edu', role: 'Student', department: 'Computer Applications', className: 'BCA A', approval: 'Approved' },
-    { id: 6, name: 'Aarav Jain', email: 'aarav.jain@college.edu', role: 'Student', department: 'Business Administration', className: 'BBA A', approval: 'Approved' },
-    { id: 7, name: 'Aarav Joseph', email: 'aarav.joseph@college.edu', role: 'Student', department: 'Commerce', className: 'BCom B', approval: 'Approved' }
-  ]);
+  const [usersList, setUsersList] = useState<AdminUser[]>([]);
+
+  // Synchronize Users list from global AppContext
+  useEffect(() => {
+    if (users && users.length > 0) {
+      setUsersList(
+        users.map((u) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          department: u.department || 'General',
+          className: u.className || 'General',
+          approval: u.isApproved ? 'Approved' : 'Pending'
+        }))
+      );
+    }
+  }, [users]);
 
   const [userSearch, setUserSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('All Departments');
@@ -270,7 +297,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
       u.email.toLowerCase().includes(userSearch.toLowerCase());
     const matchesDept = deptFilter === 'All Departments' || u.department === deptFilter;
     const matchesClass = classFilter === 'All Classes' || u.className === classFilter;
-    const matchesRole = roleFilter === 'All Roles' || u.role === roleFilter;
+    const matchesRole = roleFilter === 'All Roles' || u.role.toLowerCase() === roleFilter.toLowerCase();
     const matchesStatus = statusFilter === 'All Statuses' || u.approval === statusFilter;
 
     return matchesSearch && matchesDept && matchesClass && matchesRole && matchesStatus;
@@ -284,34 +311,35 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     if (!name) return;
     const email = prompt('Enter User Email:');
     if (!email) return;
-    const role = prompt('Enter Role (Student / Teacher / IQAC / Admin):') || 'Student';
-    const department = prompt('Enter Department:') || 'Computer Science';
-    const className = prompt('Enter Class Name:') || 'BSc CS A';
+    const role = prompt('Enter Role (Student / Faculty / Evaluation / Admin):') || 'Student';
+    const department = prompt('Enter Department Code (e.g. CS, MCA):') || 'CS';
+    const className = prompt('Enter Class Name (e.g. BCA A, MCA):') || 'BCA A';
 
-    const newUser: AdminUser = {
-      id: Date.now(),
-      name,
-      email,
-      role,
-      department,
-      className,
-      approval: 'Approved'
-    };
-
-    setUsersList((prev) => [...prev, newUser]);
+    addUserGlobal(email, role.toLowerCase(), name, department, className);
   };
 
   // ----------------------------------------------------
   // DATASET 4: DEPARTMENT MANAGEMENT
   // ----------------------------------------------------
-  const [deptsList, setDeptsList] = useState<AdminDept[]>([
-    { name: 'Administration', classes: [] },
-    { name: 'Business Administration', classes: ['BBA A', 'BBA B'] },
-    { name: 'Commerce', classes: ['BCom A', 'BCom B', 'BCom C'] },
-    { name: 'Computer Applications', classes: ['BCA A'] },
-    { name: 'Computer Science', classes: ['BSc CS A', 'BSc CS B'] },
-    { name: 'Economics', classes: ['BA Economics A'] }
-  ]);
+  const [deptsList, setDeptsList] = useState<AdminDept[]>([]);
+
+  // Synchronize Departments & Classes from global AppContext
+  useEffect(() => {
+    if (departments) {
+      setDeptsList(
+        departments.map((d) => {
+          const deptClasses = (classes || []).filter(
+            (c) => c.department_code === d.code || c.department === d.name
+          );
+          return {
+            name: d.name,
+            code: d.code,
+            classes: deptClasses.map((c) => c.name)
+          } as any;
+        })
+      );
+    }
+  }, [departments, classes]);
 
   const [newDeptInput, setNewDeptInput] = useState('');
   const [newClassInputs, setNewClassInputs] = useState<Record<string, string>>({});
@@ -319,44 +347,27 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
   const handleAddDept = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDeptInput.trim()) return;
-    const exists = deptsList.some((d) => d.name.toLowerCase() === newDeptInput.trim().toLowerCase());
-    if (exists) {
-      alert('This department already exists.');
-      return;
-    }
-    setDeptsList((prev) => [...prev, { name: newDeptInput.trim(), classes: [] }]);
+    const code = newDeptInput.trim().toUpperCase().split(' ').map(w => w[0]).join('').substring(0, 5);
+    addDepartmentGlobal(newDeptInput.trim(), code);
     setNewDeptInput('');
   };
 
   const handleDeleteDept = (deptName: string) => {
-    setDeptsList((prev) => prev.filter((d) => d.name !== deptName));
+    // Find department code by name
+    const dept = departments?.find(d => d.name === deptName || d.code === deptName);
+    const code = dept ? dept.code : deptName;
+    if (window.confirm(`Are you sure you want to delete department ${code}?`)) {
+      deleteDepartmentGlobal(code);
+    }
   };
 
   const handleAddClass = (deptName: string) => {
     const classVal = newClassInputs[deptName]?.trim();
     if (!classVal) return;
-
-    setDeptsList((prev) =>
-      prev.map((d) => {
-        if (d.name === deptName) {
-          const exists = d.classes.some((c) => c.toLowerCase() === classVal.toLowerCase());
-          if (exists) {
-            alert('Class already exists in this department.');
-            return d;
-          }
-          return {
-            ...d,
-            classes: [...d.classes, classVal]
-          };
-        }
-        return d;
-      })
-    );
-
-    setNewClassInputs((prev) => ({
-      ...prev,
-      [deptName]: ''
-    }));
+    const dept = departments?.find(d => d.name === deptName || d.code === deptName);
+    const code = dept ? dept.code : deptName;
+    addClassGlobal(classVal, code);
+    setNewClassInputs(prev => ({ ...prev, [deptName]: '' }));
   };
 
   // ----------------------------------------------------
@@ -938,27 +949,82 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                       </button>
                     </div>
 
-                    {/* Classes Tag List */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {d.classes.map((c) => (
-                        <span
-                          key={c}
-                          style={{
-                            padding: '6px 12px',
-                            background: '#f1f5f9',
-                            color: '#334155',
-                            borderRadius: '8px',
-                            fontSize: '0.82rem',
-                            fontWeight: 700
-                          }}
-                        >
-                          {c}
-                        </span>
-                      ))}
-                      {d.classes.length === 0 && (
-                        <span className="muted" style={{ fontSize: '0.8rem' }}>No classes associated yet.</span>
-                      )}
-                    </div>
+                     {/* Classes & Roles Mappings List */}
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                       {d.classes.map((className) => {
+                         const classObj = classes.find((c) => c.name === className);
+                         return (
+                           <div
+                             key={className}
+                             style={{
+                               padding: '12px 16px',
+                               background: '#f8fafc',
+                               border: '1px solid #e2e8f0',
+                               borderRadius: '8px',
+                               display: 'grid',
+                               gridTemplateColumns: '1.2fr 2fr 2fr',
+                               gap: '16px',
+                               alignItems: 'center'
+                             }}
+                           >
+                             <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1e293b' }}>{className}</span>
+
+                             {/* Class Teacher Select */}
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                               <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b' }}>CLASS ADVISOR (FACULTY)</span>
+                               <select
+                                 value={classObj?.classTeacher || ''}
+                                 onChange={(e) => updateClassMapping(className, e.target.value, classObj?.dqcMember || '')}
+                                 style={{
+                                   padding: '6px 10px',
+                                   fontSize: '0.8rem',
+                                   borderRadius: '6px',
+                                   border: '1px solid #cbd5e1',
+                                   background: '#ffffff',
+                                   color: '#334155',
+                                   fontWeight: 600
+                                 }}
+                               >
+                                 <option value="">Select Teacher</option>
+                                 {users.filter((u) => u.role === 'faculty').map((u) => (
+                                   <option key={u.email} value={u.email}>
+                                     {u.name}
+                                   </option>
+                                 ))}
+                               </select>
+                             </div>
+
+                             {/* DQC Member Select */}
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                               <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b' }}>DQC REPRESENTATIVE (STUDENT)</span>
+                               <select
+                                 value={classObj?.dqcMember || ''}
+                                 onChange={(e) => updateClassMapping(className, classObj?.classTeacher || '', e.target.value)}
+                                 style={{
+                                   padding: '6px 10px',
+                                   fontSize: '0.8rem',
+                                   borderRadius: '6px',
+                                   border: '1px solid #cbd5e1',
+                                   background: '#ffffff',
+                                   color: '#334155',
+                                   fontWeight: 600
+                                 }}
+                               >
+                                 <option value="">Select DQC Rep</option>
+                                 {users.filter((u) => u.role === 'student').map((u) => (
+                                   <option key={u.email} value={u.email}>
+                                     {u.name}
+                                   </option>
+                                 ))}
+                               </select>
+                             </div>
+                           </div>
+                         );
+                       })}
+                       {d.classes.length === 0 && (
+                         <span className="muted" style={{ fontSize: '0.8rem' }}>No classes associated yet.</span>
+                       )}
+                     </div>
 
                     {/* Add Class Inner Form */}
                     <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>

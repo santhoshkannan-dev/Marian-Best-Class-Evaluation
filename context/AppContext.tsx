@@ -69,6 +69,15 @@ interface AppContextType {
   addUserToGroup: (groupId: string, email: string) => boolean;
   removeUserFromGroup: (groupId: string, email: string) => void;
   updateUserProfile: (name: string, className: string) => Promise<{ success: boolean; error?: string }>;
+  classes: any[];
+  departments: any[];
+  addAcademicYearGlobal: (year: string) => Promise<void>;
+  setActiveAcademicYearGlobal: (year: string) => Promise<void>;
+  addDepartmentGlobal: (name: string, code: string) => Promise<void>;
+  deleteDepartmentGlobal: (code: string) => Promise<void>;
+  addClassGlobal: (name: string, deptCode: string) => Promise<void>;
+  updateClassMapping: (name: string, teacherEmail: string, dqcEmail: string) => Promise<void>;
+  addUserGlobal: (email: string, role: string, name: string, deptCode: string, className: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -105,6 +114,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [jwtToken, setJwtToken] = useState<string | null>(null);
   const [currentUserInfo, setCurrentUserInfo] = useState<AppContextType['currentUserInfo']>(null);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
 
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
@@ -316,9 +327,66 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const fetchAcademicYears = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/academic-years/');
+      if (res.ok) {
+        const data = await res.json();
+        setAcademicYears(data.map((y: any) => y.year));
+        const active = data.find((y: any) => y.status === 'Active');
+        if (active) {
+          setActiveAcademicYear(active.year);
+          setSelectedAcademicYear(active.year);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/departments/');
+      if (res.ok) {
+        const data = await res.json();
+        setDepartments(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/auth/classes/');
+      if (res.ok) {
+        const data = await res.json();
+        setClasses(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/users/');
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     if (loggedIn) {
       fetchSubmissions();
+      fetchAcademicYears();
+      fetchDepartments();
+      fetchClasses();
+      fetchUsers();
     }
   }, [loggedIn, jwtToken]);
 
@@ -501,6 +569,116 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setUserGroups((prev) => [...prev, group]);
   };
 
+  const addAcademicYearGlobal = async (year: string) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/academic-years/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, status: 'Inactive' })
+      });
+      if (res.ok) {
+        setAcademicYears(prev => [...prev.filter(y => y !== year), year]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const setActiveAcademicYearGlobal = async (year: string) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/academic-years/', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year })
+      });
+      if (res.ok) {
+        setActiveAcademicYear(year);
+        setSelectedAcademicYear(year);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const addDepartmentGlobal = async (name: string, code: string) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/departments/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, code })
+      });
+      if (res.ok) {
+        const newDept = await res.json();
+        setDepartments(prev => [...prev.filter(d => d.code !== code), newDept]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const deleteDepartmentGlobal = async (code: string) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/departments/', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      if (res.ok) {
+        setDepartments(prev => prev.filter(d => d.code !== code));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const addClassGlobal = async (name: string, deptCode: string) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/auth/classes/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, department_code: deptCode })
+      });
+      if (res.ok) {
+        const newCls = await res.json();
+        setClasses(prev => [...prev.filter(c => c.name !== name), newCls]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const updateClassMapping = async (name: string, teacherEmail: string, dqcEmail: string) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/auth/classes/', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, classTeacher: teacherEmail, dqcMember: dqcEmail })
+      });
+      if (res.ok) {
+        const updatedCls = await res.json();
+        setClasses(prev => prev.map(c => c.name === name ? updatedCls : c));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const addUserGlobal = async (email: string, role: string, name: string, deptCode: string, className: string) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/users/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role, name, department_code: deptCode, class_name: className })
+      });
+      if (res.ok) {
+        const newUser = await res.json();
+        setUsers(prev => [...prev.filter(u => u.email.toLowerCase() !== email.toLowerCase()), newUser]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const deleteUserGroup = (groupId: string) => {
     setUserGroups((prev) => prev.filter((g) => g.id !== groupId));
   };
@@ -606,7 +784,16 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         toggleStudentRepMode,
         addUserToGroup,
         removeUserFromGroup,
-        updateUserProfile
+        updateUserProfile,
+        classes,
+        departments,
+        addAcademicYearGlobal,
+        setActiveAcademicYearGlobal,
+        addDepartmentGlobal,
+        deleteDepartmentGlobal,
+        addClassGlobal,
+        updateClassMapping,
+        addUserGlobal
       }}
     >
       {children}
