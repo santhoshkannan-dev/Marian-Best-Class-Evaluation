@@ -638,7 +638,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="admin-header-row">
                   <div>
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Criteria Categories</h1>
                     <p className="muted" style={{ fontSize: '0.88rem' }}>Manage and organize evaluation criteria hierarchies.</p>
@@ -664,7 +664,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                 </div>
 
                 {/* Criteria Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div className="criteria-grid-wrapper">
                   {criteriaCategories.map((c) => (
                     <div
                       key={c.id}
@@ -709,7 +709,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
             </div>
 
             {/* Action Buttons Top Bar */}
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="admin-actions-bar">
               <button
                 className="btn"
                 style={{ background: '#f97316', color: '#ffffff', fontWeight: 700 }}
@@ -728,7 +728,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
             {/* User Filters List */}
             <div className="card">
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>Hierarchy View</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+              <div className="filters-grid">
                 <div className="form-group">
                   <label className="form-label" style={{ fontSize: '0.78rem' }}>Search</label>
                   <input
@@ -956,21 +956,12 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                          return (
                            <div
                              key={className}
-                             style={{
-                               padding: '12px 16px',
-                               background: '#f8fafc',
-                               border: '1px solid #e2e8f0',
-                               borderRadius: '8px',
-                               display: 'grid',
-                               gridTemplateColumns: '1.2fr 2fr 2fr',
-                               gap: '16px',
-                               alignItems: 'center'
-                             }}
+                             className="class-advisor-mapping-row"
                            >
                              <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1e293b' }}>{className}</span>
 
                              {/* Class Teacher Select */}
-                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                             <div className="mapping-select-group">
                                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b' }}>CLASS ADVISOR (FACULTY)</span>
                                <select
                                  value={classObj?.classTeacher || ''}
