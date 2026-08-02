@@ -71,6 +71,39 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
   const [selectedClass, setSelectedClass] = useState('All Classes');
   const [expandedDept, setExpandedDept] = useState<string | null>(null);
 
+  // Rich mock student scores database for leaderboard queries
+  const [studentsList, setStudentsList] = useState([
+    { name: 'Santhosh Kannan', class: 'BCA A', dept: 'Computer Applications', score: 45.0, email: 'santhosh.25pmc152@mariancollege.org' },
+    { name: 'Kiran Menon', class: 'BCom A', dept: 'Commerce', score: 38.0, email: 'kiran.menon@mariancollege.org' },
+    { name: 'Anjali Nair', class: 'BCom A', dept: 'Commerce', score: 35.5, email: 'anjali.nair@mariancollege.org' },
+    { name: 'Thomas Kurian', class: 'BSc CS B', dept: 'Computer Science', score: 42.0, email: 'thomas.kurian@mariancollege.org' },
+    { name: 'Isha Menon', class: 'BSc CS B', dept: 'Computer Science', score: 39.0, email: 'isha.menon@mariancollege.org' },
+    { name: 'Mary Joseph', class: 'BA English A', dept: 'English', score: 36.0, email: 'mary.joseph@mariancollege.org' },
+    { name: 'Gaurav Menon', class: 'BA English A', dept: 'English', score: 33.0, email: 'gaurav.menon@mariancollege.org' },
+    { name: 'Albin Sunny', class: 'BBA A', dept: 'Business Administration', score: 41.5, email: 'albin.sunny@mariancollege.org' },
+    { name: 'Merlin Joy', class: 'BBA A', dept: 'Business Administration', score: 37.0, email: 'merlin.joy@mariancollege.org' }
+  ]);
+
+  // Rich mock class scores database for best class rank
+  const [classesList, setClassesList] = useState([
+    { name: 'BCA A', dept: 'Computer Applications', score: 1245.0, mentor: 'Dr. Allen George' },
+    { name: 'BCom A', dept: 'Commerce', score: 1120.0, mentor: 'Prof. Kochumol Abraham' },
+    { name: 'BSc CS B', dept: 'Computer Science', score: 980.5, mentor: 'Dr. Sijomon P.' },
+    { name: 'BBA A', dept: 'Business Administration', score: 850.0, mentor: 'Prof. Joy Mathew' },
+    { name: 'BA English A', dept: 'English', score: 790.0, mentor: 'Dr. Mary George' }
+  ]);
+
+  const [lookupType, setLookupType] = useState<'department' | 'class'>('department');
+  const [selectedLookupGroup, setSelectedLookupGroup] = useState<string>('Computer Applications');
+
+  const getTopStudent = () => {
+    const filtered = studentsList.filter(s => 
+      lookupType === 'department' ? s.dept === selectedLookupGroup : s.class === selectedLookupGroup
+    );
+    if (filtered.length === 0) return null;
+    return filtered.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+  };
+
   // Simulated Department verified database
   const [deptStats, setDeptStats] = useState([
     { name: 'Business Administration', total: 92, verified: 92 },
@@ -110,6 +143,17 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
         return d;
       })
     );
+
+    // 5. Update student and class live scores
+    setStudentsList((prev) =>
+      prev.map((s) => (s.name === studentName ? { ...s, score: s.score + marks } : s))
+    );
+    const matchedStudent = studentsList.find((s) => s.name === studentName);
+    if (matchedStudent) {
+      setClassesList((prev) =>
+        prev.map((c) => (c.name === matchedStudent.class ? { ...c, score: c.score + marks } : c))
+      );
+    }
 
     alert(`Successfully verified and locked submissions for ${studentName}!`);
     setExpandedDept(null);
@@ -169,6 +213,125 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                 <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                   <div style={{ width: '97.6%', height: '100%', background: '#16a34a' }} />
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* EVALUATOR DETAILS & LEADERS LOOKUP GRID */}
+          <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* EVALUATOR DETAILS CARD */}
+            <div className="card" style={{ background: '#ffffff', border: '1.5px solid var(--glass-border)', borderRadius: '16px', padding: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '18px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '1.3rem', fontWeight: 'bold' }}>
+                  AG
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>Allen George</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>Senior Evaluator | System Auditor</p>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.86rem', borderTop: '1px solid #f1f5f9', paddingTop: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Employee ID:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>MCE-4910</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Scope Access:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>All Departments & Classes</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Assigned Domain:</span>
+                  <span style={{ fontWeight: 700, color: '#3b82f6' }}>Co- & Extracurricular Evaluation</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Last Database Audit:</span>
+                  <span style={{ fontWeight: 700, color: '#16a34a' }}>Just now (Synced)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* LEADERBOARD & LOOKUP CARD */}
+            <div className="card" style={{ background: '#ffffff', border: '1.5px solid var(--glass-border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>Performers Leaderboard</h3>
+                  <span style={{ padding: '4px 10px', background: '#fef3c7', color: '#d97706', borderRadius: '12px', fontSize: '0.74rem', fontWeight: 800 }}>🏆 Live Standings</span>
+                </div>
+
+                {/* Top Class overall */}
+                <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Top Performing Class</span>
+                    <span style={{ fontSize: '0.94rem', fontWeight: 800, color: '#1e293b' }}>{classesList.reduce((prev, current) => (prev.score > current.score) ? prev : current).name}</span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-primary)' }}>{classesList.reduce((prev, current) => (prev.score > current.score) ? prev : current).score.toFixed(1)} pts</span>
+                  </div>
+                </div>
+
+                {/* Top Student Lookup Panel */}
+                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '8px' }}>Top Student Lookup</span>
+                  
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    <select 
+                      className="select" 
+                      style={{ padding: '6px 8px', fontSize: '0.8rem', flex: 1 }}
+                      value={lookupType}
+                      onChange={(e) => {
+                        const val = e.target.value as 'department' | 'class';
+                        setLookupType(val);
+                        setSelectedLookupGroup(val === 'department' ? 'Computer Applications' : 'BCA A');
+                      }}
+                    >
+                      <option value="department">Department-wise</option>
+                      <option value="class">Class-wise</option>
+                    </select>
+
+                    <select 
+                      className="select" 
+                      style={{ padding: '6px 8px', fontSize: '0.8rem', flex: 1.5 }}
+                      value={selectedLookupGroup}
+                      onChange={(e) => setSelectedLookupGroup(e.target.value)}
+                    >
+                      {lookupType === 'department' ? (
+                        <>
+                          <option value="Computer Applications">Computer Applications</option>
+                          <option value="Commerce">Commerce</option>
+                          <option value="Computer Science">Computer Science</option>
+                          <option value="English">English</option>
+                          <option value="Business Administration">Business Administration</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="BCA A">BCA A</option>
+                          <option value="BCom A">BCom A</option>
+                          <option value="BSc CS B">BSc CS B</option>
+                          <option value="BBA A">BBA A</option>
+                          <option value="BA English A">BA English A</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lookup Result Display */}
+              <div>
+                {getTopStudent() ? (
+                  <div style={{ background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', border: '1px solid #bbf7d0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#16a34a' }}>⭐ {getTopStudent()?.name}</span>
+                      <span style={{ fontSize: '0.74rem', color: '#667085', display: 'block' }}>{getTopStudent()?.class} ({getTopStudent()?.dept})</span>
+                    </div>
+                    <span style={{ fontSize: '0.94rem', fontWeight: 800, color: '#15803d' }}>{getTopStudent()?.score.toFixed(1)} pts</span>
+                  </div>
+                ) : (
+                  <div style={{ background: '#fef2f2', padding: '10px 14px', borderRadius: '8px', border: '1px solid #fecaca', textAlign: 'center' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#991b1b' }}>No students found in this group selection.</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
