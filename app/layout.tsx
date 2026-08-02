@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppContextProvider } from '@/context/AppContext';
 import { NavSidebar } from '@/components/NavSidebar';
@@ -7,6 +7,12 @@ import { Footer } from '@/components/Footer';
 export const metadata: Metadata = {
   title: 'Marian Excellence Grid — Marian College Kuttikkanam',
   description: 'Marian Excellence Grid Evaluation System - Marian College Kuttikkanam. Track, verify and celebrate class achievements.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -26,3 +32,4 @@ export default function RootLayout({
     </html>
   );
 }
+
