@@ -324,7 +324,15 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                               <td style={{ fontWeight: 700 }}>
                                 {studentObj ? studentObj.name : `Student #${sub.studentId}`}
                               </td>
-                              <td style={{ fontSize: '0.88rem' }}>{itemObj?.title || 'Activity'}</td>
+                              <td style={{ fontSize: '0.88rem' }}>
+                                {sub.evidence?.submissionType ? (
+                                  <span className="badge badge-verified" style={{ background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe', fontWeight: 800 }}>
+                                    📊 {sub.evidence.submissionType}
+                                  </span>
+                                ) : (
+                                  itemObj?.title || 'Activity'
+                                )}
+                              </td>
                               <td>
                                 {isEventId ? (
                                   <span

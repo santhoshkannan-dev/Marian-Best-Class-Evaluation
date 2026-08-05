@@ -30,6 +30,14 @@ export interface SubmissionEvidence {
   count?: number;
   value?: number;
   checked?: boolean;
+  submissionType?: string;
+  grades?: {
+    S?: number;
+    A?: number;
+    B?: number;
+    C?: number;
+  };
+  totalStudents?: number;
 }
 
 export interface Submission {

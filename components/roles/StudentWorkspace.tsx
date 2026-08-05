@@ -46,9 +46,32 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     });
   }, [criteriaCatalog, isStudentRep]);
 
+  const { activeAcademicYear } = useApp();
+
   // Form State for Submit Activity
   const [selectedCategory, setSelectedCategory] = useState(availableCriteriaCatalog[0]?.id || 'cat-online-courses');
   const [selectedCriteriaId, setSelectedCriteriaId] = useState<number>(availableCriteriaCatalog[0]?.items[0]?.id || 201);
+
+  // Academic Category State (Submission Types & Grade Breakdown)
+  const [academicSubmissionType, setAcademicSubmissionType] = useState<'Sem Result' | 'SAVE Sem Result'>('Sem Result');
+  const [sGradeCount, setSGradeCount] = useState<number>(0);
+  const [aGradeCount, setAGradeCount] = useState<number>(0);
+  const [bGradeCount, setBGradeCount] = useState<number>(0);
+  const [cGradeCount, setCGradeCount] = useState<number>(0);
+
+  const isAcademicCategory =
+    selectedCategory === 'cat-academics' ||
+    availableCriteriaCatalog.find((c) => c.id === selectedCategory)?.category.toLowerCase().trim() === 'academics';
+
+  const existingAcademicSubmission = React.useMemo(() => {
+    if (!isAcademicCategory) return null;
+    return submissions.find(
+      (s) =>
+        (!s.academicYear || s.academicYear === activeAcademicYear) &&
+        s.evidence?.submissionType === academicSubmissionType &&
+        s.id !== editingSubId
+    );
+  }, [isAcademicCategory, submissions, activeAcademicYear, academicSubmissionType, editingSubId]);
 
   // Sync selected category if current selection is not available for regular student
   React.useEffect(() => {
@@ -77,6 +100,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         setSelectedCriteriaId(sub.criteriaId);
         setDescription(sub.description);
         if (sub.evidence?.count) setCountValue(sub.evidence.count);
+        if (sub.evidence?.submissionType) {
+          setAcademicSubmissionType(sub.evidence.submissionType as 'Sem Result' | 'SAVE Sem Result');
+        }
+        if (sub.evidence?.grades) {
+          setSGradeCount(sub.evidence.grades.S || 0);
+          setAGradeCount(sub.evidence.grades.A || 0);
+          setBGradeCount(sub.evidence.grades.B || 0);
+          setCGradeCount(sub.evidence.grades.C || 0);
+        }
         if (sub.eventId) {
           setEventId(sub.eventId);
           setProofFile('');
@@ -234,11 +266,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   };
 
   const handleFormSubmit = (status: 'Submitted' | 'Draft') => {
-    if (!description.trim()) return;
+    const isAcademicCategory =
+      currentCategory?.id === 'cat-academics' ||
+      currentCategory?.category.toLowerCase().trim() === 'academics';
 
     const isProgramsOrganized =
       currentCategory?.id === 'cat-programs-organized' ||
       currentCategory?.category.toLowerCase().trim() === 'programs organized';
+
+    if (isAcademicCategory && existingAcademicSubmission && !editingSubId) {
+      alert(`"${academicSubmissionType}" has already been updated for this evaluation cycle. Only one submission per type is allowed.`);
+      return;
+    }
+
+    const totalStudents = sGradeCount + aGradeCount + bGradeCount + cGradeCount;
+    let finalDescription = description.trim();
+    if (isAcademicCategory && !finalDescription) {
+      finalDescription = `${academicSubmissionType} Grade Summary — S: ${sGradeCount}, A: ${aGradeCount}, B: ${bGradeCount}, C: ${cGradeCount} (Total: ${totalStudents} students)`;
+    }
+
+    if (!finalDescription) return;
 
     const initialStatus = status === 'Draft' ? 'Draft' : 'Pending Rep Verification';
     const computedEventId = isProgramsOrganized ? (eventId.trim() || undefined) : undefined;
@@ -246,27 +293,36 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       ? (eventId.trim() ? `Event ID: ${eventId.trim()}` : (proofFile || 'EVT-SUBMISSION'))
       : (proofFile || 'document_proof.pdf');
 
+    const computedEvidence = isAcademicCategory
+      ? {
+          type: 'academic_grades',
+          submissionType: academicSubmissionType,
+          grades: { S: sGradeCount, A: aGradeCount, B: bGradeCount, C: cGradeCount },
+          totalStudents
+        }
+      : { type: currentItem?.type || 'count', count: countValue };
+
     if (editingSubId) {
       updateSubmission(editingSubId, {
         criteriaId: selectedCriteriaId,
-        description,
+        description: finalDescription,
         proof: computedProof,
         eventId: computedEventId,
         status: initialStatus,
-        evidence: { type: currentItem?.type || 'count', count: countValue }
+        evidence: computedEvidence
       });
       setEditingSubId(null);
     } else {
       addSubmission({
         studentId: currentStudentId,
         criteriaId: selectedCriteriaId,
-        description,
+        description: finalDescription,
         status: initialStatus,
         remarks: status === 'Submitted' ? 'Awaiting Student Rep verification' : 'Saved as draft',
         proof: computedProof,
         eventId: computedEventId,
         evaluatorVerified: false,
-        evidence: { type: currentItem?.type || 'count', count: countValue }
+        evidence: computedEvidence
       });
     }
 
@@ -274,6 +330,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     setProofFile('');
     setEventId('');
     setCountValue(1);
+    setSGradeCount(0);
+    setAGradeCount(0);
+    setBGradeCount(0);
+    setCGradeCount(0);
     setActivePage('submissions');
     router.push('/student/submissions');
   };
@@ -524,44 +584,156 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     </select>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Item</label>
-                    <select
-                      className="select"
-                      value={selectedCriteriaId}
-                      onChange={(e) => setSelectedCriteriaId(Number(e.target.value))}
-                    >
-                      {currentCategory?.items.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {isAcademicCategory ? (
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: 800 }}>Type of Academic Submission</label>
+                      <select
+                        className="select"
+                        value={academicSubmissionType}
+                        onChange={(e) => setAcademicSubmissionType(e.target.value as 'Sem Result' | 'SAVE Sem Result')}
+                      >
+                        <option value="Sem Result">Sem Result (End Semester Examination)</option>
+                        <option value="SAVE Sem Result">SAVE Sem Result (Supplementary / Special Exam)</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <label className="form-label">Item</label>
+                      <select
+                        className="select"
+                        value={selectedCriteriaId}
+                        onChange={(e) => setSelectedCriteriaId(Number(e.target.value))}
+                      >
+                        {currentCategory?.items.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
-                {/* Selected Criteria Rule Box */}
-                {currentItem && (
-                  <div style={{ padding: '16px', background: 'rgba(79, 70, 229, 0.04)', border: '1px solid rgba(79, 70, 229, 0.15)', borderRadius: '14px' }}>
-                    <span className="badge badge-submitted" style={{ marginBottom: '8px' }}>
-                      {currentItem.type.toUpperCase()} BASED
-                    </span>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
+                {existingAcademicSubmission && !editingSubId && (
+                  <div
+                    style={{
+                      padding: '14px 18px',
+                      borderRadius: '12px',
+                      background: '#fef2f2',
+                      border: '1.5px solid #fecaca',
+                      color: '#991b1b',
+                      fontSize: '0.88rem',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px'
+                    }}
+                  >
+                    <span>⚠️</span>
+                    <div>
+                      <strong>One-Time Limit Reached:</strong> &ldquo;{academicSubmissionType}&rdquo; has already been submitted for active evaluation cycle. Both <em>Sem Result</em> and <em>SAVE Sem Result</em> can only be updated once per evaluation cycle.
+                    </div>
                   </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Count / Frequency</label>
-                    <input
-                      type="number"
-                      className="input"
-                      min={1}
-                      value={countValue}
-                      onChange={(e) => setCountValue(Number(e.target.value))}
-                      required
-                    />
+                {/* Academic Category Grade Breakdown Box */}
+                {isAcademicCategory ? (
+                  <div style={{ padding: '20px', background: 'rgba(99, 102, 241, 0.04)', border: '1.5px solid rgba(99, 102, 241, 0.2)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>
+                        📊 Academic Grade Breakdown ({academicSubmissionType})
+                      </h4>
+                      <span className="badge badge-verified" style={{ padding: '6px 14px', fontSize: '0.82rem', background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe' }}>
+                        Total Students: {sGradeCount + aGradeCount + bGradeCount + cGradeCount}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#4f46e5', fontWeight: 800, fontSize: '0.84rem' }}>
+                          ⭐ S Grade Count
+                        </label>
+                        <input
+                          type="number"
+                          className="input"
+                          min={0}
+                          value={sGradeCount}
+                          onChange={(e) => setSGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#059669', fontWeight: 800, fontSize: '0.84rem' }}>
+                          🥇 A Grade Count
+                        </label>
+                        <input
+                          type="number"
+                          className="input"
+                          min={0}
+                          value={aGradeCount}
+                          onChange={(e) => setAGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#d97706', fontWeight: 800, fontSize: '0.84rem' }}>
+                          🥈 B Grade Count
+                        </label>
+                        <input
+                          type="number"
+                          className="input"
+                          min={0}
+                          value={bGradeCount}
+                          onChange={(e) => setBGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#2563eb', fontWeight: 800, fontSize: '0.84rem' }}>
+                          🥉 C Grade Count
+                        </label>
+                        <input
+                          type="number"
+                          className="input"
+                          min={0}
+                          value={cGradeCount}
+                          onChange={(e) => setCGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          required
+                        />
+                      </div>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    {/* Selected Criteria Rule Box */}
+                    {currentItem && (
+                      <div style={{ padding: '16px', background: 'rgba(79, 70, 229, 0.04)', border: '1px solid rgba(79, 70, 229, 0.15)', borderRadius: '14px' }}>
+                        <span className="badge badge-submitted" style={{ marginBottom: '8px' }}>
+                          {currentItem.type.toUpperCase()} BASED
+                        </span>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  {!isAcademicCategory && (
+                    <div className="form-group">
+                      <label className="form-label">Count / Frequency</label>
+                      <input
+                        type="number"
+                        className="input"
+                        min={1}
+                        value={countValue}
+                        onChange={(e) => setCountValue(Number(e.target.value))}
+                        required
+                      />
+                    </div>
+                  )}
 
                   {isProgramsOrganized ? (
                     <div className="form-group">
@@ -734,9 +906,27 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       return (
                         <tr key={sub.id}>
                           <td style={{ fontWeight: 700 }}>{cat?.category || 'General'}</td>
-                          <td>{item?.title || 'Activity'}</td>
                           <td>
-                            {sub.evidence?.count ? `${sub.evidence.count}` : '-'}
+                            {sub.evidence?.submissionType ? (
+                              <span className="badge badge-verified" style={{ background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe', fontWeight: 800 }}>
+                                📊 {sub.evidence.submissionType}
+                              </span>
+                            ) : (
+                              item?.title || 'Activity'
+                            )}
+                          </td>
+                          <td>
+                            {sub.evidence?.type === 'academic_grades' || sub.evidence?.grades ? (
+                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                <span style={{ color: '#4f46e5' }}>S: {sub.evidence.grades?.S || 0}</span> |
+                                <span style={{ color: '#059669' }}>A: {sub.evidence.grades?.A || 0}</span> |
+                                <span style={{ color: '#d97706' }}>B: {sub.evidence.grades?.B || 0}</span> |
+                                <span style={{ color: '#2563eb' }}>C: {sub.evidence.grades?.C || 0}</span>
+                                <span style={{ color: '#64748b' }}>(Total: {sub.evidence.totalStudents || 0})</span>
+                              </div>
+                            ) : (
+                              sub.evidence?.count ? `${sub.evidence.count}` : '-'
+                            )}
                           </td>
                           <td>
                             {isEventId ? (
@@ -959,7 +1149,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             <div className="muted" style={{ fontSize: '0.76rem' }}>{studentObj?.className || 'BSc CS A'}</div>
                           </td>
                           <td style={{ fontWeight: 600 }}>{cat?.category || 'General'}</td>
-                          <td>{item?.title || 'Activity'}</td>
+                          <td>
+                            {sub.evidence?.submissionType ? (
+                              <span className="badge badge-verified" style={{ background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe', fontWeight: 800 }}>
+                                📊 {sub.evidence.submissionType}
+                              </span>
+                            ) : (
+                              item?.title || 'Activity'
+                            )}
+                          </td>
                           <td>
                             {isEventId ? (
                               <span
