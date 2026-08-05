@@ -25,7 +25,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const adminNav = [
     { id: 'years', label: 'Academic Years', href: '/admin/academic-years' },
     { id: 'criteria', label: 'Criteria Management', href: '/admin/criteria' },
-    { id: 'users', label: 'User Management', href: '/admin/users' },
     { id: 'groups', label: 'User Groups', href: '/admin/groups' },
     { id: 'departments', label: 'Department Management', href: '/admin/departments' },
     { id: 'settings', label: 'Settings', href: '/admin/settings' },

@@ -33,10 +33,13 @@ export interface SubmissionEvidence {
   submissionType?: string;
   grades?: {
     S?: number;
+    APlus?: number;
     A?: number;
+    Fail?: number;
     B?: number;
     C?: number;
   };
+  classPassPercentage?: number;
   totalStudents?: number;
 }
 
@@ -64,6 +67,7 @@ export interface AppUser {
   department?: string;
   className?: string;
   isApproved?: boolean;
+  isStudentRep?: boolean;
 }
 
 export interface UserGroup {

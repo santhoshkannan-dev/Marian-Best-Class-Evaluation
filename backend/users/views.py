@@ -1,5 +1,8 @@
+import logging
 from datetime import datetime
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -455,18 +458,27 @@ class AcademicYearListView(APIView):
 
     def put(self, request):
         year_str = request.data.get('year')
+        is_active = request.data.get('is_active', True)
+        if isinstance(is_active, str):
+            is_active = is_active.lower() == 'true' or is_active.lower() == 'active'
+
         if not year_str:
             return Response({"error": "year is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        AcademicYear.objects.all().update(is_active=False)
         try:
             ay = AcademicYear.objects.get(year=year_str)
+        except AcademicYear.DoesNotExist:
+            ay = AcademicYear.objects.create(year=year_str, is_active=is_active)
+
+        if is_active:
+            AcademicYear.objects.all().update(is_active=False)
             ay.is_active = True
             ay.save()
-        except AcademicYear.DoesNotExist:
-            ay = AcademicYear.objects.create(year=year_str, is_active=True)
+        else:
+            ay.is_active = False
+            ay.save()
 
-        return Response({"year": ay.year, "status": "Active"})
+        return Response({"year": ay.year, "status": "Active" if ay.is_active else "Inactive"})
 
 class DepartmentListView(APIView):
     permission_classes = [AllowAny]
@@ -481,10 +493,15 @@ class DepartmentListView(APIView):
     def post(self, request):
         name = request.data.get('name')
         code = request.data.get('code')
-        if not name or not code:
-            return Response({"error": "name and code are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not name:
+            return Response({"error": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not code:
+            code = ''.join([w[0] for w in name.split()]).upper()[:5] or "DEPT"
 
         dept, created = Department.objects.get_or_create(code=code, defaults={"name": name})
+        if not created and dept.name != name:
+            dept.name = name
+            dept.save(update_fields=['name'])
         return Response({"name": dept.name, "code": dept.code})
 
     def delete(self, request):
@@ -550,7 +567,14 @@ class ClassListView(APIView):
                 cls.class_teacher = None
             else:
                 try:
-                    cls.class_teacher = User.objects.get(email=teacher_email)
+                    teacher = User.objects.get(email=teacher_email)
+                    # Exclusivity constraint: Cannot be assigned to another class
+                    other_class = Class.objects.filter(class_teacher=teacher).exclude(id=cls.id).first()
+                    if other_class:
+                        return Response({
+                            "error": f"Faculty '{teacher.get_full_name() or teacher_email}' is already assigned as Class Advisor to '{other_class.name}'."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    cls.class_teacher = teacher
                 except User.DoesNotExist:
                     return Response({"error": f"Teacher with email '{teacher_email}' not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -559,7 +583,23 @@ class ClassListView(APIView):
                 cls.dqc_member = None
             else:
                 try:
-                    cls.dqc_member = User.objects.get(email=dqc_email)
+                    student = User.objects.get(email=dqc_email)
+                    # Exclusivity constraint: Cannot be assigned to another class
+                    other_class = Class.objects.filter(dqc_member=student).exclude(id=cls.id).first()
+                    if other_class:
+                        return Response({
+                            "error": f"Student '{student.get_full_name() or dqc_email}' is already assigned as DQC Representative to '{other_class.name}'."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    # Class allocation & email series verification constraint
+                    if student.class_name and student.class_name.name != cls.name:
+                        return Response({
+                            "error": f"Student '{student.get_full_name() or dqc_email}' belongs to '{student.class_name.name}' and cannot be assigned to '{cls.name}'."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    cls.dqc_member = student
+                    student.is_student_rep = True
+                    student.save(update_fields=['is_student_rep'])
                 except User.DoesNotExist:
                     return Response({"error": f"Student with email '{dqc_email}' not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -706,6 +746,39 @@ class SubmissionListView(APIView):
             event_id=event_id,
             evidence=evidence
         )
+        
+        # Sync relational models (AcademicGradeBreakdown & WorkflowAuditTrail)
+        try:
+            from users.models import AcademicGradeBreakdown, WorkflowAuditTrail
+            sub_evidence = evidence or {}
+            sub_type = sub_evidence.get("submissionType")
+            if sub_type:
+                submission.submission_type = sub_type
+                submission.save(update_fields=["submission_type"])
+            grades = sub_evidence.get("grades")
+            if isinstance(grades, dict):
+                AcademicGradeBreakdown.objects.update_or_create(
+                    submission=submission,
+                    defaults={
+                        "s_grade_count": grades.get("S", 0),
+                        "a_plus_grade_count": grades.get("APlus", 0),
+                        "a_grade_count": grades.get("A", 0),
+                        "failed_count": grades.get("Fail", 0),
+                        "class_pass_percentage": sub_evidence.get("classPassPercentage", 0.0),
+                        "total_students": sub_evidence.get("totalStudents", 0)
+                    }
+                )
+            WorkflowAuditTrail.objects.create(
+                submission=submission,
+                actor=user,
+                stage=1,
+                stage_name="Student Claims",
+                previous_status="Initial",
+                new_status=submission.status,
+                comments=remarks or ""
+            )
+        except Exception as e:
+            logger.warning(f"Error syncing relational models for submission #{submission.id}: {e}")
         
         return Response({
             "id": submission.id,

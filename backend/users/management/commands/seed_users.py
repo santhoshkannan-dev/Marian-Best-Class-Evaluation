@@ -109,4 +109,67 @@ class Command(BaseCommand):
             mca_class.save()
             self.stdout.write("Configured MCA Class Teacher and DQC member links")
 
+        # 6. Seed Criteria Catalog
+        from users.models import CriteriaCategory, CriteriaItem
+        criteria_catalog_data = [
+            {
+                "code": "cat-academics",
+                "category": "Academics",
+                "access_level": "student_rep_only",
+                "items": [
+                    {"title": "Sem Result Academic Grades", "type": "academic_grades", "marks": 5.0},
+                    {"title": "SAVE Sem Result Academic Grades", "type": "academic_grades", "marks": 5.0},
+                ]
+            },
+            {
+                "code": "cat-online-courses",
+                "category": "Online Courses",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "NPTEL Course Completed", "type": "count", "marks": 10.0},
+                    {"title": "MOOC Course Completed", "type": "count", "marks": 5.0},
+                    {"title": "Other Recognized Online Course", "type": "count", "marks": 3.0},
+                ]
+            },
+            {
+                "code": "cat-internships",
+                "category": "Internships",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Offline Internship", "type": "count", "marks": 5.0},
+                    {"title": "Online Internship", "type": "count", "marks": 3.0},
+                ]
+            },
+            {
+                "code": "cat-programs-organized",
+                "category": "Programs Organized",
+                "access_level": "student_rep_only",
+                "items": [
+                    {"title": "National Level Program Organized", "type": "count", "marks": 15.0},
+                    {"title": "State/Regional Level Program Organized", "type": "count", "marks": 10.0},
+                    {"title": "Department Level Program Organized", "type": "count", "marks": 5.0},
+                ]
+            },
+            {
+                "code": "cat-documentation",
+                "category": "Documentation",
+                "access_level": "student_rep_only",
+                "items": [
+                    {"title": "Class Activity Report & Documents", "type": "fixed", "marks": 10.0},
+                ]
+            }
+        ]
+
+        for cat_data in criteria_catalog_data:
+            cat_obj, _ = CriteriaCategory.objects.get_or_create(
+                code=cat_data["code"],
+                defaults={"category": cat_data["category"], "access_level": cat_data["access_level"]}
+            )
+            for item_data in cat_data["items"]:
+                CriteriaItem.objects.get_or_create(
+                    category=cat_obj,
+                    title=item_data["title"],
+                    defaults={"type": item_data["type"], "marks": item_data["marks"]}
+                )
+
         self.stdout.write(self.style.SUCCESS("Database seeding completed successfully!"))

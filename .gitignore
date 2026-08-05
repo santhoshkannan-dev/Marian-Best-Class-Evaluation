@@ -24,9 +24,7 @@ Thumbs.db
 
 # Python Virtual Environment and caches
 backend/venv/
-backend/__pycache__/
-backend/users/__pycache__/
-backend/marian_backend/__pycache__/
+__pycache__/
 *.pyc
 *.sqlite3
 

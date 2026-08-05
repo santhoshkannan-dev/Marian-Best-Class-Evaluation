@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import (
-    Department, AcademicYear, Class, User, UserProfile,
-    CriteriaCategory, CriteriaItem, UserGroup, PreviousChampion
+    Department, AcademicYear, Class, User,
+    CriteriaCategory, CriteriaItem, Submission,
+    AcademicGradeBreakdown, WorkflowAuditTrail, ClassIndexResult
 )
 
 class AcademicYearSerializer(serializers.ModelSerializer):
@@ -14,7 +15,7 @@ class ClassSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Class
-        fields = ['id', 'name', 'batch', 'department', 'department_name', 'academic_year', 'created_at']
+        fields = ['id', 'name', 'department', 'department_name', 'created_at']
 
 class DepartmentSerializer(serializers.ModelSerializer):
     classes = ClassSerializer(many=True, read_only=True)
@@ -33,37 +34,50 @@ class CriteriaCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CriteriaCategory
-        fields = ['id', 'code', 'category', 'description', 'weightage_percentage', 'display_order', 'is_active', 'items']
+        fields = ['id', 'code', 'category', 'access_level', 'items', 'created_at']
 
 class UserSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField(source='department.name', read_only=True)
     class_name_display = serializers.CharField(source='class_name.name', read_only=True)
-    batch = serializers.CharField(source='class_name.batch', read_only=True)
 
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
             'role', 'department', 'department_name', 'class_name',
-            'class_name_display', 'batch', 'is_staff', 'is_superuser', 'is_active'
+            'class_name_display', 'is_student_rep', 'is_staff', 'is_superuser', 'is_active'
         ]
 
-class UserGroupSerializer(serializers.ModelSerializer):
-    member_emails = serializers.SlugRelatedField(
-        many=True,
-        slug_field='email',
-        queryset=User.objects.all(),
-        source='members'
-    )
+class AcademicGradeBreakdownSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademicGradeBreakdown
+        fields = ['s_grade_count', 'a_plus_grade_count', 'a_grade_count', 'failed_count', 'class_pass_percentage', 'total_students']
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    grade_breakdown = AcademicGradeBreakdownSerializer(read_only=True)
 
     class Meta:
-        model = UserGroup
-        fields = ['id', 'name', 'description', 'members', 'member_emails', 'created_at', 'updated_at']
+        model = Submission
+        fields = [
+            'id', 'user', 'user_email', 'user_name', 'criteria_id',
+            'academic_year', 'submission_type', 'description', 'status',
+            'remarks', 'marks', 'proof', 'event_id', 'evaluator_verified',
+            'evidence', 'verified_by_name', 'grade_breakdown', 'created_at', 'updated_at'
+        ]
 
-class PreviousChampionSerializer(serializers.ModelSerializer):
-    academic_year_label = serializers.CharField(source='academic_year.year_label', read_only=True)
+class WorkflowAuditTrailSerializer(serializers.ModelSerializer):
+    actor_email = serializers.CharField(source='actor.email', read_only=True)
+
+    class Meta:
+        model = WorkflowAuditTrail
+        fields = ['id', 'submission', 'actor', 'actor_email', 'stage', 'stage_name', 'previous_status', 'new_status', 'comments', 'created_at']
+
+class ClassIndexResultSerializer(serializers.ModelSerializer):
     class_name_display = serializers.CharField(source='class_name.name', read_only=True)
+    academic_year_display = serializers.CharField(source='academic_year.year', read_only=True)
 
     class Meta:
-        model = PreviousChampion
-        fields = ['id', 'academic_year', 'academic_year_label', 'class_name', 'class_name_display', 'rank', 'rank_label', 'score', 'event_name', 'banner_image_url']
+        model = ClassIndexResult
+        fields = ['id', 'class_name', 'class_name_display', 'academic_year', 'academic_year_display', 'academic_score', 'co_curricular_score', 'extra_curricular_score', 'final_index', 'rank', 'updated_at']
