@@ -74,7 +74,7 @@ interface AppContextType {
   classes: any[];
   departments: any[];
   addAcademicYearGlobal: (year: string) => Promise<void>;
-  setActiveAcademicYearGlobal: (year: string) => Promise<void>;
+  setActiveAcademicYearGlobal: (year: string, isActive?: boolean) => Promise<void>;
   addDepartmentGlobal: (name: string, code: string) => Promise<void>;
   deleteDepartmentGlobal: (code: string) => Promise<void>;
   addClassGlobal: (name: string, deptCode: string) => Promise<void>;
@@ -193,10 +193,46 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [students, setStudents] = useState<Student[]>(defaultStudents);
   const [userGroups, setUserGroups] = useState<UserGroup[]>(defaultUserGroups);
 
+  const defaultClasses = [
+    { id: 1, name: "II MCA", department: "The Post-Graduate Department of Computer Applications", department_code: "PGDCA", classTeacher: "kochumol.abraham@mariancollege.org", dqcMember: "santhosh.25pmc152@mariancollege.org" },
+    { id: 2, name: "II BCA A", department: "The Under-Graduate Department of Computer Applications", department_code: "UGDCA", classTeacher: "rajesh@marian.ac.in", dqcMember: "santhosh.25ubc154@mariancollege.org" },
+    { id: 3, name: "BCA A", department: "Computer Science", department_code: "CS", classTeacher: "", dqcMember: "" },
+    { id: 4, name: "MCA", department: "The Post-Graduate Department of Computer Applications", department_code: "PGDCA", classTeacher: "", dqcMember: "" },
+  ];
+
+  const defaultDepartments = [
+    { name: "The Post-Graduate Department of Computer Applications", code: "PGDCA" },
+    { name: "The Under-Graduate Department of Computer Applications", code: "UGDCA" },
+    { name: "Computer Science", code: "CS" },
+    { name: "Internal Quality Assurance Cell", code: "IQAC" },
+    { name: "Administration", code: "ADMIN" }
+  ];
+
   const [jwtToken, setJwtToken] = useState<string | null>(null);
   const [currentUserInfo, setCurrentUserInfo] = useState<AppContextType['currentUserInfo']>(null);
-  const [classes, setClasses] = useState<any[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>(defaultClasses);
+  const [departments, setDepartments] = useState<any[]>(defaultDepartments);
+
+  // Fetch departments and classes from backend on mount
+  useEffect(() => {
+    fetch('http://localhost:8000/api/departments/')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDepartments(data);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch departments from backend:", err));
+
+    fetch('http://localhost:8000/api/auth/classes/')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setClasses(data);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch classes from backend:", err));
+  }, []);
 
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
@@ -671,37 +707,52 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const addAcademicYearGlobal = async (year: string) => {
+    // Update local state immediately
+    setAcademicYears((prev) => [...prev.filter((y) => y !== year), year]);
+
     try {
       const res = await fetch('http://localhost:8000/api/academic-years/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year, status: 'Inactive' })
+        body: JSON.stringify({ year, is_active: false })
       });
       if (res.ok) {
-        setAcademicYears(prev => [...prev.filter(y => y !== year), year]);
+        setAcademicYears((prev) => [...prev.filter((y) => y !== year), year]);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to add academic year to backend API:', e);
     }
   };
 
-  const setActiveAcademicYearGlobal = async (year: string) => {
+  const setActiveAcademicYearGlobal = async (year: string, isActive: boolean = true) => {
+    if (isActive) {
+      setActiveAcademicYear(year);
+      setSelectedAcademicYear(year);
+    } else if (activeAcademicYear === year) {
+      setActiveAcademicYear('');
+    }
+
     try {
       const res = await fetch('http://localhost:8000/api/academic-years/', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year })
+        body: JSON.stringify({ year, is_active: isActive })
       });
       if (res.ok) {
-        setActiveAcademicYear(year);
-        setSelectedAcademicYear(year);
+        if (isActive) {
+          setActiveAcademicYear(year);
+          setSelectedAcademicYear(year);
+        }
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to update active academic year on backend API:', e);
     }
   };
 
   const addDepartmentGlobal = async (name: string, code: string) => {
+    const newDeptObj = { name, code };
+    setDepartments((prev) => [...prev.filter((d) => d.code !== code && d.name !== name), newDeptObj]);
+
     try {
       const res = await fetch('http://localhost:8000/api/departments/', {
         method: 'POST',
@@ -710,45 +761,68 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
       if (res.ok) {
         const newDept = await res.json();
-        setDepartments(prev => [...prev.filter(d => d.code !== code), newDept]);
+        setDepartments((prev) => [...prev.filter((d) => d.code !== code && d.name !== name), newDept]);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to add department to backend API:', e);
     }
   };
 
   const deleteDepartmentGlobal = async (code: string) => {
+    setDepartments((prev) => prev.filter((d) => d.code !== code && d.name !== code));
+
     try {
-      const res = await fetch('http://localhost:8000/api/departments/', {
+      await fetch('http://localhost:8000/api/departments/', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
       });
-      if (res.ok) {
-        setDepartments(prev => prev.filter(d => d.code !== code));
-      }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to delete department from backend API:', e);
     }
   };
 
   const addClassGlobal = async (name: string, deptCode: string) => {
+    const deptObj = departments.find((d) => d.code === deptCode || d.name === deptCode);
+    const deptName = deptObj ? deptObj.name : deptCode;
+    const realCode = deptObj ? deptObj.code : deptCode;
+
+    const newClsObj = {
+      id: Date.now(),
+      name,
+      department: deptName,
+      department_code: realCode,
+      classTeacher: "",
+      dqcMember: ""
+    };
+
+    setClasses((prev) => [...prev.filter((c) => c.name !== name), newClsObj]);
+
     try {
       const res = await fetch('http://localhost:8000/api/auth/classes/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, department_code: deptCode })
+        body: JSON.stringify({ name, department_code: realCode })
       });
       if (res.ok) {
         const newCls = await res.json();
-        setClasses(prev => [...prev.filter(c => c.name !== name), newCls]);
+        setClasses((prev) => [...prev.filter((c) => c.name !== name), newCls]);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to add class to backend API:', e);
     }
   };
 
   const updateClassMapping = async (name: string, teacherEmail: string, dqcEmail: string) => {
+    // Optimistically update local state immediately
+    setClasses((prev) =>
+      prev.map((c) => (c.name === name ? { ...c, classTeacher: teacherEmail, dqcMember: dqcEmail } : c))
+    );
+
+    // Auto-sync group memberships
+    if (teacherEmail) addUserToGroup('grp-class-teachers', teacherEmail);
+    if (dqcEmail) addUserToGroup('grp-student-reps', dqcEmail);
+
     try {
       const res = await fetch('http://localhost:8000/api/auth/classes/', {
         method: 'PUT',
@@ -757,10 +831,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
       if (res.ok) {
         const updatedCls = await res.json();
-        setClasses(prev => prev.map(c => c.name === name ? updatedCls : c));
+        setClasses((prev) => prev.map((c) => (c.name === name ? updatedCls : c)));
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to update class mapping on backend:', e);
     }
   };
 

@@ -84,6 +84,7 @@ class Submission(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submissions')
     criteria_id = models.IntegerField()
     academic_year = models.CharField(max_length=50, blank=True, null=True)
+    submission_type = models.CharField(max_length=50, blank=True, null=True) # e.g. 'Sem Result', 'SAVE Sem Result'
     description = models.TextField()
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Draft')
     remarks = models.TextField(blank=True, null=True)
@@ -98,3 +99,70 @@ class Submission(models.Model):
 
     def __str__(self):
         return f"Submission {self.id} - {self.user.email} - {self.status}"
+
+
+class CriteriaCategory(models.Model):
+    code = models.CharField(max_length=50, unique=True) # e.g. 'cat-academics'
+    category = models.CharField(max_length=100)
+    access_level = models.CharField(max_length=20, default='all_students') # 'all_students', 'student_rep_only'
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.category
+
+
+class CriteriaItem(models.Model):
+    category = models.ForeignKey(CriteriaCategory, on_delete=models.CASCADE, related_name='items')
+    title = models.CharField(max_length=255)
+    type = models.CharField(max_length=20) # 'count', 'fixed', 'range', 'negative', 'academic_grades'
+    marks = models.FloatField(default=0.0)
+    rules_json = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.category.category} - {self.title}"
+
+
+class AcademicGradeBreakdown(models.Model):
+    submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name='grade_breakdown')
+    s_grade_count = models.IntegerField(default=0)
+    a_plus_grade_count = models.IntegerField(default=0)
+    a_grade_count = models.IntegerField(default=0)
+    failed_count = models.IntegerField(default=0)
+    class_pass_percentage = models.FloatField(default=0.0)
+    total_students = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Grade Breakdown for Submission #{self.submission_id}"
+
+
+class WorkflowAuditTrail(models.Model):
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='audit_logs')
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    stage = models.IntegerField() # 1 to 7
+    stage_name = models.CharField(max_length=100)
+    previous_status = models.CharField(max_length=50)
+    new_status = models.CharField(max_length=50)
+    comments = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Audit Log #{self.id} - Sub #{self.submission_id} Stage {self.stage}"
+
+
+class ClassIndexResult(models.Model):
+    class_name = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='index_results')
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
+    academic_score = models.FloatField(default=0.0)
+    co_curricular_score = models.FloatField(default=0.0)
+    extra_curricular_score = models.FloatField(default=0.0)
+    final_index = models.FloatField(default=0.0)
+    rank = models.IntegerField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.class_name.name} ({self.academic_year.year}) Index: {self.final_index}"

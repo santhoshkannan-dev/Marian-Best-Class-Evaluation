@@ -50,6 +50,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     addClassGlobal,
     updateClassMapping,
     users,
+    userGroups,
     addUserGlobal
   } = useApp();
 
@@ -86,8 +87,8 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     setNewYearInput('');
   };
 
-  const handleSetActiveYear = (targetYear: string) => {
-    setActiveAcademicYearGlobal(targetYear);
+  const handleToggleYearStatus = (targetYear: string, isActive: boolean) => {
+    setActiveAcademicYearGlobal(targetYear, isActive);
   };
 
   // ----------------------------------------------------
@@ -328,14 +329,25 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     if (departments) {
       setDeptsList(
         departments.map((d) => {
-          const deptClasses = (classes || []).filter(
-            (c) => c.department_code === d.code || c.department === d.name
-          );
+          const deptClasses = (classes || []).filter((c) => {
+            if (!c || !c.name) return false;
+            const cDept = (c.department || '').toLowerCase().trim();
+            const cCode = (c.department_code || '').toLowerCase().trim();
+            const dName = (d.name || '').toLowerCase().trim();
+            const dCode = (d.code || '').toLowerCase().trim();
+
+            return (
+              (cCode && dCode && cCode === dCode) ||
+              (cDept && dName && cDept === dName) ||
+              (cDept && dCode && cDept === dCode) ||
+              (cCode && dName && cCode === dName)
+            );
+          });
           return {
             name: d.name,
             code: d.code,
             classes: deptClasses.map((c) => c.name)
-          } as any;
+          };
         })
       );
     }
@@ -460,14 +472,18 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                         </td>
                         <td>
                           {y.status === 'Active' ? (
-                            <button className="btn btn-secondary btn-sm" disabled style={{ opacity: 0.6 }}>
-                              Currently Active
+                            <button
+                              className="btn btn-sm btn-secondary"
+                              style={{ fontSize: '0.78rem', padding: '6px 14px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', fontWeight: 700 }}
+                              onClick={() => handleToggleYearStatus(y.year, false)}
+                            >
+                              Set Inactive
                             </button>
                           ) : (
                             <button
                               className="btn btn-sm"
-                              style={{ background: '#f97316', color: '#ffffff', fontWeight: 700 }}
-                              onClick={() => handleSetActiveYear(y.year)}
+                              style={{ background: '#10b981', color: '#ffffff', fontWeight: 700, padding: '6px 14px', fontSize: '0.78rem' }}
+                              onClick={() => handleToggleYearStatus(y.year, true)}
                             >
                               Set Active
                             </button>
@@ -953,6 +969,65 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                        {d.classes.map((className) => {
                          const classObj = classes.find((c) => c.name === className);
+
+                         const classTeachersGroup = (userGroups || []).find(
+                           (g) => g.name === 'Class Teachers Council' || g.id === 'grp-class-teachers'
+                         );
+                         const studentRepsGroup = (userGroups || []).find(
+                           (g) => g.name === 'Student Representatives' || g.id === 'grp-student-reps'
+                         );
+
+                         // All Faculty/Teacher Users (Excluding those assigned to ANOTHER class)
+                         const availableFaculty = users.filter((u) => {
+                           const isTeacherRole = u.role === 'teacher' || u.role === 'faculty';
+                           if (!isTeacherRole) return false;
+
+                           // Exclusivity constraint: allow current assigned advisor for this class, exclude assigned to another class
+                           const isAssignedToOtherClass = classes.some(
+                             (c) => c.name !== className && c.classTeacher?.toLowerCase().trim() === u.email.toLowerCase().trim()
+                           );
+                           return !isAssignedToOtherClass;
+                         }).sort((a, b) => {
+                           const aInGroup = classTeachersGroup?.emails.some((e) => e.toLowerCase().trim() === a.email.toLowerCase().trim());
+                           const bInGroup = classTeachersGroup?.emails.some((e) => e.toLowerCase().trim() === b.email.toLowerCase().trim());
+                           if (aInGroup && !bInGroup) return -1;
+                           if (!aInGroup && bInGroup) return 1;
+                           return a.name.localeCompare(b.name);
+                         });
+
+                         // All Students belonging to class (Excluding those assigned as DQC Rep to ANOTHER class)
+                         const availableStudentReps = users.filter((u) => {
+                           const isStudentRole = u.role === 'student';
+                           if (!isStudentRole) return false;
+
+                           // Exclusivity constraint: allow current assigned DQC rep for this class, exclude assigned to another class
+                           const isAssignedToOtherClass = classes.some(
+                             (c) => c.name !== className && c.dqcMember?.toLowerCase().trim() === u.email.toLowerCase().trim()
+                           );
+                           if (isAssignedToOtherClass) return false;
+
+                           // Class Match OR Email Series Verification
+                           if (u.className && u.className.toLowerCase().trim() === className.toLowerCase().trim()) {
+                             return true;
+                           }
+
+                           const email = (u.email || '').toLowerCase().trim();
+                           const localPart = email.split('@')[0] || '';
+                           const cleanClass = className.toLowerCase().trim();
+
+                           if (cleanClass.includes('mca')) return localPart.includes('pmc') || localPart.includes('mc') || localPart.includes('mca');
+                           if (cleanClass.includes('bca')) return localPart.includes('ubc') || localPart.includes('bc') || localPart.includes('bca');
+                           if (cleanClass.includes('bsc') || cleanClass.includes('cs')) return localPart.includes('bsc') || localPart.includes('cs');
+
+                           return true;
+                         }).sort((a, b) => {
+                           const aInGroup = studentRepsGroup?.emails.some((e) => e.toLowerCase().trim() === a.email.toLowerCase().trim()) || a.isStudentRep;
+                           const bInGroup = studentRepsGroup?.emails.some((e) => e.toLowerCase().trim() === b.email.toLowerCase().trim()) || b.isStudentRep;
+                           if (aInGroup && !bInGroup) return -1;
+                           if (!aInGroup && bInGroup) return 1;
+                           return a.name.localeCompare(b.name);
+                         });
+
                          return (
                            <div
                              key={className}
@@ -976,12 +1051,15 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                                    fontWeight: 600
                                  }}
                                >
-                                 <option value="">Select Teacher</option>
-                                 {users.filter((u) => u.role === 'faculty').map((u) => (
-                                   <option key={u.email} value={u.email}>
-                                     {u.name}
-                                   </option>
-                                 ))}
+                                 <option value="">Select Teacher (Class Advisor)</option>
+                                 {availableFaculty.map((u) => {
+                                   const isCouncilMember = classTeachersGroup?.emails.some((e) => e.toLowerCase().trim() === u.email.toLowerCase().trim());
+                                   return (
+                                     <option key={u.email} value={u.email}>
+                                       {isCouncilMember ? '⭐ [Council] ' : ''}{u.name} ({u.email})
+                                     </option>
+                                   );
+                                 })}
                                </select>
                              </div>
 
@@ -1001,12 +1079,15 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                                    fontWeight: 600
                                  }}
                                >
-                                 <option value="">Select DQC Rep</option>
-                                 {users.filter((u) => u.role === 'student').map((u) => (
-                                   <option key={u.email} value={u.email}>
-                                     {u.name}
-                                   </option>
-                                 ))}
+                                 <option value="">Select DQC Rep (Student)</option>
+                                 {availableStudentReps.map((u) => {
+                                   const isRepGroupMember = studentRepsGroup?.emails.some((e) => e.toLowerCase().trim() === u.email.toLowerCase().trim()) || u.isStudentRep;
+                                   return (
+                                     <option key={u.email} value={u.email}>
+                                       {isRepGroupMember ? '⭐ [Rep Group] ' : ''}{u.name} ({u.email})
+                                     </option>
+                                   );
+                                 })}
                                </select>
                              </div>
                            </div>

@@ -55,9 +55,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   // Academic Category State (Submission Types & Grade Breakdown)
   const [academicSubmissionType, setAcademicSubmissionType] = useState<'Sem Result' | 'SAVE Sem Result'>('Sem Result');
   const [sGradeCount, setSGradeCount] = useState<number>(0);
+  const [aPlusGradeCount, setAPlusGradeCount] = useState<number>(0);
   const [aGradeCount, setAGradeCount] = useState<number>(0);
-  const [bGradeCount, setBGradeCount] = useState<number>(0);
-  const [cGradeCount, setCGradeCount] = useState<number>(0);
+  const [failCount, setFailCount] = useState<number>(0);
+  const [passPercentage, setPassPercentage] = useState<number>(0);
 
   const isAcademicCategory =
     selectedCategory === 'cat-academics' ||
@@ -105,9 +106,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         }
         if (sub.evidence?.grades) {
           setSGradeCount(sub.evidence.grades.S || 0);
+          setAPlusGradeCount(sub.evidence.grades.APlus || 0);
           setAGradeCount(sub.evidence.grades.A || 0);
-          setBGradeCount(sub.evidence.grades.B || 0);
-          setCGradeCount(sub.evidence.grades.C || 0);
+          setFailCount(sub.evidence.grades.Fail || 0);
+        }
+        if (sub.evidence?.classPassPercentage !== undefined) {
+          setPassPercentage(sub.evidence.classPassPercentage);
         }
         if (sub.eventId) {
           setEventId(sub.eventId);
@@ -279,10 +283,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
-    const totalStudents = sGradeCount + aGradeCount + bGradeCount + cGradeCount;
+    const totalStudents = sGradeCount + aPlusGradeCount + aGradeCount + failCount;
     let finalDescription = description.trim();
     if (isAcademicCategory && !finalDescription) {
-      finalDescription = `${academicSubmissionType} Grade Summary — S: ${sGradeCount}, A: ${aGradeCount}, B: ${bGradeCount}, C: ${cGradeCount} (Total: ${totalStudents} students)`;
+      finalDescription = `${academicSubmissionType} Grade Summary — S: ${sGradeCount}, A+: ${aPlusGradeCount}, A: ${aGradeCount}, Fail: ${failCount} (Pass: ${passPercentage}%, Total: ${totalStudents} students)`;
     }
 
     if (!finalDescription) return;
@@ -297,7 +301,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       ? {
           type: 'academic_grades',
           submissionType: academicSubmissionType,
-          grades: { S: sGradeCount, A: aGradeCount, B: bGradeCount, C: cGradeCount },
+          grades: { S: sGradeCount, APlus: aPlusGradeCount, A: aGradeCount, Fail: failCount },
+          classPassPercentage: passPercentage,
           totalStudents
         }
       : { type: currentItem?.type || 'count', count: countValue };
@@ -331,9 +336,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     setEventId('');
     setCountValue(1);
     setSGradeCount(0);
+    setAPlusGradeCount(0);
     setAGradeCount(0);
-    setBGradeCount(0);
-    setCGradeCount(0);
+    setFailCount(0);
+    setPassPercentage(0);
     setActivePage('submissions');
     router.push('/student/submissions');
   };
@@ -644,14 +650,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         📊 Academic Grade Breakdown ({academicSubmissionType})
                       </h4>
                       <span className="badge badge-verified" style={{ padding: '6px 14px', fontSize: '0.82rem', background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe' }}>
-                        Total Students: {sGradeCount + aGradeCount + bGradeCount + cGradeCount}
+                        Total Students: {sGradeCount + aPlusGradeCount + aGradeCount + failCount}
                       </span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#4f46e5', fontWeight: 800, fontSize: '0.84rem' }}>
-                          ⭐ S Grade Count
+                        <label className="form-label" style={{ color: '#4f46e5', fontWeight: 800, fontSize: '0.82rem' }}>
+                          ⭐ S Grade
                         </label>
                         <input
                           type="number"
@@ -664,8 +670,22 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#059669', fontWeight: 800, fontSize: '0.84rem' }}>
-                          🥇 A Grade Count
+                        <label className="form-label" style={{ color: '#0284c7', fontWeight: 800, fontSize: '0.82rem' }}>
+                          🌟 A+ Grade
+                        </label>
+                        <input
+                          type="number"
+                          className="input"
+                          min={0}
+                          value={aPlusGradeCount}
+                          onChange={(e) => setAPlusGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#059669', fontWeight: 800, fontSize: '0.82rem' }}>
+                          🥇 A Grade
                         </label>
                         <input
                           type="number"
@@ -678,29 +698,32 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#d97706', fontWeight: 800, fontSize: '0.84rem' }}>
-                          🥈 B Grade Count
+                        <label className="form-label" style={{ color: '#dc2626', fontWeight: 800, fontSize: '0.82rem' }}>
+                          ❌ Fail Count
                         </label>
                         <input
                           type="number"
                           className="input"
                           min={0}
-                          value={bGradeCount}
-                          onChange={(e) => setBGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          value={failCount}
+                          onChange={(e) => setFailCount(Math.max(0, parseInt(e.target.value) || 0))}
                           required
                         />
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#2563eb', fontWeight: 800, fontSize: '0.84rem' }}>
-                          🥉 C Grade Count
+                        <label className="form-label" style={{ color: '#7c3aed', fontWeight: 800, fontSize: '0.82rem' }}>
+                          📈 Class Pass %
                         </label>
                         <input
                           type="number"
+                          step="0.01"
                           className="input"
                           min={0}
-                          value={cGradeCount}
-                          onChange={(e) => setCGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          max={100}
+                          placeholder="e.g. 95.5"
+                          value={passPercentage}
+                          onChange={(e) => setPassPercentage(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
                           required
                         />
                       </div>
@@ -917,12 +940,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           </td>
                           <td>
                             {sub.evidence?.type === 'academic_grades' || sub.evidence?.grades ? (
-                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                 <span style={{ color: '#4f46e5' }}>S: {sub.evidence.grades?.S || 0}</span> |
+                                <span style={{ color: '#0284c7' }}>A+: {sub.evidence.grades?.APlus || 0}</span> |
                                 <span style={{ color: '#059669' }}>A: {sub.evidence.grades?.A || 0}</span> |
-                                <span style={{ color: '#d97706' }}>B: {sub.evidence.grades?.B || 0}</span> |
-                                <span style={{ color: '#2563eb' }}>C: {sub.evidence.grades?.C || 0}</span>
-                                <span style={{ color: '#64748b' }}>(Total: {sub.evidence.totalStudents || 0})</span>
+                                <span style={{ color: '#dc2626' }}>Fail: {sub.evidence.grades?.Fail || 0}</span> |
+                                <span style={{ color: '#7c3aed' }}>Pass: {sub.evidence.classPassPercentage !== undefined ? `${sub.evidence.classPassPercentage}%` : '-'}</span>
                               </div>
                             ) : (
                               sub.evidence?.count ? `${sub.evidence.count}` : '-'

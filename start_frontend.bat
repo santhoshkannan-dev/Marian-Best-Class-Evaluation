@@ -1,0 +1,3 @@
+@echo off
+echo Starting Next.js Frontend Server...
+npm run dev

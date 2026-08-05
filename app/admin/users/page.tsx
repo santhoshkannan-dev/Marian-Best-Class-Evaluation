@@ -1,8 +1,12 @@
 'use client';
 
-import React from 'react';
-import { AdminWorkspace } from '@/components/roles/AdminWorkspace';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function UsersPage() {
-  return <AdminWorkspace view="users" />;
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/admin/academic-years');
+  }, [router]);
+  return null;
 }
