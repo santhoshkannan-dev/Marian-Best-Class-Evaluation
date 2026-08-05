@@ -13,37 +13,43 @@ export const WorkflowTimeline: React.FC = () => {
   const steps: TimelineStep[] = [
     {
       id: 1,
-      title: 'Submission',
-      subtitle: 'Student Claims',
-      desc: 'Students submit proof documents and claims for evaluation catalog items.'
+      title: 'Student Claims',
+      subtitle: 'Submission',
+      desc: 'Students submit proof documents and achievement claims for evaluation catalog items.'
     },
     {
       id: 2,
-      title: 'Verification',
-      subtitle: 'Class Teacher review',
-      desc: 'Class Teachers inspect uploaded files, verify claims, or request correction.'
+      title: 'DQAC Member Verification',
+      subtitle: 'Student Rep Audit',
+      desc: 'DQAC student representatives conduct initial verification of class and group achievement claims.'
     },
     {
       id: 3,
-      title: 'Evaluation',
-      subtitle: 'Evaluator Auditing',
-      desc: 'Central evaluators audit materials, verify compliance, and save item marks.'
+      title: 'Class Teacher Verification',
+      subtitle: 'Faculty Advisor Review',
+      desc: 'Class Teachers inspect uploaded files, verify claims, or request correction.'
     },
     {
       id: 4,
-      title: 'Moderation',
-      subtitle: 'IQAC Signoff',
-      desc: 'IQAC team reviews metrics, suggests adjustments, and locks indexes.'
+      title: 'Evaluation',
+      subtitle: 'Evaluator Auditing',
+      desc: 'Central evaluators audit materials, verify compliance, and award item marks.'
     },
     {
       id: 5,
-      title: 'Class Index',
-      subtitle: 'Score Aggregation',
-      desc: 'The dynamic index calculates class points divided by the number of students.'
+      title: 'Mark Moderation',
+      subtitle: 'IQAC Signoff',
+      desc: 'IQAC team reviews metrics, moderates marks, and locks indexes.'
     },
     {
       id: 6,
-      title: 'Grade',
+      title: 'Class Index',
+      subtitle: 'Score Aggregation',
+      desc: 'The dynamic index calculates total class points divided by student strength.'
+    },
+    {
+      id: 7,
+      title: 'Final Grade',
       subtitle: 'Final Classification',
       desc: 'Best Class trophies and ratings are assigned based on final class indexes.'
     }
@@ -85,14 +91,14 @@ export const WorkflowTimeline: React.FC = () => {
           <div
             key={step.id}
             style={{
-              flex: '1 1 160px',
+              flex: '1 1 130px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               textAlign: 'center',
               zIndex: 1,
               position: 'relative',
-              minWidth: '150px'
+              minWidth: '120px'
             }}
           >
             {/* Step circle */}

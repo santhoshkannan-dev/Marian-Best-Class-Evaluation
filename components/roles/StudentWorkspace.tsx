@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { Submission, CriteriaItem } from '@/data/initialData';
 
@@ -9,6 +10,7 @@ interface StudentWorkspaceProps {
 }
 
 export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
+  const router = useRouter();
   const {
     submissions,
     criteriaCatalog,
@@ -21,7 +23,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     setActivePage,
     isStudentRep,
     currentUserInfo,
-    updateUserProfile
+    updateUserProfile,
+    editingSubId,
+    setEditingSubId
   } = useApp();
 
   const activeTab = view || activePage || 'dashboard';
@@ -62,7 +66,30 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [proofFile, setProofFile] = useState<string>('');
   const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
-  const [editingSubId, setEditingSubId] = useState<number | null>(null);
+
+  // Synchronize form states when editing a pending submission
+  React.useEffect(() => {
+    if (editingSubId) {
+      const sub = submissions.find((s) => s.id === editingSubId);
+      if (sub) {
+        const cat = availableCriteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
+        if (cat) setSelectedCategory(cat.id);
+        setSelectedCriteriaId(sub.criteriaId);
+        setDescription(sub.description);
+        if (sub.evidence?.count) setCountValue(sub.evidence.count);
+        if (sub.eventId) {
+          setEventId(sub.eventId);
+          setProofFile('');
+        } else if (sub.proof?.startsWith('Event ID:')) {
+          setEventId(sub.proof.replace('Event ID: ', ''));
+          setProofFile('');
+        } else {
+          setEventId('');
+          setProofFile(sub.proof || '');
+        }
+      }
+    }
+  }, [editingSubId, submissions, availableCriteriaCatalog]);
 
   // Search & Filter State for My Submissions
   const [searchQuery, setSearchQuery] = useState('');
@@ -248,25 +275,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     setEventId('');
     setCountValue(1);
     setActivePage('submissions');
+    router.push('/student/submissions');
   };
 
   const handleEdit = (sub: Submission) => {
-    const cat = availableCriteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
-    if (cat) setSelectedCategory(cat.id);
-    setSelectedCriteriaId(sub.criteriaId);
-    setDescription(sub.description);
-    if (sub.eventId) {
-      setEventId(sub.eventId);
-      setProofFile('');
-    } else if (sub.proof?.startsWith('Event ID:')) {
-      setEventId(sub.proof.replace('Event ID: ', ''));
-      setProofFile('');
-    } else {
-      setEventId('');
-      setProofFile(sub.proof || '');
-    }
     setEditingSubId(sub.id);
     setActivePage('submit');
+    router.push('/student/submit');
   };
 
   const getStatusBadge = (status: string) => {
@@ -412,10 +427,45 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         {activeTab === 'submit' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>
-              {editingSubId ? 'Edit Submission' : 'Submit Activity'}
+              {editingSubId ? 'Edit Pending Submission' : 'Submit Activity'}
             </h1>
 
             <div className="card" style={{ maxWidth: '860px' }}>
+              {editingSubId && (
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    marginBottom: '16px',
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    background: '#fef3c7',
+                    border: '1px solid #fde68a',
+                    color: '#92400e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    ✏️ <strong>Editing Pending Submission #{editingSubId}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => {
+                      setEditingSubId(null);
+                      setDescription('');
+                      setProofFile('');
+                      setEventId('');
+                      setCountValue(1);
+                    }}
+                    style={{ padding: '4px 10px', fontSize: '0.78rem' }}
+                  >
+                    Cancel Edit
+                  </button>
+                </div>
+              )}
               {/* Category Availability Notice */}
               <div
                 style={{
@@ -676,7 +726,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
                       const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
                       const rulePts = item ? item.marks * (sub.evidence?.count || 1) : 0;
-                      const isLocked = ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status);
+                      const isPending = ['Pending', 'Pending Rep Verification', 'Submitted', 'Draft', 'Correction Requested'].includes(sub.status) || sub.status.toLowerCase().includes('pending');
                       const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
                       const isEventId = sub.eventId || sub.proof?.startsWith('Event ID:');
                       const displayEventId = sub.eventId || (sub.proof?.startsWith('Event ID:') ? sub.proof.replace('Event ID: ', '') : sub.proof);
@@ -754,25 +804,33 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             )}
                           </td>
                           <td>
-                            {!isLocked ? (
+                            {isPending ? (
                               <div style={{ display: 'flex', gap: '6px' }}>
                                 <button
                                   className="btn btn-sm btn-secondary"
                                   onClick={() => handleEdit(sub)}
-                                  title="Edit Submission"
+                                  title="Edit Pending Submission"
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                 >
-                                  ✏️
+                                  ✏️ Edit
                                 </button>
                                 <button
                                   className="btn btn-sm btn-danger"
-                                  onClick={() => deleteSubmission(sub.id)}
-                                  title="Delete Submission"
+                                  onClick={() => {
+                                    if (window.confirm('Are you sure you want to delete this pending submission?')) {
+                                      deleteSubmission(sub.id);
+                                    }
+                                  }}
+                                  title="Delete Pending Submission"
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                 >
-                                  🗑️
+                                  🗑️ Delete
                                 </button>
                               </div>
                             ) : (
-                              <span className="muted" style={{ fontSize: '0.82rem', fontWeight: 600 }}>Locked</span>
+                              <span className="muted" style={{ fontSize: '0.82rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                🔒 Locked
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -1034,83 +1092,62 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         {/* TAB 5: MY PROFILE                                    */}
         {/* ---------------------------------------------------- */}
         {activeTab === 'profile' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
             <div>
               <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>My Profile</h1>
               <p className="muted" style={{ fontSize: '0.88rem' }}>
-                View and update your personal student profile details. Any changes will be synchronized directly to the database.
+                View your personal student profile details derived from your official institutional account.
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '24px', alignItems: 'start' }}>
-              {/* Profile Card Summary */}
-              <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '32px' }}>
-                <div
-                  style={{
-                    width: '100px',
-                    height: '100px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, var(--primary, #3b82f6), #1d4ed8)',
-                    color: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '2.5rem',
-                    fontWeight: 800,
-                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)'
-                  }}
-                >
-                  {currentUserInfo?.name ? currentUserInfo.name.charAt(0).toUpperCase() : 'S'}
-                </div>
-
-                <div style={{ textAlign: 'center' }}>
-                  <h2 style={{ fontSize: '1.24rem', fontWeight: 800 }}>{currentUserInfo?.name || 'Student'}</h2>
-                  <p className="muted" style={{ fontSize: '0.84rem' }}>{currentUserInfo?.email}</p>
-                </div>
-
-                <div style={{ width: '100%', height: '1px', background: '#e2e8f0' }} />
-
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
-                    <span className="muted">Role</span>
-                    <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{currentUserInfo?.role || 'Student'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
-                    <span className="muted">Department</span>
-                    <span style={{ fontWeight: 700 }}>{currentUserInfo?.department || 'Not Assigned'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
-                    <span className="muted">Current Class</span>
-                    <span style={{ fontWeight: 700 }}>{currentUserInfo?.class_name || 'Not Assigned'}</span>
-                  </div>
-                </div>
+            {/* Profile Card Summary */}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '36px 40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)' }}>
+              <div
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--primary, #3b82f6), #1d4ed8)',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2.5rem',
+                  fontWeight: 800,
+                  boxShadow: '0 4px 14px rgba(59, 130, 246, 0.25)',
+                  overflow: 'hidden'
+                }}
+              >
+                {currentUserInfo?.picture ? (
+                  <img
+                    src={currentUserInfo.picture}
+                    alt={currentUserInfo.name || 'Profile'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span>{currentUserInfo?.name ? currentUserInfo.name.charAt(0).toUpperCase() : 'S'}</span>
+                )}
               </div>
 
-              {/* Profile Details (Read Only) */}
-              <div className="card" style={{ padding: '32px' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '20px' }}>Profile Details</h3>
+              <div style={{ textAlign: 'center' }}>
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)' }}>{currentUserInfo?.name || 'Student'}</h2>
+                <p className="muted" style={{ fontSize: '0.86rem', marginTop: '4px' }}>{currentUserInfo?.email}</p>
+              </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div className="form-group">
-                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Full Name</label>
-                    <div style={{ padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: 600, color: 'var(--text-main)' }}>
-                      {currentUserInfo?.name || 'Not Set'}
-                    </div>
-                  </div>
+              <div style={{ width: '100%', height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
 
-                  <div className="form-group">
-                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Registered Class</label>
-                    <div style={{ padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: 600, color: 'var(--text-main)' }}>
-                      {currentUserInfo?.class_name || 'Not Assigned'}
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Email Address</label>
-                    <div style={{ padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: 600, color: 'var(--text-main)' }}>
-                      {currentUserInfo?.email || 'Not Set'}
-                    </div>
-                  </div>
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.92rem' }}>
+                  <span className="muted" style={{ color: '#64748b' }}>Role</span>
+                  <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{currentUserInfo?.role || 'Student'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', fontSize: '0.92rem' }}>
+                  <span className="muted" style={{ color: '#64748b', whiteSpace: 'nowrap' }}>Department</span>
+                  <span style={{ fontWeight: 700, textAlign: 'right' }}>{currentUserInfo?.department || 'Not Assigned'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.92rem' }}>
+                  <span className="muted" style={{ color: '#64748b' }}>Current Class</span>
+                  <span style={{ fontWeight: 700 }}>{currentUserInfo?.class_name || 'Not Assigned'}</span>
                 </div>
               </div>
             </div>

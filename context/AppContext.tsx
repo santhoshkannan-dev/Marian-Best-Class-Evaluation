@@ -69,6 +69,8 @@ interface AppContextType {
   addUserToGroup: (groupId: string, email: string) => boolean;
   removeUserFromGroup: (groupId: string, email: string) => void;
   updateUserProfile: (name: string, className: string) => Promise<{ success: boolean; error?: string }>;
+  editingSubId: number | null;
+  setEditingSubId: (id: number | null) => void;
   classes: any[];
   departments: any[];
   addAcademicYearGlobal: (year: string) => Promise<void>;
@@ -92,9 +94,88 @@ const mapBackendRoleToFrontend = (backendRole: string): string => {
   return role; // student, iqac, admin
 };
 
+export function parseStudentEmail(email: string) {
+  if (!email || !email.includes('@')) return null;
+  const usernamePart = email.split('@')[0];
+  const parts = usernamePart.split('.');
+  if (parts.length < 2) return null;
+
+  const rawName = parts[0];
+  const codePart = parts[1];
+
+  const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
+  if (!codePart || codePart.length < 5 || !/^\d{2}/.test(codePart)) return null;
+
+  const batchYear = 2000 + parseInt(codePart.substring(0, 2), 10);
+  const levelChar = codePart.charAt(2).toLowerCase();
+  const courseCode = codePart.substring(3, 5).toLowerCase();
+  const rollDigits = codePart.substring(5);
+
+  const isPg = levelChar === 'p';
+  const isUg = levelChar === 'u';
+
+  const courseMap: Record<string, { full: string; abbr: string; field: string }> = {
+    mc: { full: 'Master of Computer Applications', abbr: 'MCA', field: 'Computer Applications' },
+    bc: { full: 'Bachelor of Computer Applications', abbr: 'BCA', field: 'Computer Applications' },
+    ba: { full: 'Bachelor of Business Administration', abbr: 'BBA', field: 'Business Administration' },
+    cm: { full: 'Commerce', abbr: 'BCom', field: 'Commerce' },
+    sw: { full: 'Social Work', abbr: 'MSW', field: 'Social Work' },
+  };
+
+  const courseInfo = courseMap[courseCode] || {
+    full: courseCode.toUpperCase(),
+    abbr: courseCode.toUpperCase(),
+    field: courseCode.toUpperCase()
+  };
+
+  const department = isPg
+    ? `The Post-Graduate Department of ${courseInfo.field}`
+    : `The Under-Graduate Department of ${courseInfo.field}`;
+
+  const departmentCode = isPg
+    ? (courseInfo.abbr === 'MCA' ? 'PGDCA' : `PG-${courseInfo.abbr}`)
+    : (courseInfo.abbr === 'BCA' ? 'UGDCA' : `UG-${courseInfo.abbr}`);
+
+  let section = '';
+  if (isUg && /^\d+$/.test(rollDigits)) {
+    const rollNum = parseInt(rollDigits, 10);
+    const series = Math.floor(rollNum / 100);
+    if (series === 1) section = 'A';
+    else if (series === 2) section = 'B';
+    else if (series === 3) section = 'C';
+    else if (series === 4) section = 'D';
+    else section = 'A';
+  }
+
+  const currentYear = new Date().getFullYear();
+  const yearDiff = currentYear - batchYear + 1;
+  let yearRoman = 'II';
+  if (yearDiff <= 1) yearRoman = 'I';
+  else if (yearDiff === 2) yearRoman = 'II';
+  else if (yearDiff === 3) yearRoman = 'III';
+  else if (yearDiff >= 4) yearRoman = 'IV';
+
+  const className = section
+    ? `${yearRoman} ${courseInfo.abbr} ${section}`
+    : `${yearRoman} ${courseInfo.abbr}`;
+
+  return {
+    firstName,
+    batchYear,
+    level: isPg ? 'Postgraduate' : 'Undergraduate',
+    courseName: courseInfo.abbr,
+    department,
+    departmentCode,
+    section,
+    className
+  };
+}
+
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<string>('');
   const [activePage, setActivePage] = useState<string>('dashboard');
+  const [editingSubId, setEditingSubId] = useState<number | null>(null);
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [currentStudentId, setCurrentStudentId] = useState<number>(1);
@@ -119,6 +200,22 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
+  const updateCurrentUserInfo = (info: AppContextType['currentUserInfo']) => {
+    if (info && info.email) {
+      const parsed = parseStudentEmail(info.email);
+      if (parsed) {
+        info = {
+          ...info,
+          name: info.name && info.name !== info.email ? info.name : parsed.firstName,
+          department: info.department || parsed.department,
+          department_code: info.department_code || parsed.departmentCode,
+          class_name: info.class_name || parsed.className
+        };
+      }
+    }
+    setCurrentUserInfo(info);
+  };
+
   // Load from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -142,7 +239,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (data.currentRole) setCurrentRole(data.currentRole);
           if (data.currentUserId) setCurrentUserId(data.currentUserId);
           if (data.jwtToken) setJwtToken(data.jwtToken);
-          if (data.currentUserInfo) setCurrentUserInfo(data.currentUserInfo);
+          if (data.currentUserInfo) updateCurrentUserInfo(data.currentUserInfo);
         }
       } catch (e) {
         console.error('Failed to load persisted state', e);
@@ -225,7 +322,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       const feRole = mapBackendRoleToFrontend(data.user.role);
       setJwtToken(data.tokens.access);
-      setCurrentUserInfo(data.user);
+      updateCurrentUserInfo(data.user);
       setLoggedIn(true);
       setCurrentRole(feRole);
       setCurrentUserId(data.user.id);
@@ -259,7 +356,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       const feRole = mapBackendRoleToFrontend(data.user.role);
       setJwtToken(data.tokens.access);
-      setCurrentUserInfo(data.user);
+      updateCurrentUserInfo(data.user);
       setLoggedIn(true);
       setCurrentRole(feRole);
       setCurrentUserId(data.user.id);
@@ -292,7 +389,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         return { success: false, error: data.error || 'Failed to update profile' };
       }
 
-      setCurrentUserInfo(data);
+      updateCurrentUserInfo(data);
 
       setUsers((prev) =>
         prev.map((u) =>
@@ -440,35 +537,39 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const updateSubmission = async (id: number, updates: Partial<Submission>) => {
+    // Optimistically update state locally first
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+    );
+
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
-      const res = await fetch(`http://localhost:8000/api/submissions/${id}/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          criteriaId: updates.criteriaId,
-          academicYear: updates.academicYear,
-          description: updates.description,
-          status: updates.status,
-          remarks: updates.remarks,
-          marks: updates.marks,
-          proof: updates.proof,
-          eventId: updates.eventId,
-          evidence: updates.evidence,
-          evaluatorVerified: updates.evaluatorVerified
-        })
-      });
-      if (res.ok) {
-        const updatedSub = await res.json();
-        setSubmissions((prev) =>
-          prev.map((s) => (s.id === id ? updatedSub : s))
-        );
-      } else {
-        const data = await res.json();
-        console.error('Failed to update submission:', data.error);
+      if (token) {
+        const res = await fetch(`http://localhost:8000/api/submissions/${id}/`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            criteriaId: updates.criteriaId,
+            academicYear: updates.academicYear,
+            description: updates.description,
+            status: updates.status,
+            remarks: updates.remarks,
+            marks: updates.marks,
+            proof: updates.proof,
+            eventId: updates.eventId,
+            evidence: updates.evidence,
+            evaluatorVerified: updates.evaluatorVerified
+          })
+        });
+        if (res.ok) {
+          const updatedSub = await res.json();
+          setSubmissions((prev) =>
+            prev.map((s) => (s.id === id ? updatedSub : s))
+          );
+        }
       }
     } catch (err: any) {
       console.error('Server connection failed during submission update:', err);
@@ -476,18 +577,18 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const deleteSubmission = async (id: number) => {
+    // Optimistically remove from state locally first
+    setSubmissions((prev) => prev.filter((s) => s.id !== id));
+
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
-      const res = await fetch(`http://localhost:8000/api/submissions/${id}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
-      if (res.ok) {
-        setSubmissions((prev) => prev.filter((s) => s.id !== id));
-      } else {
-        console.error('Failed to delete submission');
+      if (token) {
+        await fetch(`http://localhost:8000/api/submissions/${id}/`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
       }
     } catch (err: any) {
       console.error('Server connection failed during submission deletion:', err);
@@ -785,6 +886,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         addUserToGroup,
         removeUserFromGroup,
         updateUserProfile,
+        editingSubId,
+        setEditingSubId,
         classes,
         departments,
         addAcademicYearGlobal,

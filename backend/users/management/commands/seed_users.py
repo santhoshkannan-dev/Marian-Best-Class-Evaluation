@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from users.models import Department, Class, User, AcademicYear
+from users.views import allocate_student_from_email
 
 class Command(BaseCommand):
     help = 'Seeds departments, classes, academic years, and pre-mapped users'
@@ -23,7 +24,8 @@ class Command(BaseCommand):
 
         # 2. Seed Departments
         departments_data = [
-            {"name": "Master of Computer Applications", "code": "MCA"},
+            {"name": "The Post-Graduate Department of Computer Applications", "code": "PGDCA"},
+            {"name": "The Under-Graduate Department of Computer Applications", "code": "UGDCA"},
             {"name": "Computer Science", "code": "CS"},
             {"name": "Internal Quality Assurance Cell", "code": "IQAC"},
             {"name": "Administration", "code": "ADMIN"},
@@ -38,9 +40,10 @@ class Command(BaseCommand):
 
         # 3. Seed Classes
         classes_data = [
+            {"name": "II MCA", "dept_code": "PGDCA"},
+            {"name": "II BCA A", "dept_code": "UGDCA"},
             {"name": "BCA A", "dept_code": "CS"},
-            {"name": "BSc CS B", "dept_code": "CS"},
-            {"name": "MCA", "dept_code": "MCA"},
+            {"name": "MCA", "dept_code": "PGDCA"},
         ]
 
         classes = {}
@@ -52,11 +55,11 @@ class Command(BaseCommand):
                 self.stdout.write(f"Created Class: {obj.name}")
 
         # 4. Seed Users
-        # Format: (email, role, dept_code, class_name, is_staff, is_superuser, first, last)
         users_data = [
-            ("santhosh.25pmc152@mariancollege.org", "student", "MCA", "MCA", False, False, "Santhosh", "Kannan"),
-            ("amal.25pmc141@mariancollege.org", "student", "MCA", "MCA", False, False, "Amal", "Joseph"),
-            ("kochumol.abraham@mariancollege.org", "faculty", "MCA", None, True, False, "Kochumol", "Abraham"),
+            ("santhosh.25pmc152@mariancollege.org", "student", "PGDCA", "II MCA", False, False, "Santhosh", "Kannan"),
+            ("amal.25pmc114@mariancollege.org", "student", "PGDCA", "II MCA", False, False, "Amal", "Thomas"),
+            ("santhosh.25ubc154@mariancollege.org", "student", "UGDCA", "II BCA A", False, False, "Santhosh", "Kannan"),
+            ("kochumol.abraham@mariancollege.org", "faculty", "PGDCA", None, True, False, "Kochumol", "Abraham"),
             ("allen.george@mariancollege.org", "evaluation", "CS", None, True, False, "Allen", "George"),
             ("iqac@mariancollege.org", "iqac", "IQAC", None, True, False, "IQAC", "Coordinator"),
             ("admin@mariancollege.org", "admin", "ADMIN", None, True, True, "System", "Administrator"),
@@ -94,11 +97,12 @@ class Command(BaseCommand):
                 user.last_name = last
                 user.set_password("MarianPassword@123")
                 user.save()
-                self.stdout.write(f"Updated pre-registered user: {email} ({role})")
+
+            user = allocate_student_from_email(user)
             seeded_users[email] = user
 
         # 5. Set Class Teacher & DQC member for classes
-        mca_class = classes.get("MCA")
+        mca_class = Class.objects.filter(name__in=["II MCA", "MCA"]).first()
         if mca_class:
             mca_class.class_teacher = seeded_users.get("kochumol.abraham@mariancollege.org")
             mca_class.dqc_member = seeded_users.get("santhosh.25pmc152@mariancollege.org")

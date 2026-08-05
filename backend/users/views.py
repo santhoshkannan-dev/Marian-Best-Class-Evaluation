@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.conf import settings
 
 from rest_framework.views import APIView
@@ -21,10 +22,168 @@ def get_tokens_for_user(user):
     }
 
 
+def parse_name_from_email(email):
+    """
+    Dynamically derives user name from email local part for any email.
+    e.g. amal.thomas.25pmc114@mariancollege.org -> 'Amal Thomas'
+    e.g. kochumol.abraham@mariancollege.org -> 'Kochumol Abraham'
+    e.g. amal.25pmc114@mariancollege.org -> 'Amal'
+    """
+    if not email or '@' not in email:
+        return "User"
+    local_part = email.split('@')[0]
+    parts = local_part.split('.')
+    name_parts = []
+    for part in parts:
+        if any(char.isdigit() for char in part):
+            break
+        name_parts.append(part.capitalize())
+    if name_parts:
+        return " ".join(name_parts)
+    return parts[0].capitalize()
+
+
+def parse_student_email(email):
+    """
+    Parses Marian College student email format:
+    e.g. amal.25pmc114@mariancollege.org -> II MCA, PG Dept of Computer Applications
+    e.g. santhosh.25ubc154@mariancollege.org -> II BCA A, UG Dept of Computer Applications
+    """
+    if not email or '@' not in email:
+        return None
+
+    local_part = email.split('@')[0]
+    parts = local_part.split('.')
+    if len(parts) < 2:
+        return None
+
+    code_part = parts[-1] if any(char.isdigit() for char in parts[-1]) else (parts[1] if len(parts) > 1 else "")
+    first_name = parse_name_from_email(email)
+
+    if not (len(code_part) >= 5 and code_part[:2].isdigit()):
+        return None
+
+    batch_year = 2000 + int(code_part[:2])
+    level_char = code_part[2].lower()
+    course_code = code_part[3:5].lower()
+    roll_digits = code_part[5:]
+
+    is_pg = (level_char == 'p')
+    is_ug = (level_char == 'u')
+
+    course_map = {
+        'mc': ('Master of Computer Applications', 'MCA', 'Computer Applications'),
+        'bc': ('Bachelor of Computer Applications', 'BCA', 'Computer Applications'),
+        'ba': ('Bachelor of Business Administration', 'BBA', 'Business Administration'),
+        'cm': ('Commerce', 'BCom', 'Commerce'),
+        'sw': ('Social Work', 'MSW', 'Social Work'),
+    }
+
+    full_course, course_abbr, field_name = course_map.get(
+        course_code, 
+        (course_code.upper(), course_code.upper(), course_code.upper())
+    )
+
+    if is_pg:
+        dept_name = f"The Post-Graduate Department of {field_name}"
+        dept_code = "PGDCA" if course_abbr == 'MCA' else f"PG-{course_abbr}"
+    else:
+        dept_name = f"The Under-Graduate Department of {field_name}"
+        dept_code = "UGDCA" if course_abbr == 'BCA' else f"UG-{course_abbr}"
+
+    section = ''
+    if is_ug and roll_digits.isdigit():
+        roll_num = int(roll_digits)
+        series = roll_num // 100
+        if series == 1:
+            section = 'A'
+        elif series == 2:
+            section = 'B'
+        elif series == 3:
+            section = 'C'
+        elif series == 4:
+            section = 'D'
+        else:
+            section = 'A'
+
+    current_year = datetime.now().year
+    year_diff = current_year - batch_year + 1
+    if year_diff <= 1:
+        year_roman = 'I'
+    elif year_diff == 2:
+        year_roman = 'II'
+    elif year_diff == 3:
+        year_roman = 'III'
+    elif year_diff >= 4:
+        year_roman = 'IV'
+    else:
+        year_roman = 'II'
+
+    if section:
+        class_name = f"{year_roman} {course_abbr} {section}"
+    else:
+        class_name = f"{year_roman} {course_abbr}"
+
+    return {
+        "first_name": first_name,
+        "batch_year": batch_year,
+        "level": "Postgraduate" if is_pg else "Undergraduate",
+        "course_name": course_abbr,
+        "department_name": dept_name,
+        "department_code": dept_code,
+        "section": section,
+        "class_name": class_name
+    }
+
+
+def allocate_student_from_email(user):
+    """
+    Allocates student user to the derived Department and Class objects based on their email.
+    """
+    if user.role != 'student' and determine_role_from_email(user.email) != 'student':
+        return user
+
+    parsed = parse_student_email(user.email)
+    if not parsed:
+        return user
+
+    update_fields = ['department', 'class_name']
+    if not user.first_name or user.first_name == user.username:
+        derived_name = parse_name_from_email(user.email)
+        name_parts = derived_name.split(" ", 1)
+        user.first_name = name_parts[0]
+        if len(name_parts) > 1:
+            user.last_name = name_parts[1]
+            update_fields.extend(['first_name', 'last_name'])
+        else:
+            update_fields.append('first_name')
+
+    dept_obj, _ = Department.objects.get_or_create(
+        code=parsed["department_code"],
+        defaults={"name": parsed["department_name"]}
+    )
+    if dept_obj.name != parsed["department_name"]:
+        dept_obj.name = parsed["department_name"]
+        dept_obj.save()
+
+    class_obj, _ = Class.objects.get_or_create(
+        name=parsed["class_name"],
+        defaults={"department": dept_obj}
+    )
+    if class_obj.department != dept_obj:
+        class_obj.department = dept_obj
+        class_obj.save()
+
+    user.department = dept_obj
+    user.class_name = class_obj
+    user.save(update_fields=list(set(update_fields)))
+    return user
+
+
 def determine_role_from_email(email):
     """
     Determines user role based on Marian College email format:
-    - name.number (e.g. santhosh.25pmc152) -> student
+    - name.number (e.g. santhosh.25pmc152, amal.25pmc114) -> student
     - name.name (e.g. kochumol.abraham) -> faculty (staff)
     """
     username_part = email.split('@')[0]
@@ -114,6 +273,7 @@ class GoogleLoginView(APIView):
                     user.last_name = names[1]
 
             user.save()
+            user = allocate_student_from_email(user)
 
             tokens = get_tokens_for_user(user)
 
@@ -177,7 +337,8 @@ class DevBypassLoginView(APIView):
         except User.DoesNotExist:
             detected_role = determine_role_from_email(email)
             if detected_role == 'student':
-                names = [email.split("@")[0], ""]
+                derived_name = parse_name_from_email(email)
+                names = derived_name.split(" ", 1)
                 user = User.objects.create(
                     username=email,
                     email=email,
@@ -191,6 +352,7 @@ class DevBypassLoginView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
+        user = allocate_student_from_email(user)
         tokens = get_tokens_for_user(user)
 
         return Response(
@@ -213,7 +375,7 @@ class UserProfileView(APIView):
 
     def get(self, request):
 
-        user = request.user
+        user = allocate_student_from_email(request.user)
 
         return Response(
             {
@@ -570,6 +732,9 @@ class SubmissionDetailView(APIView):
         try:
             if user.role == 'student':
                 submission = Submission.objects.get(pk=pk, user=user)
+                valid_pending = ['pending', 'pending rep verification', 'submitted', 'draft', 'correction requested']
+                if submission.status.lower() not in valid_pending:
+                    return Response({"error": "Only pending submissions can be edited"}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 submission = Submission.objects.get(pk=pk)
         except Submission.DoesNotExist:
@@ -624,6 +789,9 @@ class SubmissionDetailView(APIView):
         try:
             if user.role == 'student':
                 submission = Submission.objects.get(pk=pk, user=user)
+                valid_pending = ['pending', 'pending rep verification', 'submitted', 'draft', 'correction requested']
+                if submission.status.lower() not in valid_pending:
+                    return Response({"error": "Only pending submissions can be deleted"}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 submission = Submission.objects.get(pk=pk)
         except Submission.DoesNotExist:

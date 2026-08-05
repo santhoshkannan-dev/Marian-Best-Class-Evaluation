@@ -66,17 +66,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'marian_backend.wsgi.application'
 
-# Database Setup (PostgreSQL Configuration)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'marian_best_class',
-        'USER': 'postgres',
-        'PASSWORD': 'santhosh',
-        'HOST': 'localhost',
-        'PORT': '5432',
+# Database Setup (PostgreSQL with SQLite fallback)
+PG_HOST = os.environ.get('DATABASE_HOST', '')
+PG_DB = os.environ.get('DATABASE_NAME', 'marian_best_class')
+PG_USER = os.environ.get('DATABASE_USER', 'postgres')
+PG_PASSWORD = os.environ.get('DATABASE_PASSWORD', 'santhosh')
+PG_PORT = os.environ.get('DATABASE_PORT', '5432')
+
+if PG_HOST:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': PG_DB,
+            'USER': PG_USER,
+            'PASSWORD': PG_PASSWORD,
+            'HOST': PG_HOST,
+            'PORT': PG_PORT,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
