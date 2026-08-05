@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 
 interface AdminWorkspaceProps {
-  view?: 'years' | 'criteria' | 'users' | 'departments' | 'settings';
+  view?: 'years' | 'criteria' | 'users' | 'departments' | 'settings' | 'champions';
 }
 
 interface AcademicYear {

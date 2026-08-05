@@ -154,7 +154,9 @@ export default function LoginPage() {
                     required
                   >
                     <option value="" disabled>Select your role</option>
-                    <option value="santhosh.25pmc152@mariancollege.org">Student/DQC Member</option>
+                    <option value="santhosh.25pmc152@mariancollege.org">Student/DQC Rep (santhosh.25pmc152 - II MCA)</option>
+                    <option value="amal.25pmc114@mariancollege.org">PG Student (amal.25pmc114 - II MCA)</option>
+                    <option value="santhosh.25ubc154@mariancollege.org">UG Student (santhosh.25ubc154 - II BCA A)</option>
                     <option value="kochumol.abraham@mariancollege.org">Class Teacher</option>
                     <option value="allen.george@mariancollege.org">Evaluator</option>
                     <option value="admin@mariancollege.org">Admin</option>

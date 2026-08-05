@@ -336,7 +336,10 @@ export const defaultUsers: AppUser[] = [
   { id: 2, name: "Prof. Rajesh Kumar", email: "rajesh@marian.ac.in", role: "teacher", className: "BSc CS A", department: "Computer Science", isApproved: true },
   { id: 3, name: "Dr. Elizabeth Varghese", email: "elizabeth@marian.ac.in", role: "evaluator", department: "Computer Science", isApproved: true },
   { id: 4, name: "Admin Officer", email: "admin@marian.ac.in", role: "admin", isApproved: true },
-  { id: 6, name: "IQAC Coordinator", email: "iqac@marian.ac.in", role: "iqac", isApproved: true }
+  { id: 6, name: "IQAC Coordinator", email: "iqac@marian.ac.in", role: "iqac", isApproved: true },
+  { id: 101, name: "Amal Thomas", email: "amal.25pmc114@mariancollege.org", role: "student", className: "II MCA", department: "The Post-Graduate Department of Computer Applications", isApproved: true },
+  { id: 102, name: "Santhosh Kannan", email: "santhosh.25pmc152@mariancollege.org", role: "student", className: "II MCA", department: "The Post-Graduate Department of Computer Applications", isApproved: true },
+  { id: 103, name: "Santhosh Kannan", email: "santhosh.25ubc154@mariancollege.org", role: "student", className: "II BCA A", department: "The Under-Graduate Department of Computer Applications", isApproved: true }
 ];
 
 export const defaultAcademicYears = ["2025-2026", "2024-2025", "2023-2024"];
