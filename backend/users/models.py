@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 class AcademicYear(models.Model):
     year = models.CharField(max_length=20, unique=True) # e.g. "2025-2026"
     is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -13,7 +13,7 @@ class AcademicYear(models.Model):
 class Department(models.Model):
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=20, unique=True) # e.g. MCA, CS, IQAC, ADMIN
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -24,7 +24,7 @@ class Class(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='classes')
     class_teacher = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='advisor_classes')
     dqc_member = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='rep_classes')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -94,6 +94,12 @@ class Submission(models.Model):
     evaluator_verified = models.BooleanField(default=False)
     evidence = models.JSONField(blank=True, null=True)
     verified_by_name = models.CharField(max_length=255, blank=True, null=True)
+    rep_verified_by_name = models.CharField(max_length=255, blank=True, null=True)
+    rep_remarks = models.TextField(blank=True, null=True)
+    teacher_verified_by_name = models.CharField(max_length=255, blank=True, null=True)
+    teacher_remarks = models.TextField(blank=True, null=True)
+    evaluator_verified_by_name = models.CharField(max_length=255, blank=True, null=True)
+    evaluator_remarks = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -166,3 +172,24 @@ class ClassIndexResult(models.Model):
 
     def __str__(self):
         return f"{self.class_name.name} ({self.academic_year.year}) Index: {self.final_index}"
+
+
+class SystemSetting(models.Model):
+    key = models.CharField(max_length=100, unique=True)
+    value = models.TextField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.key}: {self.value}"
+
+
+class UserGroupModel(models.Model):
+    group_id = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=150)
+    description = models.TextField(blank=True, null=True)
+    members = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.group_id})"

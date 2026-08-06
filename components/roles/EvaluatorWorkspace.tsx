@@ -17,8 +17,11 @@ interface LockedSubmission {
   dept: string;
 }
 
+import { useApp } from '@/context/AppContext';
+
 export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = 'dashboard' }) => {
   const router = useRouter();
+  const { evaluationOpen } = useApp();
 
   // Local interactive state for pending list to simulate live evaluation approvals
   const [pendingItems, setPendingItems] = useState<LockedSubmission[]>([
@@ -117,6 +120,11 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
   ]);
 
   const handleVerifyAndLock = (itemId: string, deptName: string, marks: number, studentName: string) => {
+    if (!evaluationOpen) {
+      alert('Evaluation access is currently CLOSED by system administrator.');
+      return;
+    }
+
     // 1. Move to locked list
     const foundItem = pendingItems.find((i) => i.id === itemId);
     if (!foundItem) return;

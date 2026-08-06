@@ -8,7 +8,9 @@ from .views import (
     SubmissionDetailView,
     AcademicYearListView,
     DepartmentListView,
-    UserManagementView
+    UserManagementView,
+    SystemSettingView,
+    UserGroupListView
 )
 
 urlpatterns = [
@@ -21,4 +23,6 @@ urlpatterns = [
     path('users/', UserManagementView.as_view(), name='user-management'),
     path('submissions/', SubmissionListView.as_view(), name='submission-list'),
     path('submissions/<int:pk>/', SubmissionDetailView.as_view(), name='submission-detail'),
+    path('settings/', SystemSettingView.as_view(), name='system-settings'),
+    path('user-groups/', UserGroupListView.as_view(), name='user-groups'),
 ]

@@ -46,6 +46,7 @@ interface AppContextType {
   setRole: (role: string) => void;
   setActivePage: (page: string) => void;
   setAcademicYear: (year: string) => void;
+  fetchSubmissions: () => Promise<void>;
   addSubmission: (newSub: Omit<Submission, 'id'>) => void;
   updateSubmission: (id: number, updates: Partial<Submission>) => void;
   deleteSubmission: (id: number) => void;
@@ -56,6 +57,9 @@ interface AppContextType {
   toggleUserApproval: (userId: number) => void;
   toggleSubmissionOpen: () => void;
   toggleEvaluationOpen: () => void;
+  submissionWindowStart: string;
+  submissionWindowEnd: string;
+  setSubmissionWindow: (start: string, end: string) => void;
   loginAsRole: (role: string) => void;
   loginWithGoogleToken: (idToken: string) => Promise<{ success: boolean; error?: string }>;
   loginBypass: (email: string) => Promise<{ success: boolean; error?: string }>;
@@ -186,6 +190,14 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [submissionOpen, setSubmissionOpen] = useState<boolean>(true);
   const [evaluationOpen, setEvaluationOpen] = useState<boolean>(true);
+  const [submissionWindowStart, setSubmissionWindowStart] = useState<string>('');
+  const [submissionWindowEnd, setSubmissionWindowEnd] = useState<string>('');
+
+  const setSubmissionWindow = (start: string, end: string) => {
+    setSubmissionWindowStart(start);
+    setSubmissionWindowEnd(end);
+    syncSettingsToBackend({ submissionWindowStart: start, submissionWindowEnd: end });
+  };
 
   const [submissions, setSubmissions] = useState<Submission[]>(defaultSubmissions);
   const [criteriaCatalog, setCriteriaCatalog] = useState<CriteriaCategory[]>(defaultCriteriaCatalog);
@@ -261,6 +273,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const data = JSON.parse(saved);
           if (data.submissionOpen !== undefined) setSubmissionOpen(data.submissionOpen);
           if (data.evaluationOpen !== undefined) setEvaluationOpen(data.evaluationOpen);
+          if (data.submissionWindowStart !== undefined) setSubmissionWindowStart(data.submissionWindowStart);
+          if (data.submissionWindowEnd !== undefined) setSubmissionWindowEnd(data.submissionWindowEnd);
           if (data.submissions) setSubmissions(data.submissions);
           if (data.users) setUsers(data.users);
           if (data.criteriaCatalog) setCriteriaCatalog(data.criteriaCatalog);
@@ -277,6 +291,19 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (data.jwtToken) setJwtToken(data.jwtToken);
           if (data.currentUserInfo) updateCurrentUserInfo(data.currentUserInfo);
         }
+
+        // Fetch persisted settings from Django DB backend
+        fetch('http://localhost:8000/api/settings/')
+          .then(res => res.ok ? res.json() : null)
+          .then(settingsData => {
+            if (settingsData) {
+              if (settingsData.submissionOpen !== undefined) setSubmissionOpen(settingsData.submissionOpen === 'true');
+              if (settingsData.evaluationOpen !== undefined) setEvaluationOpen(settingsData.evaluationOpen === 'true');
+              if (settingsData.submissionWindowStart !== undefined) setSubmissionWindowStart(settingsData.submissionWindowStart);
+              if (settingsData.submissionWindowEnd !== undefined) setSubmissionWindowEnd(settingsData.submissionWindowEnd);
+            }
+          })
+          .catch(err => console.warn('Failed to fetch backend settings:', err));
       } catch (e) {
         console.error('Failed to load persisted state', e);
       } finally {
@@ -444,13 +471,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const fetchSubmissions = async () => {
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
-      if (!token) return;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
-      const res = await fetch('http://localhost:8000/api/submissions/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
+      const res = await fetch('http://localhost:8000/api/submissions/', { headers });
       if (res.ok) {
         const data = await res.json();
         setSubmissions(data);
@@ -529,7 +555,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setCurrentUserId(null);
     setJwtToken(null);
     setCurrentUserInfo(null);
-    setSubmissions(defaultSubmissions);
+    // Keep submissions state intact so student submissions permanently persist on logout and system restarts
     localStorage.removeItem('bc_access_token');
     localStorage.removeItem('bc_refresh_token');
   };
@@ -540,19 +566,38 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const addSubmission = async (newSub: Omit<Submission, 'id'>) => {
+    const tempId = Date.now();
+    const userEmail = currentUserInfo?.email || users.find((u) => u.id === currentUserId)?.email || '';
+
+    const createdTempSub: Submission = {
+      ...newSub,
+      id: tempId,
+      studentId: newSub.studentId || currentUserId || currentStudentId,
+      user_email: userEmail,
+      userEmail: userEmail,
+      email: userEmail,
+      academicYear: selectedAcademicYear || '2025-2026',
+      status: newSub.status || 'Pending Verification',
+      remarks: newSub.remarks || ''
+    };
+
+    // Optimistically update local state immediately so My Submissions updates instantly
+    setSubmissions((prev) => [createdTempSub, ...prev]);
+
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch('http://localhost:8000/api/submissions/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
+          email: userEmail,
           criteriaId: newSub.criteriaId,
-          academicYear: selectedAcademicYear,
+          academicYear: selectedAcademicYear || '2025-2026',
           description: newSub.description,
-          status: newSub.status,
+          status: newSub.status || 'Pending Verification',
           remarks: newSub.remarks || '',
           marks: newSub.marks || null,
           proof: newSub.proof || '',
@@ -560,12 +605,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           evidence: newSub.evidence || null
         })
       });
+
       if (res.ok) {
         const createdSub = await res.json();
-        setSubmissions((prev) => [createdSub, ...prev]);
-      } else {
-        const data = await res.json();
-        console.error('Failed to create submission:', data.error);
+        setSubmissions((prev) =>
+          prev.map((s) => (s.id === tempId ? createdSub : s))
+        );
       }
     } catch (err: any) {
       console.error('Server connection failed during submission creation:', err);
@@ -687,8 +732,33 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     );
   };
 
-  const toggleSubmissionOpen = () => setSubmissionOpen((prev) => !prev);
-  const toggleEvaluationOpen = () => setEvaluationOpen((prev) => !prev);
+  const syncSettingsToBackend = async (updates: Record<string, any>) => {
+    try {
+      await fetch('http://localhost:8000/api/settings/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+    } catch (e) {
+      console.warn('Backend settings sync failed:', e);
+    }
+  };
+
+  const toggleSubmissionOpen = () => {
+    setSubmissionOpen((prev) => {
+      const next = !prev;
+      syncSettingsToBackend({ submissionOpen: next });
+      return next;
+    });
+  };
+
+  const toggleEvaluationOpen = () => {
+    setEvaluationOpen((prev) => {
+      const next = !prev;
+      syncSettingsToBackend({ evaluationOpen: next });
+      return next;
+    });
+  };
 
   const addStudent = (newStud: Omit<Student, 'id'>) => {
     const nextId = students.reduce((max, s) => Math.max(max, s.id), 0) + 1;
@@ -862,10 +932,11 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail) return false;
     let added = false;
+
     setUserGroups((prev) =>
       prev.map((g) => {
-        if (g.id === groupId) {
-          if (!g.emails.includes(cleanEmail)) {
+        if (g.id === groupId || (groupId === 'grp-student-reps' && g.id === 'grp-student-reps')) {
+          if (!g.emails.map((e) => e.toLowerCase()).includes(cleanEmail)) {
             added = true;
             return { ...g, emails: [...g.emails, cleanEmail] };
           }
@@ -873,6 +944,29 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         return g;
       })
     );
+
+    // If student email is added to Student Representatives group, update rep role ONLY for their corresponding class
+    if (groupId === 'grp-student-reps' || groupId.includes('student-rep')) {
+      const studentObj = users.find((u) => u.email.toLowerCase().trim() === cleanEmail);
+      let targetClass = studentObj?.className || '';
+
+      if (!targetClass && cleanEmail.includes('@mariancollege.org')) {
+        const localPart = cleanEmail.split('@')[0] || '';
+        if (localPart.includes('25pmc') || localPart.includes('pmc')) targetClass = 'II MCA';
+        else if (localPart.includes('25ubc') || localPart.includes('ubc')) targetClass = 'II BCA A';
+      }
+
+      if (targetClass) {
+        // Mark user as student rep
+        setUsers((prev) =>
+          prev.map((u) => (u.email.toLowerCase().trim() === cleanEmail ? { ...u, isStudentRep: true } : u))
+        );
+
+        // Assign dqcMember ONLY to the corresponding class the student belongs to
+        updateClassMapping(targetClass, '', cleanEmail);
+      }
+    }
+
     return added;
   };
 
@@ -937,6 +1031,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setRole,
         setActivePage,
         setAcademicYear,
+        fetchSubmissions,
         addSubmission,
         updateSubmission,
         deleteSubmission,
@@ -947,6 +1042,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         toggleUserApproval,
         toggleSubmissionOpen,
         toggleEvaluationOpen,
+        submissionWindowStart,
+        submissionWindowEnd,
+        setSubmissionWindow,
         loginAsRole,
         loginWithGoogleToken,
         loginBypass,

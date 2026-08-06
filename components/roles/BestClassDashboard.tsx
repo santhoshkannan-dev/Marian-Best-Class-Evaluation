@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import { useApp } from '@/context/AppContext';
 
 export const BestClassDashboard: React.FC = () => {
+  const { activeAcademicYear } = useApp();
   const leaderboardData = [
     { rank: 1, className: 'BSc CS A', department: 'Computer Science', totalScore: 345, badge: '🥇 Top Class' },
     { rank: 2, className: 'BCom B', department: 'Commerce', totalScore: 310, badge: '🥈 2nd Place' },
@@ -14,7 +15,7 @@ export const BestClassDashboard: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="card" style={{ background: 'linear-gradient(135deg, rgba(79,70,229,0.06), rgba(219,39,119,0.06))', border: '1px solid rgba(79,70,229,0.2)' }}>
-        <div className="eyebrow" style={{ marginBottom: '8px' }}>Leaderboard 2025-2026</div>
+        <div className="eyebrow" style={{ marginBottom: '8px' }}>Leaderboard {activeAcademicYear || '2025-2026'}</div>
         <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>Best Class Standings</h2>
         <p className="muted" style={{ marginTop: '4px' }}>
           Rankings calculated dynamically based on Academic Performance, Activities, Certifications, and Verification Scores.

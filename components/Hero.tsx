@@ -7,11 +7,11 @@ export const Hero: React.FC = () => {
     <section
       style={{
         textAlign: 'center',
-        padding: '60px 24px 40px',
+        padding: '30px 24px 10px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '16px',
+        gap: '12px',
         animation: 'fadeUp 1s ease-out'
       }}
     >

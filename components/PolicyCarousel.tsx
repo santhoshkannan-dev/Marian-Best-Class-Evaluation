@@ -11,6 +11,8 @@ export const PolicyCarousel: React.FC<PolicyCarouselProps> = ({ onViewDetails })
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const lastWheelTime = useRef<number>(0);
 
   // Auto-slide every 3 seconds unless paused on hover
   useEffect(() => {
@@ -23,6 +25,32 @@ export const PolicyCarousel: React.FC<PolicyCarouselProps> = ({ onViewDetails })
       if (autoPlayTimer.current) clearInterval(autoPlayTimer.current);
     };
   }, [isPaused]);
+
+  // Support Mouse Wheel Scrolling
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastWheelTime.current < 180) return; // 180ms smooth throttle
+      lastWheelTime.current = now;
+
+      if (e.deltaY > 0 || e.deltaX > 0) {
+        // Scroll down/right -> Next Category
+        setActiveIndex((prev) => (prev + 1) % policyCategories.length);
+      } else if (e.deltaY < 0 || e.deltaX < 0) {
+        // Scroll up/left -> Previous Category
+        setActiveIndex((prev) => (prev - 1 + policyCategories.length) % policyCategories.length);
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   // Support touch swipe on mobile
   const touchStartX = useRef<number | null>(null);
@@ -78,15 +106,16 @@ export const PolicyCarousel: React.FC<PolicyCarouselProps> = ({ onViewDetails })
 
   return (
     <div
+      ref={containerRef}
       style={{
         width: '100%',
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '60px 0',
+        padding: '10px 0',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '40px',
+        gap: '16px',
         overflow: 'hidden'
       }}
       onMouseEnter={() => setIsPaused(true)}

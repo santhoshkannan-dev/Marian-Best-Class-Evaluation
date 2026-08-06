@@ -13,12 +13,18 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const router = useRouter();
   const {
     submissions,
+    fetchSubmissions,
     criteriaCatalog,
+    submissionOpen,
+    submissionWindowStart,
+    submissionWindowEnd,
     addSubmission,
     updateSubmission,
     deleteSubmission,
+    currentUserId,
     currentStudentId,
     students,
+    users,
     activePage,
     setActivePage,
     isStudentRep,
@@ -29,6 +35,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   } = useApp();
 
   const activeTab = view || activePage || 'dashboard';
+
+  // Auto-fetch latest class submissions from backend when verification or submissions tab is active
+  React.useEffect(() => {
+    if (activeTab === 'verification' || activeTab === 'submissions') {
+      fetchSubmissions();
+    }
+  }, [activeTab]);
 
   // Filter criteria categories based on Student Representative group membership
   const availableCriteriaCatalog = React.useMemo(() => {
@@ -193,7 +206,39 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const currentItem: CriteriaItem | undefined = currentCategory?.items.find((i) => i.id === selectedCriteriaId) || currentCategory?.items[0];
   const isProgramsOrganized = currentCategory?.id === 'cat-programs-organized' || currentCategory?.category.toLowerCase().trim() === 'programs organized';
 
-  const mySubmissions = submissions.filter((s) => s.studentId === currentStudentId);
+  const currentEmail = (currentUserInfo?.email || '').toLowerCase().trim();
+  const loggedInUser = users.find((u) => u.email.toLowerCase().trim() === currentEmail);
+  const loggedInStudent = students.find(
+    (st) =>
+      (st as any).email?.toLowerCase().trim() === currentEmail ||
+      (loggedInUser && st.name.toLowerCase().trim() === loggedInUser.name.toLowerCase().trim())
+  );
+
+  // My Submissions (Strictly OWN submissions submitted by the logged-in user)
+  const mySubmissions = submissions.filter((s) => {
+    const subEmail = (
+      (s as any).user_email ||
+      (s as any).userEmail ||
+      (s as any).email ||
+      ''
+    ).toLowerCase().trim();
+
+    // 1. If submission has an associated email, strictly match with logged-in user email
+    if (subEmail && currentEmail) {
+      return subEmail === currentEmail;
+    }
+
+    // 2. If logged-in user email is present, match studentId to logged-in user / student record ID
+    if (currentEmail) {
+      if (loggedInUser && s.studentId === loggedInUser.id) return true;
+      if (loggedInStudent && s.studentId === loggedInStudent.id) return true;
+      if (currentUserId && s.studentId === currentUserId) return true;
+      return false;
+    }
+
+    // 3. Fallback for unauthenticated dev mode: match active studentId
+    return s.studentId === currentStudentId;
+  });
 
   const totalChecklistPages = Math.ceil(availableCriteriaCatalog.length / checklistPageSize) || 1;
   const paginatedChecklist = availableCriteriaCatalog.slice((checklistPage - 1) * checklistPageSize, checklistPage * checklistPageSize);
@@ -231,17 +276,74 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const totalPages = Math.ceil(filteredSubmissions.length / pageSize) || 1;
   const paginatedSubmissions = filteredSubmissions.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // Peer Submissions for Group Verification Desk
-  const peerSubmissions = submissions.filter((s) => s.studentId !== currentStudentId);
+  // Helper to check if two class names match (handling prefixes like II MCA vs MCA)
+  const isSameClass = (c1?: string, c2?: string) => {
+    if (!c1 || !c2) return true;
+    const norm1 = c1.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
+    const norm2 = c2.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
+    return norm1 === norm2 || c1.toLowerCase().trim() === c2.toLowerCase().trim();
+  };
+
+  // Determine current logged in Student Representative's class
+  const currentStudentObj = students.find((s) => s.id === currentStudentId);
+  const repClass =
+    (currentUserInfo as any)?.className ||
+    (currentUserInfo as any)?.class_name ||
+    currentStudentObj?.className ||
+    'II MCA';
+
+  // Peer Submissions for Group Verification Desk (Includes ALL OTHER users' submissions from the same class as Student Representative ONLY for verification)
+  const peerSubmissions = submissions.filter((sub) => {
+    // Exclude draft submissions from verification desk
+    if (sub.status === 'Draft') return false;
+
+    // Exclude student rep's OWN submission from Group Verification Desk (peer submissions only)
+    const subEmail = (
+      (sub as any).user_email ||
+      (sub as any).userEmail ||
+      (sub as any).email ||
+      ''
+    ).toLowerCase().trim();
+
+    if (currentEmail && subEmail && subEmail === currentEmail) {
+      return false;
+    }
+    if (sub.studentId === currentStudentId || (currentUserId && sub.studentId === currentUserId)) {
+      return false;
+    }
+
+    const studentObj = students.find((s) => s.id === sub.studentId);
+    const userObj = users.find(
+      (u) =>
+        u.id === sub.studentId ||
+        (sub as any).user_email?.toLowerCase().trim() === u.email.toLowerCase().trim() ||
+        (sub as any).userEmail?.toLowerCase().trim() === u.email.toLowerCase().trim() ||
+        (sub as any).email?.toLowerCase().trim() === u.email.toLowerCase().trim()
+    );
+
+    const studentClass =
+      studentObj?.className ||
+      (userObj as any)?.className ||
+      (userObj as any)?.class_name ||
+      '';
+
+    if (studentClass && repClass) {
+      return isSameClass(studentClass, repClass);
+    }
+    return true;
+  });
 
   const filteredRepSubmissions = peerSubmissions.filter((sub) => {
     const studentObj = students.find((s) => s.id === sub.studentId);
+    const userObj = users.find((u) => u.id === sub.studentId || (sub as any).user_email === u.email || (sub as any).userEmail === u.email);
+    const studentName = studentObj?.name || userObj?.name || (userObj as any)?.first_name ? `${(userObj as any).first_name} ${(userObj as any).last_name || ''}`.trim() : '';
+
     const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
     const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
 
     const matchesSearch =
       !repSearchQuery ||
-      (studentObj && studentObj.name.toLowerCase().includes(repSearchQuery.toLowerCase())) ||
+      studentName.toLowerCase().includes(repSearchQuery.toLowerCase()) ||
       sub.description.toLowerCase().includes(repSearchQuery.toLowerCase()) ||
       (item && item.title.toLowerCase().includes(repSearchQuery.toLowerCase())) ||
       (cat && cat.category.toLowerCase().includes(repSearchQuery.toLowerCase()));
@@ -250,8 +352,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       repStatusFilter === 'all' ||
       (repStatusFilter === 'pending' && (sub.status === 'Pending Rep Verification' || sub.status === 'Pending' || sub.status === 'Submitted')) ||
       (repStatusFilter === 'verified' && sub.status === 'Student Rep Verified') ||
-      (repStatusFilter === 'approved' && sub.status === 'Approved') ||
-      (repStatusFilter === 'correction' && sub.status === 'Correction Requested') ||
+      (repStatusFilter === 'approved' && (sub.status === 'Approved' || sub.status === 'Verified' || sub.status === 'Evaluated' || sub.status === 'Locked')) ||
+      (repStatusFilter === 'correction' && (sub.status === 'Correction Requested' || sub.status === 'Correction')) ||
       (repStatusFilter === 'rejected' && sub.status === 'Rejected');
 
     return matchesSearch && matchesStatus;
@@ -289,13 +391,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       finalDescription = `${academicSubmissionType} Grade Summary — S: ${sGradeCount}, A+: ${aPlusGradeCount}, A: ${aGradeCount}, Fail: ${failCount} (Pass: ${passPercentage}%, Total: ${totalStudents} students)`;
     }
 
-    if (!finalDescription) return;
+    if (!finalDescription) {
+      alert("Please enter a Description for the activity before submitting.");
+      return;
+    }
+
+    if (isProgramsOrganized && !eventId.trim() && !proofFile.trim()) {
+      alert("Please provide an Event ID or Proof Document link before submitting.");
+      return;
+    }
+
+    if (!isProgramsOrganized && !proofFile.trim()) {
+      alert("Please provide a Proof Document link or reference before submitting.");
+      return;
+    }
 
     const initialStatus = status === 'Draft' ? 'Draft' : 'Pending Rep Verification';
     const computedEventId = isProgramsOrganized ? (eventId.trim() || undefined) : undefined;
     const computedProof = isProgramsOrganized
-      ? (eventId.trim() ? `Event ID: ${eventId.trim()}` : (proofFile || 'EVT-SUBMISSION'))
-      : (proofFile || 'document_proof.pdf');
+      ? (eventId.trim() ? `Event ID: ${eventId.trim()}` : proofFile.trim())
+      : proofFile.trim();
 
     const computedEvidence = isAcademicCategory
       ? {
@@ -306,6 +421,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
           totalStudents
         }
       : { type: currentItem?.type || 'count', count: countValue };
+
+    // Enforce Admin Settings: Submission Status & Submission Time Window
+    if (status === 'Submitted') {
+      if (!submissionOpen) {
+        alert('Activity submissions are currently CLOSED by system administrator.');
+        return;
+      }
+
+      if (submissionWindowStart || submissionWindowEnd) {
+        const now = new Date();
+        if (submissionWindowStart && new Date(submissionWindowStart) > now) {
+          alert(`Submissions have not opened yet. Opening time: ${new Date(submissionWindowStart).toLocaleString()}`);
+          return;
+        }
+        if (submissionWindowEnd && new Date(submissionWindowEnd) < now) {
+          alert(`Submissions closed at ${new Date(submissionWindowEnd).toLocaleString()}`);
+          return;
+        }
+      }
+    }
 
     if (editingSubId) {
       updateSubmission(editingSubId, {
@@ -816,6 +951,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           placeholder="Paste Google Drive link or document reference..."
                           value={proofFile}
                           onChange={(e) => setProofFile(e.target.value)}
+                          required
                         />
                       </div>
                       <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
@@ -909,22 +1045,29 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     <tr>
                       <th>Category</th>
                       <th>Item</th>
-                      <th>Evidence</th>
-                      <th>Proof File</th>
+                      <th>Evidence & Proof</th>
                       <th>Description</th>
-                      <th>Status</th>
-                      <th>Action</th>
+                      <th>Student Rep Review (Round 1)</th>
+                      <th>Class Advisor Review (Round 2)</th>
+                      <th>Evaluation Status (Round 3)</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedSubmissions.map((sub) => {
                       const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
                       const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
-                      const rulePts = item ? item.marks * (sub.evidence?.count || 1) : 0;
                       const isPending = ['Pending', 'Pending Rep Verification', 'Submitted', 'Draft', 'Correction Requested'].includes(sub.status) || sub.status.toLowerCase().includes('pending');
                       const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
                       const isEventId = sub.eventId || sub.proof?.startsWith('Event ID:');
                       const displayEventId = sub.eventId || (sub.proof?.startsWith('Event ID:') ? sub.proof.replace('Event ID: ', '') : sub.proof);
+
+                      const isRepApproved = sub.status === 'Student Rep Verified' || sub.repVerifiedByName || ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status);
+                      const isTeacherApproved = ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status);
+                      const isTeacherRejected = sub.status === 'Rejected';
+                      const isCorrectionNeeded = sub.status === 'Correction Requested' || sub.status === 'Correction';
+
+                      const isEvaluated = sub.evaluatorVerified || sub.status === 'Evaluated' || sub.status === 'Locked' || (sub.marks !== null && sub.marks !== undefined);
 
                       return (
                         <tr key={sub.id}>
@@ -939,80 +1082,168 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             )}
                           </td>
                           <td>
-                            {sub.evidence?.type === 'academic_grades' || sub.evidence?.grades ? (
-                              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                                <span style={{ color: '#4f46e5' }}>S: {sub.evidence.grades?.S || 0}</span> |
-                                <span style={{ color: '#0284c7' }}>A+: {sub.evidence.grades?.APlus || 0}</span> |
-                                <span style={{ color: '#059669' }}>A: {sub.evidence.grades?.A || 0}</span> |
-                                <span style={{ color: '#dc2626' }}>Fail: {sub.evidence.grades?.Fail || 0}</span> |
-                                <span style={{ color: '#7c3aed' }}>Pass: {sub.evidence.classPassPercentage !== undefined ? `${sub.evidence.classPassPercentage}%` : '-'}</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {sub.evidence?.type === 'academic_grades' || sub.evidence?.grades ? (
+                                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                                  <span style={{ color: '#4f46e5' }}>S: {sub.evidence.grades?.S || 0}</span> |
+                                  <span style={{ color: '#0284c7' }}>A+: {sub.evidence.grades?.APlus || 0}</span> |
+                                  <span style={{ color: '#059669' }}>A: {sub.evidence.grades?.A || 0}</span> |
+                                  <span style={{ color: '#dc2626' }}>Fail: {sub.evidence.grades?.Fail || 0}</span> |
+                                  <span style={{ color: '#7c3aed' }}>Pass: {sub.evidence.classPassPercentage !== undefined ? `${sub.evidence.classPassPercentage}%` : '-'}</span>
+                                </div>
+                              ) : (
+                                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{sub.evidence?.count ? `Count: ${sub.evidence.count}` : ''}</span>
+                              )}
+
+                              {isEventId ? (
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    background: '#eff6ff',
+                                    color: '#1d4ed8',
+                                    padding: '2px 8px',
+                                    borderRadius: '6px',
+                                    fontWeight: 700,
+                                    fontSize: '0.78rem',
+                                    border: '1px solid #bfdbfe',
+                                    width: 'fit-content'
+                                  }}
+                                >
+                                  🎫 Event ID: {displayEventId}
+                                </span>
+                              ) : sub.proof ? (
+                                <a
+                                  href={isDriveUrl ? sub.proof : 'https://drive.google.com/'}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                                  title="Open Proof Document in Google Drive"
+                                >
+                                  📁 {sub.proof.length > 20 ? sub.proof.substring(0, 20) + '...' : sub.proof}
+                                </a>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td style={{ maxWidth: '200px', fontSize: '0.84rem' }}>{sub.description}</td>
+                          
+                          {/* Round 1: Student Representative Review */}
+                          <td>
+                            {sub.repVerifiedByName ? (
+                              <div>
+                                <span className="badge badge-verified" style={{ background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe', fontWeight: 800 }}>
+                                  ✓ Verified (Rep)
+                                </span>
+                                <div style={{ fontSize: '0.78rem', color: '#3730a3', fontWeight: 700, marginTop: '4px' }}>
+                                  by {sub.repVerifiedByName}
+                                </div>
+                                {sub.repRemarks && (
+                                  <div style={{ fontSize: '0.74rem', color: '#475569', fontStyle: 'italic', marginTop: '2px' }}>
+                                    💬 &ldquo;{sub.repRemarks}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                            ) : isRepApproved ? (
+                              <div>
+                                <span className="badge badge-verified" style={{ background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe', fontWeight: 800 }}>
+                                  ✓ Verified (Rep)
+                                </span>
                               </div>
                             ) : (
-                              sub.evidence?.count ? `${sub.evidence.count}` : '-'
-                            )}
-                          </td>
-                          <td>
-                            {isEventId ? (
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  background: '#eff6ff',
-                                  color: '#1d4ed8',
-                                  padding: '4px 10px',
-                                  borderRadius: '8px',
-                                  fontWeight: 700,
-                                  fontSize: '0.82rem',
-                                  border: '1px solid #bfdbfe'
-                                }}
-                              >
-                                🎫 Event ID: {displayEventId}
-                              </span>
-                            ) : sub.proof ? (
-                              <a
-                                href={isDriveUrl ? sub.proof : 'https://drive.google.com/'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ color: 'var(--primary)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
-                                title="Open Proof Document in Google Drive"
-                              >
-                                📁 {sub.proof.length > 20 ? sub.proof.substring(0, 20) + '...' : sub.proof}
-                              </a>
-                            ) : (
-                              <span className="muted">-</span>
-                            )}
-                          </td>
-                          <td style={{ maxWidth: '240px' }}>{sub.description}</td>
-                          <td>
-                            {getStatusBadge(sub.status)}
-                            {sub.verifiedByName && (
-                              <div style={{
-                                fontSize: '0.78rem',
-                                color: ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) ? '#16a34a' : sub.status === 'Rejected' ? '#dc2626' : '#ea580c',
-                                fontWeight: 700,
-                                marginTop: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                              }}>
-                                👤 {['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) ? 'Approved' : sub.status === 'Rejected' ? 'Rejected' : 'Reviewed'} by {sub.verifiedByName}
+                              <div>
+                                <span className="badge badge-submitted" style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', fontWeight: 800 }}>
+                                  ⏳ Pending Rep Review
+                                </span>
                               </div>
                             )}
-                            {sub.remarks && (
-                              <div style={{
-                                fontSize: '0.76rem',
-                                color: 'var(--text-muted)',
-                                marginTop: '4px',
-                                fontStyle: 'italic',
-                                background: '#f8fafc',
-                                padding: '6px 8px',
-                                borderRadius: '6px',
-                                border: '1px dashed #e2e8f0',
-                                maxWidth: '180px',
-                                wordBreak: 'break-word'
-                              }}>
-                                💬 &ldquo;{sub.remarks}&rdquo;
+                          </td>
+
+                          {/* Round 2: Class Advisor Review */}
+                          <td>
+                            {sub.teacherVerifiedByName ? (
+                              <div>
+                                <span className={`badge ${isTeacherApproved ? 'badge-verified' : isCorrectionNeeded ? 'badge-correction' : 'badge-danger'}`} style={{
+                                  background: isTeacherApproved ? '#dcfce7' : isCorrectionNeeded ? '#fff7ed' : '#fee2e2',
+                                  color: isTeacherApproved ? '#15803d' : isCorrectionNeeded ? '#c2410c' : '#dc2626',
+                                  border: `1px solid ${isTeacherApproved ? '#86efac' : isCorrectionNeeded ? '#ffedd5' : '#fca5a5'}`,
+                                  fontWeight: 800
+                                }}>
+                                  {isTeacherApproved ? '✓ Approved' : isCorrectionNeeded ? '⚠️ Correction' : '❌ Rejected'}
+                                </span>
+                                <div style={{ fontSize: '0.78rem', color: isTeacherApproved ? '#15803d' : isCorrectionNeeded ? '#c2410c' : '#dc2626', fontWeight: 700, marginTop: '4px' }}>
+                                  by {sub.teacherVerifiedByName}
+                                </div>
+                                {(sub.teacherRemarks || sub.remarks) && (
+                                  <div style={{ fontSize: '0.74rem', color: '#475569', fontStyle: 'italic', marginTop: '2px' }}>
+                                    💬 &ldquo;{sub.teacherRemarks || sub.remarks}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                            ) : isTeacherApproved ? (
+                              <div>
+                                <span className="badge badge-verified" style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontWeight: 800 }}>
+                                  ✓ Approved
+                                </span>
+                              </div>
+                            ) : isCorrectionNeeded ? (
+                              <div>
+                                <span className="badge badge-correction" style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5', fontWeight: 800 }}>
+                                  ⚠️ Correction Requested
+                                </span>
+                                {sub.remarks && (
+                                  <div style={{ fontSize: '0.74rem', color: '#c2410c', fontStyle: 'italic', marginTop: '2px' }}>
+                                    💬 &ldquo;{sub.remarks}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                            ) : isTeacherRejected ? (
+                              <div>
+                                <span className="badge badge-correction" style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', fontWeight: 800 }}>
+                                  ❌ Rejected
+                                </span>
+                                {sub.remarks && (
+                                  <div style={{ fontSize: '0.74rem', color: '#dc2626', fontStyle: 'italic', marginTop: '2px' }}>
+                                    💬 &ldquo;{sub.remarks}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="badge badge-submitted" style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', fontWeight: 700 }}>
+                                  {sub.status === 'Student Rep Verified' ? '⏳ Pending Advisor Review' : '⏳ Awaiting Rep Review'}
+                                </span>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Round 3: Evaluation Status */}
+                          <td>
+                            {isEvaluated ? (
+                              <div>
+                                <span className="badge badge-verified" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 800 }}>
+                                  🎯 Evaluated
+                                </span>
+                                <div style={{ fontSize: '0.78rem', color: '#047857', fontWeight: 800, marginTop: '4px' }}>
+                                  Marks: {sub.marks !== null && sub.marks !== undefined ? sub.marks : 'Scored'}
+                                </div>
+                                {sub.evaluatorVerifiedByName && (
+                                  <div style={{ fontSize: '0.74rem', color: '#047857', fontWeight: 700 }}>
+                                    by {sub.evaluatorVerifiedByName}
+                                  </div>
+                                )}
+                              </div>
+                            ) : isTeacherRejected ? (
+                              <div>
+                                <span className="badge badge-correction" style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', fontWeight: 800 }}>
+                                  ❌ Rejected
+                                </span>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="badge badge-submitted" style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', fontWeight: 700 }}>
+                                  ⏳ Pending Evaluation
+                                </span>
                               </div>
                             )}
                           </td>
@@ -1041,7 +1272,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                 </button>
                               </div>
                             ) : (
-                              <span className="muted" style={{ fontSize: '0.82rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <span className="badge badge-verified" style={{ fontSize: '0.74rem', padding: '4px 8px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
                                 🔒 Locked
                               </span>
                             )}
@@ -1096,11 +1327,16 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         {/* ---------------------------------------------------- */}
         {activeTab === 'verification' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Group Submissions Verification Desk</h1>
-              <p className="muted" style={{ fontSize: '0.88rem' }}>
-                Review and verify activity claims submitted by other students from your class/group. Once verified by you, claims move forward to Class Teacher verification.
-              </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Group Submissions Verification Desk</h1>
+                <p className="muted" style={{ fontSize: '0.88rem' }}>
+                  Review and verify activity claims submitted by students belonging to your class ({repClass}). Once verified, claims move forward to Class Advisor verification.
+                </p>
+              </div>
+              <span className="badge badge-verified" style={{ padding: '8px 16px', fontSize: '0.86rem', background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe', fontWeight: 800 }}>
+                🎓 Class: {repClass}
+              </span>
             </div>
 
             <div className="card">
@@ -1157,6 +1393,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   <tbody>
                     {paginatedRepSubmissions.map((sub) => {
                       const studentObj = students.find((s) => s.id === sub.studentId);
+                      const userObj = users.find((u) => u.id === sub.studentId || (sub as any).user_email === u.email || (sub as any).userEmail === u.email);
+                      const displayName = studentObj?.name || userObj?.name || ((userObj as any)?.first_name ? `${(userObj as any).first_name} ${(userObj as any).last_name || ''}`.trim() : `Student #${sub.studentId}`);
+                      const displayClass = studentObj?.className || (userObj as any)?.className || (userObj as any)?.class_name || repClass;
+
                       const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
                       const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
                       const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
@@ -1168,8 +1408,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       return (
                         <tr key={sub.id}>
                           <td style={{ fontWeight: 700 }}>
-                            {studentObj ? studentObj.name : `Student #${sub.studentId}`}
-                            <div className="muted" style={{ fontSize: '0.76rem' }}>{studentObj?.className || 'BSc CS A'}</div>
+                            {displayName}
+                            <div className="muted" style={{ fontSize: '0.76rem' }}>{displayClass}</div>
                           </td>
                           <td style={{ fontWeight: 600 }}>{cat?.category || 'General'}</td>
                           <td>
@@ -1214,18 +1454,48 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             )}
                           </td>
                           <td style={{ maxWidth: '220px' }}>{sub.description}</td>
-                          <td>{getStatusBadge(sub.status)}</td>
+                          <td>
+                            {getStatusBadge(sub.status)}
+                            {sub.verifiedByName && (
+                              <div style={{
+                                fontSize: '0.78rem',
+                                color: ['Approved', 'Verified', 'Student Rep Verified', 'Evaluated', 'Locked'].includes(sub.status) ? '#16a34a' : sub.status === 'Rejected' ? '#dc2626' : '#ea580c',
+                                fontWeight: 700,
+                                marginTop: '4px'
+                              }}>
+                                👤 {['Approved', 'Verified', 'Student Rep Verified', 'Evaluated', 'Locked'].includes(sub.status) ? 'Verified' : sub.status === 'Rejected' ? 'Rejected' : 'Reviewed'} by {sub.verifiedByName}
+                              </div>
+                            )}
+                            {sub.remarks && (
+                              <div style={{
+                                fontSize: '0.76rem',
+                                color: 'var(--text-muted)',
+                                fontStyle: 'italic',
+                                marginTop: '4px',
+                                background: '#f8fafc',
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                border: '1px dashed #e2e8f0',
+                                maxWidth: '180px',
+                                wordBreak: 'break-word'
+                              }}>
+                                💬 &ldquo;{sub.remarks}&rdquo;
+                              </div>
+                            )}
+                          </td>
                           <td>
                             {canVerify ? (
                               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                 <button
                                   className="btn btn-sm btn-primary"
-                                  onClick={() =>
+                                  onClick={() => {
+                                    const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
                                     updateSubmission(sub.id, {
                                       status: 'Student Rep Verified',
-                                      remarks: 'Verified by Student Representative and forwarded to Class Teacher.'
-                                    })
-                                  }
+                                      verifiedByName: repName,
+                                      remarks: 'Verified by Student Representative and forwarded to Class Advisor.'
+                                    });
+                                  }}
                                   title="Verify and forward to Class Teacher"
                                   style={{ padding: '6px 12px', fontSize: '0.8rem', fontWeight: 700 }}
                                 >
@@ -1233,12 +1503,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                 </button>
                                 <button
                                   className="btn btn-sm btn-secondary"
-                                  onClick={() =>
+                                  onClick={() => {
+                                    const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
+                                    const customRemarks = prompt('Enter correction note for student:') || 'Correction requested by Student Representative.';
                                     updateSubmission(sub.id, {
                                       status: 'Correction Requested',
-                                      remarks: 'Correction requested by Student Representative.'
-                                    })
-                                  }
+                                      verifiedByName: repName,
+                                      remarks: customRemarks
+                                    });
+                                  }}
                                   title="Request correction"
                                   style={{ padding: '6px 10px', fontSize: '0.8rem' }}
                                 >
@@ -1246,12 +1519,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                 </button>
                                 <button
                                   className="btn btn-sm btn-danger"
-                                  onClick={() =>
+                                  onClick={() => {
+                                    const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
+                                    const customRemarks = prompt('Enter rejection reason:') || 'Rejected by Student Representative.';
                                     updateSubmission(sub.id, {
                                       status: 'Rejected',
-                                      remarks: 'Rejected by Student Representative.'
-                                    })
-                                  }
+                                      verifiedByName: repName,
+                                      remarks: customRemarks
+                                    });
+                                  }}
                                   title="Reject submission"
                                   style={{ padding: '6px 10px', fontSize: '0.8rem' }}
                                 >
@@ -1259,9 +1535,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                 </button>
                               </div>
                             ) : (
-                              <span className="muted" style={{ fontSize: '0.82rem', fontWeight: 600 }}>
-                                {sub.status === 'Student Rep Verified' ? '✓ Forwarded to Teacher' : sub.status}
-                              </span>
+                              <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>
+                                <span className="muted" style={{ color: ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) ? '#16a34a' : '#1e40af' }}>
+                                  {sub.status === 'Student Rep Verified' ? '✓ Forwarded to Teacher' : sub.status}
+                                </span>
+                              </div>
                             )}
                           </td>
                         </tr>

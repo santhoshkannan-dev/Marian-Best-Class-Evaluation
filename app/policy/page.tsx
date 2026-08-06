@@ -372,11 +372,11 @@ export default function PolicyPage() {
     <main
       style={{
         maxWidth: '1200px',
-        margin: '40px auto 80px',
+        margin: '20px auto 40px',
         padding: '0 24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '60px',
+        gap: '24px',
         animation: 'fadeUp 0.8s ease-out'
       }}
     >

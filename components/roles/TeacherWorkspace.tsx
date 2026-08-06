@@ -14,12 +14,14 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   const {
     submissions,
     updateSubmission,
+    evaluationOpen,
     students,
     addStudent,
     deleteStudent,
     activePage,
     setActivePage,
-    criteriaCatalog
+    criteriaCatalog,
+    currentUserInfo
   } = useApp();
 
   const activeTab = view || activePage || 'dashboard';
@@ -91,10 +93,25 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     ['Pending', 'Submitted', 'Student Rep Verified', 'Pending Rep Verification'].includes(s.status)
   );
 
+  // Helper to check if two class names match
+  const isSameClass = (c1?: string, c2?: string) => {
+    if (!c1 || !c2) return true;
+    const norm1 = c1.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
+    const norm2 = c2.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
+    return norm1 === norm2 || c1.toLowerCase().trim() === c2.toLowerCase().trim();
+  };
+
+  const teacherClass = (currentUserInfo as any)?.className || (currentUserInfo as any)?.class_name || 'II MCA';
+
   // ----------------------------------------------------
-  // FILTERED STUDENT LIST FOR VERIFICATION DESK
+  // FILTERED STUDENT LIST FOR VERIFICATION DESK (Filtered to Teacher's Class)
   // ----------------------------------------------------
   const filteredStudents = students.filter((student) => {
+    // Ensure student belongs to the Class Advisor's class
+    if (student.className && teacherClass && !isSameClass(student.className, teacherClass)) {
+      return false;
+    }
+
     const stats = getStudentStats(student.id);
     const studentEmail = student.name.toLowerCase().replace(/\s+/g, '.') + '@college.edu';
     const matchesSearch =
@@ -132,10 +149,27 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
       })
     : [];
 
+  const teacherName = currentUserInfo?.name || 'Prof. Kochumol Abraham';
+
   const handleVerifySubmission = (subId: number, status: 'Approved' | 'Rejected' | 'Correction Requested') => {
+    if (!evaluationOpen) {
+      alert('Evaluation access is currently CLOSED by system administrator.');
+      return;
+    }
+
+    let customRemarks = '';
+    if (status === 'Correction Requested') {
+      customRemarks = prompt('Enter correction instructions for student:') || 'Correction Required by Class Advisor';
+    } else if (status === 'Rejected') {
+      customRemarks = prompt('Enter rejection remarks:') || 'Rejected by Class Advisor';
+    } else {
+      customRemarks = 'Verified and Approved by Class Advisor';
+    }
+
     updateSubmission(subId, {
       status,
-      remarks: status === 'Approved' ? 'Teacher Verified' : 'Correction Required by Teacher'
+      verifiedByName: teacherName,
+      remarks: customRemarks
     });
   };
 
