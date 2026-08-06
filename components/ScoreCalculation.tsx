@@ -75,10 +75,6 @@ export const ScoreCalculation: React.FC = () => {
               </p>
             </div>
           </div>
-
-          <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', padding: '14px 18px', borderRadius: '14px', color: '#6d28d9', fontSize: '0.86rem', fontWeight: 700, textAlign: 'center' }}>
-            📜 “A class becomes the best not by chance, but by the strength of its unity, discipline, and determination to grow together…”
-          </div>
         </div>
       </div>
     </section>

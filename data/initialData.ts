@@ -49,7 +49,7 @@ export interface Submission {
   criteriaId: number;
   academicYear?: string;
   description: string;
-  status: 'Approved' | 'Pending' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
+  status: 'Approved' | 'Pending' | 'Pending Verification' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
   remarks?: string;
   marks?: number | null;
   proof?: string;
@@ -57,6 +57,15 @@ export interface Submission {
   evaluatorVerified?: boolean;
   evidence?: SubmissionEvidence;
   verifiedByName?: string;
+  user_email?: string;
+  userEmail?: string;
+  email?: string;
+  repVerifiedByName?: string;
+  repRemarks?: string;
+  teacherVerifiedByName?: string;
+  teacherRemarks?: string;
+  evaluatorVerifiedByName?: string;
+  evaluatorRemarks?: string;
 }
 
 export interface AppUser {
@@ -211,147 +220,21 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
 ];
 
 export const defaultStudents: Student[] = [
-  { id: 1, name: "Anika Sharma", className: "BSc CS A" },
-  { id: 2, name: "Rahul Menon", className: "BSc CS A" },
-  { id: 3, name: "Sara Joseph", className: "BCom B" },
-  { id: 4, name: "Arjun Das", className: "BCom B" },
-  { id: 5, name: "Nisha Iyer", className: "BA English C" },
-  { id: 6, name: "Vikram Patel", className: "BA English C" }
+  { id: 101, name: "Amal Thomas", className: "II MCA" },
+  { id: 102, name: "Santhosh Kannan", className: "II MCA" },
+  { id: 103, name: "Santhosh Kannan", className: "II BCA A" }
 ];
 
-export const defaultSubmissions: Submission[] = [
-  {
-    id: 1,
-    studentId: 1,
-    criteriaId: 105,
-    description: "Department result sheet shows 93.4% pass for BSc CS A.",
-    status: "Approved",
-    remarks: "Verified against semester result summary",
-    marks: 15,
-    proof: "bsc_cs_a_pass_percentage_2025.xlsx",
-    evaluatorVerified: true,
-    evidence: { type: "range", value: 93.4 }
-  },
-  {
-    id: 2,
-    studentId: 1,
-    criteriaId: 101,
-    description: "Five S grades secured across semester courses.",
-    status: "Approved",
-    remarks: "Grade cards checked",
-    marks: 25,
-    proof: "anika_s_grade_cards.pdf",
-    evaluatorVerified: true,
-    evidence: { type: "count", count: 5 }
-  },
-  {
-    id: 3,
-    studentId: 1,
-    criteriaId: 201,
-    description: "Completed two NPTEL courses with certificates.",
-    status: "Approved",
-    remarks: "Certificates valid",
-    marks: 20,
-    proof: "anika_nptel_certificates.zip",
-    evaluatorVerified: false,
-    evidence: { type: "count", count: 2 }
-  },
-  {
-    id: 4,
-    studentId: 1,
-    criteriaId: 301,
-    description: "Offline internship completed at TechNova Labs.",
-    status: "Approved",
-    remarks: "Completion letter verified",
-    marks: 5,
-    proof: "technova_internship_letter.pdf",
-    evaluatorVerified: true,
-    evidence: { type: "count", count: 1 }
-  },
-  {
-    id: 5,
-    studentId: 1,
-    criteriaId: 601,
-    description: "Research paper accepted in a peer-reviewed student journal.",
-    status: "Pending",
-    remarks: "Awaiting publication proof",
-    marks: null,
-    proof: "publication_acceptance_mail.pdf",
-    evaluatorVerified: false,
-    evidence: { type: "count", count: 1 }
-  },
-  {
-    id: 6,
-    studentId: 2,
-    criteriaId: 102,
-    description: "Six A+ grades secured in the latest semester.",
-    status: "Approved",
-    remarks: "Mark lists verified",
-    marks: 18,
-    proof: "rahul_a_plus_results.pdf",
-    evaluatorVerified: true,
-    evidence: { type: "count", count: 6 }
-  },
-  {
-    id: 7,
-    studentId: 2,
-    criteriaId: 202,
-    description: "Three MOOC courses completed through Coursera and SWAYAM.",
-    status: "Approved",
-    remarks: "Certificates checked",
-    marks: 15,
-    proof: "rahul_mooc_certificates.zip",
-    evaluatorVerified: true,
-    evidence: { type: "count", count: 3 }
-  },
-  {
-    id: 8,
-    studentId: 2,
-    criteriaId: 402,
-    description: "Qualified UGC NET in Computer Science.",
-    status: "Approved",
-    remarks: "NET score card verified",
-    marks: 10,
-    proof: "rahul_net_scorecard.pdf",
-    evaluatorVerified: true,
-    evidence: { type: "fixed" }
-  },
-  {
-    id: 9,
-    studentId: 2,
-    criteriaId: 901,
-    description: "Coordinated Department Tech Fest 'Interface 2025'.",
-    status: "Pending Rep Verification",
-    remarks: "Submitted for Student Rep review",
-    marks: null,
-    proof: "Event ID: EVT-2025-901",
-    eventId: "EVT-2025-901",
-    evaluatorVerified: false,
-    evidence: { type: "count", count: 1 }
-  },
-  {
-    id: 10,
-    studentId: 2,
-    criteriaId: 101,
-    description: "Secured S Grade in Advanced Web Engineering.",
-    status: "Pending Rep Verification",
-    remarks: "Submitted for Student Rep review",
-    marks: null,
-    proof: "rahul_s_grade_web.pdf",
-    evaluatorVerified: false,
-    evidence: { type: "count", count: 1 }
-  }
-];
+export const defaultSubmissions: Submission[] = [];
 
 export const defaultUsers: AppUser[] = [
-  { id: 1, name: "Anika Sharma", email: "anika@marian.ac.in", role: "student", className: "BSc CS A", isApproved: true },
-  { id: 2, name: "Prof. Rajesh Kumar", email: "rajesh@marian.ac.in", role: "teacher", className: "BSc CS A", department: "Computer Science", isApproved: true },
-  { id: 3, name: "Dr. Elizabeth Varghese", email: "elizabeth@marian.ac.in", role: "evaluator", department: "Computer Science", isApproved: true },
-  { id: 4, name: "Admin Officer", email: "admin@marian.ac.in", role: "admin", isApproved: true },
-  { id: 6, name: "IQAC Coordinator", email: "iqac@marian.ac.in", role: "iqac", isApproved: true },
   { id: 101, name: "Amal Thomas", email: "amal.25pmc114@mariancollege.org", role: "student", className: "II MCA", department: "The Post-Graduate Department of Computer Applications", isApproved: true },
-  { id: 102, name: "Santhosh Kannan", email: "santhosh.25pmc152@mariancollege.org", role: "student", className: "II MCA", department: "The Post-Graduate Department of Computer Applications", isApproved: true },
-  { id: 103, name: "Santhosh Kannan", email: "santhosh.25ubc154@mariancollege.org", role: "student", className: "II BCA A", department: "The Under-Graduate Department of Computer Applications", isApproved: true }
+  { id: 102, name: "Santhosh Kannan", email: "santhosh.25pmc152@mariancollege.org", role: "student", className: "II MCA", department: "The Post-Graduate Department of Computer Applications", isApproved: true, isStudentRep: true },
+  { id: 103, name: "Santhosh Kannan", email: "santhosh.25ubc154@mariancollege.org", role: "student", className: "II BCA A", department: "The Under-Graduate Department of Computer Applications", isApproved: true },
+  { id: 104, name: "Prof. Kochumol Abraham", email: "kochumol.abraham@mariancollege.org", role: "teacher", className: "II MCA", department: "The Post-Graduate Department of Computer Applications", isApproved: true },
+  { id: 105, name: "Allen George", email: "allen.george@mariancollege.org", role: "evaluator", department: "Computer Science", isApproved: true },
+  { id: 106, name: "IQAC Coordinator", email: "iqac@mariancollege.org", role: "iqac", department: "Internal Quality Assurance Cell", isApproved: true },
+  { id: 107, name: "System Administrator", email: "admin@mariancollege.org", role: "admin", department: "Administration", isApproved: true }
 ];
 
 export const defaultAcademicYears = ["2025-2026", "2024-2025", "2023-2024"];
@@ -361,18 +244,18 @@ export const defaultUserGroups: UserGroup[] = [
     id: "grp-evaluation-committee",
     name: "Evaluation Committee",
     description: "Evaluator members assigned to review activity submissions.",
-    emails: ["allen.george@mariancollege.org", "elizabeth@marian.ac.in"]
+    emails: ["allen.george@mariancollege.org"]
   },
   {
     id: "grp-class-teachers",
     name: "Class Teachers Council",
     description: "Faculty members acting as class advisors.",
-    emails: ["kochumol.abraham@mariancollege.org", "rajesh@marian.ac.in"]
+    emails: ["kochumol.abraham@mariancollege.org"]
   },
   {
     id: "grp-student-reps",
     name: "Student Representatives",
     description: "Student council and DQC lead members.",
-    emails: ["santhosh.25pmc152@mariancollege.org", "amal.25pmc141@mariancollege.org", "anika@marian.ac.in"]
+    emails: ["santhosh.25pmc152@mariancollege.org", "amal.25pmc114@mariancollege.org"]
   }
 ];

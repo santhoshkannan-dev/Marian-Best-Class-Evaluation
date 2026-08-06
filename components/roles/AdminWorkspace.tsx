@@ -39,6 +39,13 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
   const activeTab = view || activePage || 'years';
 
   const {
+    submissionOpen,
+    toggleSubmissionOpen,
+    evaluationOpen,
+    toggleEvaluationOpen,
+    submissionWindowStart,
+    submissionWindowEnd,
+    setSubmissionWindow,
     academicYears: globalYears,
     activeAcademicYear: globalActiveYear,
     addAcademicYearGlobal,
@@ -83,7 +90,9 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
       alert('This academic year already exists.');
       return;
     }
-    addAcademicYearGlobal(newYearInput.trim());
+    const formatted = newYearInput.trim();
+    addAcademicYearGlobal(formatted);
+    setActiveAcademicYearGlobal(formatted, true);
     setNewYearInput('');
   };
 
@@ -385,17 +394,14 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
   // ----------------------------------------------------
   // DATASET 5: SETTINGS
   // ----------------------------------------------------
-  const [submissionStatus, setSubmissionStatus] = useState(true);
-  const [evaluationStatus, setEvaluationStatus] = useState(true);
-  const [startTimeWindow, setStartTimeWindow] = useState('');
-  const [endTimeWindow, setEndTimeWindow] = useState('');
+  const [startTimeWindow, setStartTimeWindow] = useState(submissionWindowStart || '');
+  const [endTimeWindow, setEndTimeWindow] = useState(submissionWindowEnd || '');
 
-  const handleResetDemoData = () => {
-    if (window.confirm('Are you sure you want to restore all seed demo data?')) {
-      alert('Demo data reset successfully.');
-      window.location.reload();
-    }
-  };
+  React.useEffect(() => {
+    setStartTimeWindow(submissionWindowStart || '');
+    setEndTimeWindow(submissionWindowEnd || '');
+  }, [submissionWindowStart, submissionWindowEnd]);
+
 
   return (
     <div style={{ position: 'relative', minHeight: '85vh', padding: '10px 0' }}>
@@ -1062,34 +1068,6 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                                  })}
                                </select>
                              </div>
-
-                             {/* DQC Member Select */}
-                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                               <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b' }}>DQC REPRESENTATIVE (STUDENT)</span>
-                               <select
-                                 value={classObj?.dqcMember || ''}
-                                 onChange={(e) => updateClassMapping(className, classObj?.classTeacher || '', e.target.value)}
-                                 style={{
-                                   padding: '6px 10px',
-                                   fontSize: '0.8rem',
-                                   borderRadius: '6px',
-                                   border: '1px solid #cbd5e1',
-                                   background: '#ffffff',
-                                   color: '#334155',
-                                   fontWeight: 600
-                                 }}
-                               >
-                                 <option value="">Select DQC Rep (Student)</option>
-                                 {availableStudentReps.map((u) => {
-                                   const isRepGroupMember = studentRepsGroup?.emails.some((e) => e.toLowerCase().trim() === u.email.toLowerCase().trim()) || u.isStudentRep;
-                                   return (
-                                     <option key={u.email} value={u.email}>
-                                       {isRepGroupMember ? '⭐ [Rep Group] ' : ''}{u.name} ({u.email})
-                                     </option>
-                                   );
-                                 })}
-                               </select>
-                             </div>
                            </div>
                          );
                        })}
@@ -1130,11 +1108,13 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
         {/* ---------------------------------------------------- */}
         {/* TAB 5: SETTINGS                                      */}
         {/* ---------------------------------------------------- */}
+        {/* TAB 5: SYSTEM SETTINGS                               */}
+        {/* ---------------------------------------------------- */}
         {activeTab === 'settings' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
               <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Settings</h1>
-              <p className="muted" style={{ fontSize: '0.88rem' }}>Control submission, evaluation, year selection, and demo reset.</p>
+              <p className="muted" style={{ fontSize: '0.88rem' }}>Manage submission status, evaluation access, time windows, and active academic year.</p>
             </div>
 
             {/* Split Status Toggles row */}
@@ -1142,19 +1122,19 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
               <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
                 <div>
                   <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 6px 0' }}>Submission Status</h3>
-                  <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>Accept new claims from students.</p>
+                  <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>Accept new claims from students system-wide.</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                  {submissionStatus ? (
+                  {submissionOpen ? (
                     <span className="badge badge-verified">ON</span>
                   ) : (
                     <span className="badge badge-correction">OFF</span>
                   )}
                   <button
                     className="btn btn-secondary btn-sm"
-                    onClick={() => setSubmissionStatus(!submissionStatus)}
+                    onClick={toggleSubmissionOpen}
                   >
-                    Toggle Submission
+                    Toggle Submission ({submissionOpen ? 'ON' : 'OFF'})
                   </button>
                 </div>
               </div>
@@ -1162,19 +1142,19 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
               <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
                 <div>
                   <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 6px 0' }}>Evaluation Status</h3>
-                  <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>Permit teachers to score claims.</p>
+                  <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>Permit class advisors and evaluators to score claims.</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                  {evaluationStatus ? (
+                  {evaluationOpen ? (
                     <span className="badge badge-verified">ON</span>
                   ) : (
                     <span className="badge badge-correction">OFF</span>
                   )}
                   <button
                     className="btn btn-secondary btn-sm"
-                    onClick={() => setEvaluationStatus(!evaluationStatus)}
+                    onClick={toggleEvaluationOpen}
                   >
-                    Toggle Evaluation
+                    Toggle Evaluation ({evaluationOpen ? 'ON' : 'OFF'})
                   </button>
                 </div>
               </div>
@@ -1184,7 +1164,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
             <div className="card">
               <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px' }}>📅 Submission Time Window</h3>
               <p className="muted" style={{ fontSize: '0.82rem', marginBottom: '20px' }}>
-                Set the start and end date/time for the submission period. Students can only submit within this window.
+                Set the start and end date/time for the submission period. Students can only submit claims within this window.
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
@@ -1212,7 +1192,10 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                 <button
                   className="btn"
                   style={{ background: '#f97316', color: '#ffffff', fontWeight: 700 }}
-                  onClick={() => alert(`Saved time window: ${startTimeWindow} to ${endTimeWindow}`)}
+                  onClick={() => {
+                    setSubmissionWindow(startTimeWindow, endTimeWindow);
+                    alert(`Submission window saved: ${startTimeWindow || 'Immediately'} to ${endTimeWindow || 'Open'}`);
+                  }}
                 >
                   Save Time Window
                 </button>
@@ -1221,7 +1204,8 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                   onClick={() => {
                     setStartTimeWindow('');
                     setEndTimeWindow('');
-                    alert('Time window cleared.');
+                    setSubmissionWindow('', '');
+                    alert('Submission time window cleared.');
                   }}
                 >
                   Clear Time Window
@@ -1229,29 +1213,15 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
               </div>
             </div>
 
-            {/* Bottom Row Academic Year & Reset Data */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '20px' }}>
-              <div className="card">
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px' }}>Academic Year</h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 700, margin: '0 0 6px 0' }}>Active Year: 2025-2026</p>
-                <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
-                  Manage academic years in the Academic Years module.
-                </p>
-              </div>
-
-              <div className="card" style={{ border: '1px solid #fca5a5' }}>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px', color: '#dc2626' }}>Reset Demo Data</h3>
-                <p className="muted" style={{ fontSize: '0.8rem', marginBottom: '16px' }}>
-                  This restores criteria, users, submissions, years, and status toggles to initial seed data.
-                </p>
-                <button
-                  className="btn"
-                  style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', fontWeight: 700 }}
-                  onClick={handleResetDemoData}
-                >
-                  Reset Demo Data
-                </button>
-              </div>
+            {/* Bottom Row Academic Year Info */}
+            <div className="card">
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '6px' }}>Academic Year</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 700, margin: '0 0 6px 0' }}>
+                Active Year: {globalActiveYear || '2025-2026'}
+              </p>
+              <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
+                Manage academic years in the Academic Years module. Changing the active academic year updates the active year system-wide.
+              </p>
             </div>
           </div>
         )}

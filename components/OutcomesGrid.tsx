@@ -86,25 +86,6 @@ export const OutcomesGrid: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Quote Banner */}
-      <div
-        style={{
-          textAlign: 'center',
-          padding: '30px 40px',
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-          color: '#ffffff',
-          borderRadius: '24px',
-          boxShadow: '0 10px 30px rgba(15, 23, 42, 0.1)',
-          maxWidth: '800px',
-          margin: '0 auto'
-        }}
-      >
-        <p style={{ fontStyle: 'italic', fontSize: '1.15rem', lineHeight: 1.6, margin: 0 }}>
-          “A class becomes the best not by chance, but by the strength of its unity, discipline, and determination to grow together…”
-        </p>
-      </div>
-    </section>
+      </div>    </section>
   );
 };

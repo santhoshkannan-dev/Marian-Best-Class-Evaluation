@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useApp } from '@/context/AppContext';
 import { policyCategories, PolicyCategory } from './policyData';
 
 interface StandingItem {
@@ -197,10 +198,29 @@ const CountUp: React.FC<{ end: number; duration?: number; suffix?: string }> = (
 };
 
 export const LandingPage: React.FC = () => {
+  const { submissionOpen, submissionWindowStart, submissionWindowEnd, activeAcademicYear } = useApp();
   const [activeYear, setActiveYear] = useState('2025');
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedClass, setSelectedClass] = useState<StandingItem | null>(null);
   const scrollTrackRef = useRef<HTMLDivElement>(null);
+
+  const formatDateTime = (isoString?: string) => {
+    if (!isoString) return null;
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString;
+      return d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return isoString;
+    }
+  };
 
   // Animations & Search States
   const [isLoaded, setIsLoaded] = useState(false);
