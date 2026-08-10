@@ -278,10 +278,21 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
   // Helper to check if two class names match (handling prefixes like II MCA vs MCA)
   const isSameClass = (c1?: string, c2?: string) => {
-    if (!c1 || !c2) return true;
-    const norm1 = c1.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
-    const norm2 = c2.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
-    return norm1 === norm2 || c1.toLowerCase().trim() === c2.toLowerCase().trim();
+    if (!c1 || !c2) return false;
+    const norm1 = c1.toLowerCase().trim();
+    const norm2 = c2.toLowerCase().trim();
+    if (norm1 === norm2) return true;
+
+    // Check if section letters match if present (e.g. BSc CS A vs BSc CS B)
+    const section1 = norm1.match(/\s+([a-z])$/);
+    const section2 = norm2.match(/\s+([a-z])$/);
+    if (section1 && section2 && section1[1] !== section2[1]) {
+      return false;
+    }
+
+    const stripped1 = norm1.replace(/^(i|ii|iii|iv|v|\d+)(st|nd|rd|th)?\s+/, '').trim();
+    const stripped2 = norm2.replace(/^(i|ii|iii|iv|v|\d+)(st|nd|rd|th)?\s+/, '').trim();
+    return stripped1 === stripped2;
   };
 
   // Determine current logged in Student Representative's class
@@ -292,12 +303,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     currentStudentObj?.className ||
     'II MCA';
 
-  // Peer Submissions for Group Verification Desk (Includes ALL OTHER users' submissions from the same class as Student Representative ONLY for verification)
+  // Peer Submissions for Group Verification Desk (Includes ALL users' submissions from the same class as Student Representative ONLY for verification)
   const peerSubmissions = submissions.filter((sub) => {
     // Exclude draft submissions from verification desk
     if (sub.status === 'Draft') return false;
 
-    // Exclude student rep's OWN submission from Group Verification Desk (peer submissions only)
     const subEmail = (
       (sub as any).user_email ||
       (sub as any).userEmail ||
@@ -305,38 +315,40 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       ''
     ).toLowerCase().trim();
 
-    if (currentEmail && subEmail && subEmail === currentEmail) {
-      return false;
-    }
-    if (sub.studentId === currentStudentId || (currentUserId && sub.studentId === currentUserId)) {
-      return false;
-    }
+    const isOwnSubmission = Boolean(currentEmail && subEmail && subEmail === currentEmail);
 
     const studentObj = students.find((s) => s.id === sub.studentId);
     const userObj = users.find(
       (u) =>
-        u.id === sub.studentId ||
-        (sub as any).user_email?.toLowerCase().trim() === u.email.toLowerCase().trim() ||
-        (sub as any).userEmail?.toLowerCase().trim() === u.email.toLowerCase().trim() ||
-        (sub as any).email?.toLowerCase().trim() === u.email.toLowerCase().trim()
+        (u.email && subEmail && u.email.toLowerCase().trim() === subEmail) ||
+        u.id === sub.studentId
     );
 
     const studentClass =
-      studentObj?.className ||
+      (sub as any).className ||
+      (sub as any).class_name ||
+      (sub as any).studentClass ||
+      (sub as any).user_class ||
+      (isOwnSubmission ? ((currentUserInfo as any)?.className || (currentUserInfo as any)?.class_name) : '') ||
       (userObj as any)?.className ||
       (userObj as any)?.class_name ||
+      studentObj?.className ||
       '';
 
-    if (studentClass && repClass) {
-      return isSameClass(studentClass, repClass);
-    }
-    return true;
+    if (!studentClass || !repClass) return false;
+    return isSameClass(studentClass, repClass);
   });
 
   const filteredRepSubmissions = peerSubmissions.filter((sub) => {
     const studentObj = students.find((s) => s.id === sub.studentId);
     const userObj = users.find((u) => u.id === sub.studentId || (sub as any).user_email === u.email || (sub as any).userEmail === u.email);
-    const studentName = studentObj?.name || userObj?.name || (userObj as any)?.first_name ? `${(userObj as any).first_name} ${(userObj as any).last_name || ''}`.trim() : '';
+    const studentName =
+      (sub as any).user_name ||
+      studentObj?.name ||
+      userObj?.name ||
+      ((userObj as any)?.first_name ? `${(userObj as any).first_name} ${(userObj as any).last_name || ''}`.trim() : '') ||
+      currentUserInfo?.name ||
+      `Student #${sub.studentId}`;
 
     const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
     const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
@@ -350,8 +362,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
     const matchesStatus =
       repStatusFilter === 'all' ||
-      (repStatusFilter === 'pending' && (sub.status === 'Pending Rep Verification' || sub.status === 'Pending' || sub.status === 'Submitted')) ||
-      (repStatusFilter === 'verified' && sub.status === 'Student Rep Verified') ||
+      (repStatusFilter === 'pending' && (sub.status === 'Pending Rep Verification' || sub.status === 'Pending' || sub.status === 'Submitted' || sub.status === 'Pending Verification')) ||
+      (repStatusFilter === 'verified' && (sub.status === 'Student Rep Verified' || sub.status === 'Verified by Student Rep')) ||
       (repStatusFilter === 'approved' && (sub.status === 'Approved' || sub.status === 'Verified' || sub.status === 'Evaluated' || sub.status === 'Locked')) ||
       (repStatusFilter === 'correction' && (sub.status === 'Correction Requested' || sub.status === 'Correction')) ||
       (repStatusFilter === 'rejected' && sub.status === 'Rejected');
@@ -454,7 +466,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       setEditingSubId(null);
     } else {
       addSubmission({
-        studentId: currentStudentId,
+        studentId: currentUserInfo?.id || currentUserId || currentStudentId,
         criteriaId: selectedCriteriaId,
         description: finalDescription,
         status: initialStatus,
@@ -1062,10 +1074,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       const isEventId = sub.eventId || sub.proof?.startsWith('Event ID:');
                       const displayEventId = sub.eventId || (sub.proof?.startsWith('Event ID:') ? sub.proof.replace('Event ID: ', '') : sub.proof);
 
-                      const isRepApproved = sub.status === 'Student Rep Verified' || sub.repVerifiedByName || ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status);
+                      const isRepApproved = sub.status === 'Student Rep Verified' || ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) || (sub.repVerifiedByName && !['Correction Requested', 'Correction', 'Rejected'].includes(sub.status));
+                      const isRepCorrection = ['Correction Requested', 'Correction'].includes(sub.status) && (!!sub.repRemarks || (!!sub.repVerifiedByName && !sub.teacherVerifiedByName) || (!!sub.remarks && !sub.teacherRemarks && !sub.teacherVerifiedByName));
+                      const isRepRejected = sub.status === 'Rejected' && (!!sub.repRemarks || (!!sub.repVerifiedByName && !sub.teacherVerifiedByName) || (!!sub.remarks && !sub.teacherRemarks && !sub.teacherVerifiedByName));
+                      
                       const isTeacherApproved = ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status);
-                      const isTeacherRejected = sub.status === 'Rejected';
-                      const isCorrectionNeeded = sub.status === 'Correction Requested' || sub.status === 'Correction';
+                      const isTeacherCorrection = ['Correction Requested', 'Correction'].includes(sub.status) && !isRepCorrection;
+                      const isTeacherRejected = sub.status === 'Rejected' && !isRepRejected;
 
                       const isEvaluated = sub.evaluatorVerified || sub.status === 'Evaluated' || sub.status === 'Locked' || (sub.marks !== null && sub.marks !== undefined);
 
@@ -1130,7 +1145,29 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           
                           {/* Round 1: Student Representative Review */}
                           <td>
-                            {sub.repVerifiedByName ? (
+                            {isRepCorrection ? (
+                              <div>
+                                <span className="badge badge-correction" style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5', fontWeight: 800 }}>
+                                  ⚠️ Correction Requested
+                                </span>
+                                {(sub.repRemarks || sub.remarks) && (
+                                  <div style={{ fontSize: '0.74rem', color: '#c2410c', fontStyle: 'italic', marginTop: '2px' }}>
+                                    💬 &ldquo;{sub.repRemarks || sub.remarks}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                            ) : isRepRejected ? (
+                              <div>
+                                <span className="badge badge-correction" style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', fontWeight: 800 }}>
+                                  ❌ Rejected
+                                </span>
+                                {(sub.repRemarks || sub.remarks) && (
+                                  <div style={{ fontSize: '0.74rem', color: '#dc2626', fontStyle: 'italic', marginTop: '2px' }}>
+                                    💬 &ldquo;{sub.repRemarks || sub.remarks}&rdquo;
+                                  </div>
+                                )}
+                              </div>
+                            ) : sub.repVerifiedByName ? (
                               <div>
                                 <span className="badge badge-verified" style={{ background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe', fontWeight: 800 }}>
                                   ✓ Verified (Rep)
@@ -1163,15 +1200,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           <td>
                             {sub.teacherVerifiedByName ? (
                               <div>
-                                <span className={`badge ${isTeacherApproved ? 'badge-verified' : isCorrectionNeeded ? 'badge-correction' : 'badge-danger'}`} style={{
-                                  background: isTeacherApproved ? '#dcfce7' : isCorrectionNeeded ? '#fff7ed' : '#fee2e2',
-                                  color: isTeacherApproved ? '#15803d' : isCorrectionNeeded ? '#c2410c' : '#dc2626',
-                                  border: `1px solid ${isTeacherApproved ? '#86efac' : isCorrectionNeeded ? '#ffedd5' : '#fca5a5'}`,
+                                <span className={`badge ${isTeacherApproved ? 'badge-verified' : isTeacherCorrection ? 'badge-correction' : 'badge-danger'}`} style={{
+                                  background: isTeacherApproved ? '#dcfce7' : isTeacherCorrection ? '#fff7ed' : '#fee2e2',
+                                  color: isTeacherApproved ? '#15803d' : isTeacherCorrection ? '#c2410c' : '#dc2626',
+                                  border: `1px solid ${isTeacherApproved ? '#86efac' : isTeacherCorrection ? '#ffedd5' : '#fca5a5'}`,
                                   fontWeight: 800
                                 }}>
-                                  {isTeacherApproved ? '✓ Approved' : isCorrectionNeeded ? '⚠️ Correction' : '❌ Rejected'}
+                                  {isTeacherApproved ? '✓ Approved' : isTeacherCorrection ? '⚠️ Correction' : '❌ Rejected'}
                                 </span>
-                                <div style={{ fontSize: '0.78rem', color: isTeacherApproved ? '#15803d' : isCorrectionNeeded ? '#c2410c' : '#dc2626', fontWeight: 700, marginTop: '4px' }}>
+                                <div style={{ fontSize: '0.78rem', color: isTeacherApproved ? '#15803d' : isTeacherCorrection ? '#c2410c' : '#dc2626', fontWeight: 700, marginTop: '4px' }}>
                                   by {sub.teacherVerifiedByName}
                                 </div>
                                 {(sub.teacherRemarks || sub.remarks) && (
@@ -1186,7 +1223,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                   ✓ Approved
                                 </span>
                               </div>
-                            ) : isCorrectionNeeded ? (
+                            ) : isTeacherCorrection ? (
                               <div>
                                 <span className="badge badge-correction" style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5', fontWeight: 800 }}>
                                   ⚠️ Correction Requested
@@ -1211,7 +1248,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             ) : (
                               <div>
                                 <span className="badge badge-submitted" style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', fontWeight: 700 }}>
-                                  {sub.status === 'Student Rep Verified' ? '⏳ Pending Advisor Review' : '⏳ Awaiting Rep Review'}
+                                  ⏳ Pending Advisor Review
                                 </span>
                               </div>
                             )}
@@ -1394,7 +1431,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     {paginatedRepSubmissions.map((sub) => {
                       const studentObj = students.find((s) => s.id === sub.studentId);
                       const userObj = users.find((u) => u.id === sub.studentId || (sub as any).user_email === u.email || (sub as any).userEmail === u.email);
-                      const displayName = studentObj?.name || userObj?.name || ((userObj as any)?.first_name ? `${(userObj as any).first_name} ${(userObj as any).last_name || ''}`.trim() : `Student #${sub.studentId}`);
+                      const displayName = (sub as any).user_name || studentObj?.name || userObj?.name || ((userObj as any)?.first_name ? `${(userObj as any).first_name} ${(userObj as any).last_name || ''}`.trim() : `Student #${sub.studentId}`);
                       const displayClass = studentObj?.className || (userObj as any)?.className || (userObj as any)?.class_name || repClass;
 
                       const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
@@ -1492,8 +1529,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                     const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
                                     updateSubmission(sub.id, {
                                       status: 'Student Rep Verified',
-                                      verifiedByName: repName,
-                                      remarks: 'Verified by Student Representative and forwarded to Class Advisor.'
+                                      repVerifiedByName: repName,
+                                      repRemarks: 'Verified by Student Representative and forwarded to Class Advisor.'
                                     });
                                   }}
                                   title="Verify and forward to Class Teacher"
@@ -1508,8 +1545,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                     const customRemarks = prompt('Enter correction note for student:') || 'Correction requested by Student Representative.';
                                     updateSubmission(sub.id, {
                                       status: 'Correction Requested',
-                                      verifiedByName: repName,
-                                      remarks: customRemarks
+                                      repVerifiedByName: repName,
+                                      repRemarks: customRemarks
                                     });
                                   }}
                                   title="Request correction"
@@ -1524,8 +1561,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                     const customRemarks = prompt('Enter rejection reason:') || 'Rejected by Student Representative.';
                                     updateSubmission(sub.id, {
                                       status: 'Rejected',
-                                      verifiedByName: repName,
-                                      remarks: customRemarks
+                                      repVerifiedByName: repName,
+                                      repRemarks: customRemarks
                                     });
                                   }}
                                   title="Reject submission"

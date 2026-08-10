@@ -1765,6 +1765,12 @@ tbody tr:hover {
   border: 1px solid #cbd5e1;
 }
 
+.status-rep-verified {
+  color: #0e7490;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+}
+
 .grade-a-plus,
 .grade-a,
 .grade-b-plus,

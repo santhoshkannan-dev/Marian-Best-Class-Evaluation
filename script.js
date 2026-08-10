@@ -58,11 +58,21 @@ const roleConfig = {
       { page: "feedback", label: "Feedback", icon: "FB" },
       { page: "best-class", label: "Best Class Dashboard", icon: "BC" }
     ]
+  },
+  group_member: {
+    label: "Student Rep",
+    heading: "Student Rep Workspace",
+    menu: [
+      { page: "dashboard", label: "Dashboard", icon: "DB" },
+      { page: "group-verify", label: "Group Submissions Verification Desk", icon: "GV" },
+      { page: "best-class", label: "Best Class Dashboard", icon: "BC" }
+    ]
   }
 };
 
 const adminManagedRoleOptions = [
   { value: "student", label: "Student" },
+  { value: "group_member", label: "Student Rep (Group Member)" },
   { value: "teacher", label: "Class Teacher" },
   { value: "evaluator", label: "Evaluation Team" },
   { value: "hod", label: "HOD" },
@@ -76,6 +86,7 @@ let academicYears = defaultAcademicYears.slice();
 const workflowStatus = {
   DRAFT: "Draft",
   SUBMITTED: "Submitted",
+  REP_VERIFIED: "Rep Verified",
   VERIFIED: "Verified",
   EVALUATED: "Evaluated",
   LOCKED: "Locked",
@@ -185,6 +196,7 @@ const state = {
   listViews: {
     studentSubmissions: createDefaultListViewState(),
     teacherVerification: createDefaultListViewState(),
+    groupMemberVerification: createDefaultListViewState(),
     evaluatorEvaluation: createDefaultEvaluatorListViewState(),
     hodClasses: createDefaultListViewState(),
     hodSubmissions: createDefaultListViewState(),
@@ -499,8 +511,19 @@ function isSubmissionScored(status) {
 }
 
 function isTeacherActionAllowed(status) {
+  // Teacher acts on Rep Verified items (after group rep pre-screens them)
+  return String(status || "") === workflowStatus.REP_VERIFIED;
+}
+
+function isRepVerified(status) {
+  return String(status || "") === workflowStatus.REP_VERIFIED;
+}
+
+function isRepActionAllowed(status) {
+  // Group Rep can only act on Submitted items
   return isSubmissionSubmitted(status);
 }
+
 
 function normalizeEvidence(evidence) {
   const safeEvidence = evidence && typeof evidence === "object" ? evidence : {};
@@ -1057,6 +1080,12 @@ function renderPage() {
       content = renderHodFeedbackPage();
     } else {
       content = renderHodDashboardPage();
+    }
+  } else if (state.currentRole === "group_member") {
+    if (state.activePage === "group-verify") {
+      content = renderGroupMemberVerificationPage();
+    } else {
+      content = renderGroupMemberDashboard();
     }
   } else {
     if (state.activePage === "reports") {
@@ -1854,7 +1883,7 @@ function renderStudentManagementPage() {
   );
 }
 function renderTeacherDashboard() {
-  const teacherClass = "BSc CS A";
+  const teacherClass = getTeacherAssignedClass();
   // Filter students for the dashboard view
   const classStudents = users.filter(u => u.role === "student" && u.class === teacherClass);
 
@@ -1926,9 +1955,13 @@ function renderTeacherVerificationSection() {
   const filteredBase = filterSubmissionViewRecords(records, viewState, true);
   const tabRecords = filteredBase.filter((record) => {
     if (state.teacherTab === "pending") {
-      return isSubmissionSubmitted(record.status);
+      // Teacher sees items that have been cleared by the Group Rep (Rep Verified)
+      return isRepVerified(record.status);
     }
-    return !isSubmissionSubmitted(record.status) && record.status !== workflowStatus.DRAFT;
+    // Reviewed tab: everything that is not Submitted/Draft/Rep Verified
+    return record.status !== workflowStatus.DRAFT &&
+           !isSubmissionSubmitted(record.status) &&
+           !isRepVerified(record.status);
   });
   const pageInfo = paginateListItems(tabRecords, viewState.currentPage, listPageSize);
   viewState.currentPage = pageInfo.currentPage;
@@ -1984,7 +2017,7 @@ function buildTeacherTable(records) {
 }
 
 function renderTeacherVerificationPage() {
-  const teacherClass = "BSc CS A"; // Demo class
+  const teacherClass = getTeacherAssignedClass(); // Dynamic: from logged-in teacher's class field
   
   // Set up filters if they don't exist
   if (!state.listViews.teacherVerification) {
@@ -2138,6 +2171,202 @@ function renderTeacherVerificationPage() {
     </div>
   `;
 }
+
+// ── Group Member (Student Rep) functions ──────────────────────────────────────
+
+function getRepAssignedClass() {
+  const currentUser = findUserById(state.currentUserId);
+  if (currentUser && String(currentUser.class || "").trim()) {
+    return String(currentUser.class).trim();
+  }
+  // Fallback: use first student's class
+  const fallbackClass = students[0] ? String(students[0].className || "").trim() : "";
+  return fallbackClass || "BSc CS A";
+}
+
+function renderGroupMemberDashboard() {
+  const repClass = getRepAssignedClass();
+  const classStudents = users.filter(u => u.role === "student" && u.class === repClass);
+  const classStudentIds = classStudents.map(u => u.id);
+  const classSubs = submissions.filter(s => classStudentIds.includes(s.studentId));
+
+  const totalSubs = classSubs.length;
+  const submittedCount = classSubs.filter(s => isSubmissionSubmitted(s.status)).length;
+  const repVerifiedCount = classSubs.filter(s => isRepVerified(s.status)).length;
+  const rejectedCount = classSubs.filter(s => s.status === workflowStatus.REJECTED || s.status === workflowStatus.CORRECTION).length;
+  const teacherVerifiedCount = classSubs.filter(s => s.status === workflowStatus.VERIFIED || s.status === workflowStatus.EVALUATED || s.status === workflowStatus.LOCKED).length;
+
+  const studentRows = classStudents.slice(0, 6).map(student => {
+    const stuSubs = submissions.filter(s => s.studentId === student.id);
+    const submitted = stuSubs.filter(s => isSubmissionSubmitted(s.status)).length;
+    const repApproved = stuSubs.filter(s => isRepVerified(s.status)).length;
+    const teacherApproved = stuSubs.filter(s => s.status === workflowStatus.VERIFIED || s.status === workflowStatus.EVALUATED || s.status === workflowStatus.LOCKED).length;
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--color-border);">
+        <span>${escapeHtml(student.name)}</span>
+        <div style="display:flex; gap:8px; font-size:0.8rem;">
+          <span class="status-pill mini status-pending" title="Awaiting Rep Review">${submitted} pending</span>
+          <span class="status-pill mini status-rep-verified" title="Rep Verified">${repApproved} rep✓</span>
+          <span class="status-pill mini status-approved" title="Teacher Verified">${teacherApproved} verified</span>
+        </div>
+      </div>`;
+  }).join("");
+
+  return (
+    `<section class="section-header">
+      <div>
+        <h1>Student Rep Dashboard</h1>
+        <p class="muted">Class: <strong>${escapeHtml(repClass)}</strong> &mdash; ${classStudents.length} student(s)</p>
+      </div>
+    </section>` +
+    `<section class="cards-grid stats-grid">
+      <div class="stat-card"><span class="stat-icon">📋</span><h3>${totalSubs}</h3><p>Total Submissions</p></div>
+      <div class="stat-card"><span class="stat-icon">⏳</span><h3>${submittedCount}</h3><p>Awaiting Rep Review</p></div>
+      <div class="stat-card"><span class="stat-icon">✅</span><h3>${repVerifiedCount}</h3><p>Rep Verified (sent to teacher)</p></div>
+      <div class="stat-card"><span class="stat-icon">🏫</span><h3>${teacherVerifiedCount}</h3><p>Teacher Verified</p></div>
+    </section>` +
+    `<section class="panel">
+      <h3>Class Activity</h3>
+      <div style="margin:15px 0;">${studentRows || "<p class='muted'>No students found in your class.</p>"}</div>
+      <div class="button-row">
+        <button type="button" class="btn primary" data-page-jump="group-verify">Open Verification Desk</button>
+      </div>
+    </section>`
+  );
+}
+
+function renderGroupMemberVerificationPage() {
+  const repClass = getRepAssignedClass();
+
+  if (!state.listViews.groupMemberVerification) {
+    state.listViews.groupMemberVerification = createDefaultListViewState();
+  }
+  const viewState = state.listViews.groupMemberVerification;
+
+  // Collect all students in the same class as the rep
+  const classStudents = users.filter(u => (u.role === "student" || u.role === "group_member") && u.class === repClass);
+  const classStudentIds = classStudents.map(u => u.id);
+
+  // Get all submissions from students in the rep's class
+  const classSubmissions = submissions.filter(s => classStudentIds.includes(s.studentId));
+
+  // Build student cards with their submissions
+  const studentItems = classStudents.map(student => {
+    const studentSubs = classSubmissions.filter(s => s.studentId === student.id);
+    const submitted = studentSubs.filter(s => isSubmissionSubmitted(s.status)).length;
+    const repVerified = studentSubs.filter(s => isRepVerified(s.status)).length;
+    const total = studentSubs.length;
+
+    let overallStatus = "No Submissions";
+    let statusClass = "status-neutral";
+    if (total === 0) {
+      overallStatus = "No Submissions"; statusClass = "status-neutral";
+    } else if (submitted > 0) {
+      overallStatus = "Pending Review"; statusClass = "status-pending";
+    } else if (repVerified === total) {
+      overallStatus = "All Rep Verified"; statusClass = "status-rep-verified";
+    } else {
+      overallStatus = "Partially Reviewed"; statusClass = "status-rep-verified";
+    }
+
+    return { student, studentSubs, submitted, repVerified, total, overallStatus, statusClass };
+  });
+
+  // Search filter
+  const query = (viewState.search || "").toLowerCase().trim();
+  const filtered = studentItems.filter(item =>
+    !query || item.student.name.toLowerCase().includes(query) || item.student.email.toLowerCase().includes(query)
+  );
+
+  const cardsHtml = filtered.map(item => {
+    const isExpanded = state.expandedStudentId === item.student.id;
+
+    let expandHtml = "";
+    if (isExpanded) {
+      const subListHtml = item.studentSubs.length > 0
+        ? item.studentSubs.map(sub => {
+            const record = createSubmissionViewRecord(sub);
+            const canAct = isRepActionAllowed(sub.status);
+
+            const controls = canAct
+              ? `<div class="field" style="margin-top:10px;">
+                  <label style="font-size:0.8rem; font-weight:600; color:var(--color-danger);">Remarks (Required for Correction/Reject)</label>
+                  <input type="text" data-rep-remark-input="${sub.id}" value="${escapeAttribute(sub.remarks || "")}" placeholder="e.g., Certificate unclear, please re-upload..." />
+                </div>
+                <div class="button-row" style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;">
+                  <button type="button" class="btn success mini" data-rep-action="${workflowStatus.REP_VERIFIED}" data-id="${sub.id}">✓ Rep Approve</button>
+                  <button type="button" class="btn warn mini" data-rep-action="${workflowStatus.CORRECTION}" data-id="${sub.id}">Request Correction</button>
+                  <button type="button" class="btn danger mini" data-rep-action="${workflowStatus.REJECTED}" data-id="${sub.id}">Reject</button>
+                </div>`
+              : `<p class="muted" style="font-size:0.85rem; margin-top:10px;">
+                  Status: <span class="status-pill mini ${getStatusClass(sub.status)}">${escapeHtml(sub.status)}</span>
+                  ${sub.remarks ? "— " + escapeHtml(sub.remarks) : ""}
+                </p>`;
+
+            return `
+              <div class="verification-item" style="border:1px solid var(--color-border); border-radius:10px; padding:14px; margin-bottom:10px; background:var(--bg-light);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <h4 style="font-size:0.92rem; margin:0;">${escapeHtml(record.itemTitle)}</h4>
+                  <span class="status-pill mini ${getStatusClass(sub.status)}">${escapeHtml(sub.status)}</span>
+                </div>
+                <p class="muted" style="font-size:0.83rem; margin-bottom:6px;">Category: ${escapeHtml(record.category)}</p>
+                <p style="font-size:0.83rem; margin-bottom:8px;">${escapeHtml(record.description || "—")}</p>
+                <button type="button" class="btn ghost mini full" data-view-doc="${escapeAttribute(sub.proofFile || sub.proof || "")}">📄 View Proof</button>
+                ${controls}
+              </div>`;
+          }).join("")
+        : "<p class='empty-state'>No submissions yet from this student.</p>";
+
+      expandHtml = `<div class="student-expand-content" style="margin-top:14px;">${subListHtml}</div>`;
+    }
+
+    return `
+      <article class="panel student-card" style="margin-bottom:14px;">
+        <div class="student-card-header">
+          <div class="student-card-info">
+            <span class="student-name">${escapeHtml(item.student.name)}</span>
+            <p class="muted" style="font-size:0.8rem;">${escapeHtml(item.student.email)}</p>
+          </div>
+          <span class="status-pill ${item.statusClass}">${item.overallStatus}</span>
+        </div>
+        <div style="display:flex; gap:12px; margin:10px 0; font-size:0.82rem; flex-wrap:wrap;">
+          <span>📋 Total: <strong>${item.total}</strong></span>
+          <span>⏳ Pending: <strong>${item.submitted}</strong></span>
+          <span>✅ Rep Verified: <strong>${item.repVerified}</strong></span>
+          <span>📊 Other: <strong>${item.total - item.submitted - item.repVerified}</strong></span>
+        </div>
+        <button type="button" class="btn ${isExpanded ? "primary" : "ghost"} full" data-expand-student="${item.student.id}">
+          ${isExpanded ? "Hide Submissions ▲" : "Review Submissions ▼"}
+        </button>
+        ${expandHtml}
+      </article>`;
+  }).join("");
+
+  return `
+    <section class="section-header">
+      <div>
+        <h1>Group Submissions Verification Desk</h1>
+        <p class="muted">Pre-screening submissions for class <strong>${escapeHtml(repClass)}</strong> — verified items are forwarded to the Class Teacher</p>
+      </div>
+    </section>
+
+    <section class="panel tool-bar" style="margin-bottom:16px;">
+      <div class="field search-box">
+        <label>Search Students</label>
+        <input type="text" placeholder="Search by name or email…" value="${escapeAttribute(viewState.search)}"
+               data-list-target="group-member-verification" data-list-filter="search" />
+      </div>
+      <div style="font-size:0.83rem; color:var(--text-muted); align-self:flex-end; padding-bottom:6px;">
+        Class: <strong>${escapeHtml(repClass)}</strong> &bull; ${classStudents.length} student(s)
+      </div>
+    </section>
+
+    <div class="student-grid">
+      ${cardsHtml || '<div class="panel empty-state">No students found in your assigned class.</div>'}
+    </div>
+  `;
+}
+
 function renderEvaluatorDashboard() {
   const verifiedQueue = submissions.filter((item) => isSubmissionVerified(item.status));
   const lockedQueue = submissions.filter((item) => isSubmissionLocked(item.status));
@@ -3627,6 +3856,36 @@ function handlePageClick(event) {
     return;
   }
 
+  // Group Rep (Student Rep) action handler
+  const repActionButton = event.target.closest("button[data-rep-action]");
+  if (repActionButton) {
+    const submissionId = Number(repActionButton.dataset.id);
+    const nextStatus = repActionButton.dataset.repAction;
+
+    const remarkInput = ui.pageContent.querySelector("[data-rep-remark-input='" + submissionId + "']");
+    const remarksValue = remarkInput ? remarkInput.value.trim() : "";
+
+    if ((nextStatus === workflowStatus.CORRECTION || nextStatus === workflowStatus.REJECTED) && !remarksValue) {
+      showToast("Please enter remarks before requesting correction or rejecting.", "warning");
+      if (remarkInput) remarkInput.focus();
+      return;
+    }
+
+    openConfirmModal(
+      "Confirm Rep Action",
+      "Mark submission as " + nextStatus + (remarksValue ? " with remarks?" : "?"),
+      () => {
+        const submission = submissions.find(s => s.id === submissionId);
+        if (submission) {
+          submission.remarks = remarksValue;
+        }
+        updateRepStatus(submissionId, nextStatus);
+      }
+    );
+    return;
+  }
+
+
   const editItemButton = event.target.closest("button[data-item-edit]");
   if (editItemButton) {
     state.editingCriteriaItemId = Number(editItemButton.dataset.itemEdit);
@@ -4121,6 +4380,17 @@ function updateListFilterState(target, filterKey, rawValue) {
     return;
   }
 
+  if (safeTarget === "group-member-verification") {
+    if (!state.listViews.groupMemberVerification) {
+      state.listViews.groupMemberVerification = createDefaultListViewState();
+    }
+    const viewState = state.listViews.groupMemberVerification;
+    viewState[safeFilterKey] = nextValue;
+    viewState.currentPage = 1;
+    renderPage();
+    return;
+  }
+
   if (safeTarget === "evaluator-evaluation") {
     const viewState = state.listViews.evaluatorEvaluation;
     viewState[safeFilterKey] = nextValue;
@@ -4428,7 +4698,7 @@ function updateTeacherStatus(submissionId, nextStatus) {
   }
 
   if (!isTeacherActionAllowed(submission.status)) {
-    showToast("Teacher can update only Submitted items.", "warning");
+    showToast("Teacher can verify only Rep Verified items.", "warning");
     return;
   }
 
@@ -4480,6 +4750,53 @@ function updateTeacherStatus(submissionId, nextStatus) {
   
   renderPage();
 }
+
+function updateRepStatus(submissionId, nextStatus) {
+  const submission = submissions.find(item => item.id === submissionId);
+  if (!submission) {
+    showToast("Submission not found.", "error");
+    return;
+  }
+
+  if (!isRepActionAllowed(submission.status)) {
+    showToast("Group Rep can only act on Submitted items.", "warning");
+    return;
+  }
+
+  if (nextStatus !== workflowStatus.REP_VERIFIED && nextStatus !== workflowStatus.CORRECTION && nextStatus !== workflowStatus.REJECTED) {
+    showToast("Invalid rep transition.", "error");
+    return;
+  }
+
+  const now = new Date().toISOString();
+  submission.timestamps = normalizeSubmissionTimestamps(submission.timestamps);
+  submission.status = nextStatus;
+  submission.timestamps.updatedAt = now;
+
+  if (nextStatus === workflowStatus.REP_VERIFIED) {
+    submission.repVerifiedBy = getCurrentActorLabel();
+    submission.timestamps.repVerifiedAt = now;
+    submission.timestamps.correctionAt = "";
+    submission.timestamps.rejectedAt = "";
+  } else if (nextStatus === workflowStatus.CORRECTION) {
+    submission.repVerifiedBy = "";
+    submission.marks = null;
+    submission.timestamps.repVerifiedAt = "";
+    submission.timestamps.correctionAt = now;
+    submission.timestamps.rejectedAt = "";
+  } else {
+    submission.repVerifiedBy = "";
+    submission.marks = null;
+    submission.timestamps.repVerifiedAt = "";
+    submission.timestamps.correctionAt = "";
+    submission.timestamps.rejectedAt = now;
+  }
+
+  persistState();
+  showToast("Submission " + submissionId + " marked as " + nextStatus + " by Rep.", "success");
+  renderPage();
+}
+
 
 function updateStudentStatus(studentId) {
   const student = users.find(u => u.id === studentId);
@@ -5603,8 +5920,46 @@ function createInitialUsers() {
     }
   ];
 
-  return studentUsers.concat(staffUsers);
+  // Student Rep (Group Member) users — one per class
+  const groupMemberUsers = [
+    {
+      id: 3001,
+      name: "Meena Pillai",
+      email: "meena.pillai@college.edu",
+      role: "group_member",
+      department: "Computer Science",
+      class: "BSc CS A",
+      isApproved: true,
+      status: "Active",
+      linkedStudentId: null
+    },
+    {
+      id: 3002,
+      name: "Tinu Jacob",
+      email: "tinu.jacob@college.edu",
+      role: "group_member",
+      department: "Commerce",
+      class: "BCom B",
+      isApproved: true,
+      status: "Active",
+      linkedStudentId: null
+    },
+    {
+      id: 3003,
+      name: "Riya Menon",
+      email: "riya.menon@college.edu",
+      role: "group_member",
+      department: "English",
+      class: "BA English C",
+      isApproved: true,
+      status: "Active",
+      linkedStudentId: null
+    }
+  ];
+
+  return studentUsers.concat(staffUsers).concat(groupMemberUsers);
 }
+
 
 function buildUserEmail(name, fallbackPrefix) {
   const base = String(name || "")
@@ -5632,6 +5987,9 @@ function normalizeUserRole(role) {
   }
   if (normalized === "admin") {
     return "admin";
+  }
+  if (normalized === "group_member" || normalized === "student rep" || normalized === "student rep (group member)") {
+    return "group_member";
   }
   return "student";
 }
@@ -5769,6 +6127,9 @@ function getStatusClass(status) {
   const normalized = String(status || "").toLowerCase();
   if (normalized === "verified" || normalized === "evaluated" || normalized === "locked" || normalized === "approved") {
     return "status-approved";
+  }
+  if (normalized === "rep verified") {
+    return "status-rep-verified";
   }
   if (normalized === "rejected") {
     return "status-rejected";
@@ -5935,7 +6296,7 @@ function buildClassPerformanceForDashboard(year, departmentFilter) {
       const effective = getSubmissionEffectiveMarks(submission);
       classEntry.totalScore += effective;
       classEntry.maxScore += getSubmissionScoreCapacity(submission);
-    } else if (submission.status === workflowStatus.SUBMITTED) {
+    } else if (submission.status === workflowStatus.SUBMITTED || submission.status === workflowStatus.REP_VERIFIED) {
       classEntry.pendingCount++;
     } else if (submission.status === workflowStatus.REJECTED) {
       classEntry.rejectedCount++;

@@ -76,9 +76,22 @@ export default function LoginPage() {
       setErrorMsg('Please select a profile to bypass authentication.');
       return;
     }
+    
+    let emailToUse = selectedBypassEmail;
+    let overrideRole = undefined;
+    if (selectedBypassEmail.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(selectedBypassEmail);
+        emailToUse = parsed.email;
+        overrideRole = parsed.role;
+      } catch (e) {
+        // Fallback to raw string
+      }
+    }
+
     setErrorMsg('');
     setLoading(true);
-    const result = await loginBypass(selectedBypassEmail);
+    const result = await loginBypass(emailToUse, overrideRole);
     setLoading(false);
     if (!result.success) {
       setErrorMsg(result.error || 'Bypass authentication failed.');
@@ -157,8 +170,8 @@ export default function LoginPage() {
                     <option value="santhosh.25pmc152@mariancollege.org">Student/DQC Rep (santhosh.25pmc152 - II MCA)</option>
                     <option value="amal.25pmc114@mariancollege.org">PG Student (amal.25pmc114 - II MCA)</option>
                     <option value="santhosh.25ubc154@mariancollege.org">UG Student (santhosh.25ubc154 - II BCA A)</option>
-                    <option value="kochumol.abraham@mariancollege.org">Class Teacher</option>
-                    <option value="allen.george@mariancollege.org">Evaluator</option>
+                    <option value={JSON.stringify({email: "kochumol.abraham@mariancollege.org", role: "faculty"})}>Class Teacher (Kochumol Abraham)</option>
+                    <option value={JSON.stringify({email: "kochumol.abraham@mariancollege.org", role: "evaluation"})}>Evaluator (Kochumol Abraham)</option>
                     <option value="admin@mariancollege.org">Admin</option>
                   </select>
                 </div>

@@ -21,7 +21,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     activePage,
     setActivePage,
     criteriaCatalog,
-    currentUserInfo
+    currentUserInfo,
+    classes
   } = useApp();
 
   const activeTab = view || activePage || 'dashboard';
@@ -102,6 +103,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   };
 
   const teacherClass = (currentUserInfo as any)?.className || (currentUserInfo as any)?.class_name || 'II MCA';
+  const teacherClassObject = classes?.find((c: any) => c.name === teacherClass);
+  const teacherDepartment = teacherClassObject?.department || currentUserInfo?.department || 'Not Assigned';
 
   // ----------------------------------------------------
   // FILTERED STUDENT LIST FOR VERIFICATION DESK (Filtered to Teacher's Class)
@@ -846,6 +849,77 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                       Upload CSV
                     </button>
                   </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: MY PROFILE */}
+        {activeTab === 'profile' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+            <div>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>My Profile</h1>
+              <p className="muted" style={{ fontSize: '0.88rem' }}>
+                View your personal teacher profile details derived from your official institutional account.
+              </p>
+            </div>
+
+            {/* Profile Card Summary */}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '36px 40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)' }}>
+              <div
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--primary, #3b82f6), #1d4ed8)',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2.5rem',
+                  fontWeight: 800,
+                  boxShadow: '0 4px 14px rgba(59, 130, 246, 0.25)',
+                  overflow: 'hidden'
+                }}
+              >
+                {currentUserInfo?.picture ? (
+                  <img
+                    src={currentUserInfo.picture}
+                    alt={currentUserInfo.name || 'Profile'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span>{(currentUserInfo?.name || currentUserInfo?.email || '?').charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 4px 0', color: '#1e293b' }}>
+                  {currentUserInfo?.name || 'Faculty Member'}
+                </h2>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>
+                  {currentUserInfo?.email || 'Not Available'}
+                </p>
+              </div>
+
+              <div style={{ width: '100%', height: '1px', background: '#e2e8f0', margin: '10px 0' }} />
+
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.88rem', color: '#64748b' }}>Role</span>
+                  <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#1e293b' }}>Class Teacher</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.88rem', color: '#64748b' }}>Department</span>
+                  <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#1e293b' }}>
+                    {teacherDepartment}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.88rem', color: '#64748b' }}>Assigned Class</span>
+                  <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#1e293b' }}>
+                    {teacherClass || 'Not Assigned'}
+                  </span>
                 </div>
               </div>
             </div>

@@ -128,6 +128,9 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
   const [newItemMarks, setNewItemMarks] = useState(5);
   const [newItemDetails, setNewItemDetails] = useState('');
 
+  // State to hold pending teacher selections before confirmation
+  const [pendingClassTeachers, setPendingClassTeachers] = useState<Record<string, string>>({});
+
   interface CriteriaItemDetail {
     id: string;
     title: string;
@@ -1042,31 +1045,50 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                              <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1e293b' }}>{className}</span>
 
                              {/* Class Teacher Select */}
-                             <div className="mapping-select-group">
+                             <div className="mapping-select-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b' }}>CLASS ADVISOR (FACULTY)</span>
-                               <select
-                                 value={classObj?.classTeacher || ''}
-                                 onChange={(e) => updateClassMapping(className, e.target.value, classObj?.dqcMember || '')}
-                                 style={{
-                                   padding: '6px 10px',
-                                   fontSize: '0.8rem',
-                                   borderRadius: '6px',
-                                   border: '1px solid #cbd5e1',
-                                   background: '#ffffff',
-                                   color: '#334155',
-                                   fontWeight: 600
-                                 }}
-                               >
-                                 <option value="">Select Teacher (Class Advisor)</option>
-                                 {availableFaculty.map((u) => {
-                                   const isCouncilMember = classTeachersGroup?.emails.some((e) => e.toLowerCase().trim() === u.email.toLowerCase().trim());
-                                   return (
-                                     <option key={u.email} value={u.email}>
-                                       {isCouncilMember ? '⭐ [Council] ' : ''}{u.name} ({u.email})
-                                     </option>
-                                   );
-                                 })}
-                               </select>
+                               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                 <select
+                                   value={pendingClassTeachers[className] !== undefined ? pendingClassTeachers[className] : (classObj?.classTeacher || '')}
+                                   onChange={(e) => setPendingClassTeachers(prev => ({ ...prev, [className]: e.target.value }))}
+                                   style={{
+                                     padding: '6px 10px',
+                                     fontSize: '0.8rem',
+                                     borderRadius: '6px',
+                                     border: '1px solid #cbd5e1',
+                                     background: '#ffffff',
+                                     color: '#334155',
+                                     fontWeight: 600,
+                                     flex: 1
+                                   }}
+                                 >
+                                   <option value="">Select Teacher (Class Advisor)</option>
+                                   {availableFaculty.map((u) => {
+                                     const isCouncilMember = classTeachersGroup?.emails.some((e) => e.toLowerCase().trim() === u.email.toLowerCase().trim());
+                                     return (
+                                       <option key={u.email} value={u.email}>
+                                         {isCouncilMember ? '⭐ [Council] ' : ''}{u.name} ({u.email})
+                                       </option>
+                                     );
+                                   })}
+                                 </select>
+                                 
+                                 {pendingClassTeachers[className] !== undefined && pendingClassTeachers[className] !== (classObj?.classTeacher || '') && (
+                                   <button
+                                     className="btn btn-sm btn-primary"
+                                     onClick={() => {
+                                       updateClassMapping(className, pendingClassTeachers[className], classObj?.dqcMember || '');
+                                       setPendingClassTeachers(prev => {
+                                         const next = { ...prev };
+                                         delete next[className];
+                                         return next;
+                                       });
+                                     }}
+                                   >
+                                     Confirm
+                                   </button>
+                                 )}
+                               </div>
                              </div>
                            </div>
                          );
