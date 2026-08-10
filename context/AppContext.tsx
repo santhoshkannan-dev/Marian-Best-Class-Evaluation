@@ -62,7 +62,7 @@ interface AppContextType {
   setSubmissionWindow: (start: string, end: string) => void;
   loginAsRole: (role: string) => void;
   loginWithGoogleToken: (idToken: string) => Promise<{ success: boolean; error?: string }>;
-  loginBypass: (email: string) => Promise<{ success: boolean; error?: string }>;
+  loginBypass: (email: string, role?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   addStudent: (student: Omit<Student, 'id'>) => void;
   deleteStudent: (id: number) => void;
@@ -402,14 +402,17 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   // Dev bypass login handler
-  const loginBypass = async (email: string) => {
+  const loginBypass = async (email: string, role?: string) => {
     try {
+      const payload: any = { email };
+      if (role) payload.role = role;
+      
       const res = await fetch('http://localhost:8000/api/auth/bypass/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -569,6 +572,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const tempId = Date.now();
     const userEmail = currentUserInfo?.email || users.find((u) => u.id === currentUserId)?.email || '';
 
+    const userClass = (currentUserInfo as any)?.className || (currentUserInfo as any)?.class_name || '';
+    const userName = currentUserInfo?.name || '';
+
     const createdTempSub: Submission = {
       ...newSub,
       id: tempId,
@@ -576,6 +582,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       user_email: userEmail,
       userEmail: userEmail,
       email: userEmail,
+      user_name: userName,
+      className: userClass,
+      class_name: userClass,
       academicYear: selectedAcademicYear || '2025-2026',
       status: newSub.status || 'Pending Verification',
       remarks: newSub.remarks || ''

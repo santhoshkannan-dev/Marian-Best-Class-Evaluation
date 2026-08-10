@@ -26,6 +26,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
     { id: 'dashboard', label: 'Dashboard', href: '/teacher/dashboard' },
     { id: 'verification', label: 'Verification', href: '/teacher/verification' },
     { id: 'student-management', label: 'Student Management', href: '/teacher/student-management' },
+    { id: 'profile', label: 'My Profile', href: '/teacher/profile' },
   ];
 
   const currentNav = teacherNav.find((i) => pathname === i.href);

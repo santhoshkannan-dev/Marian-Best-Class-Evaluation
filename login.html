@@ -660,6 +660,7 @@
                 <select id="role-select" required class="placeholder-active">
                   <option value="" disabled selected>Select your role</option>
                   <option value="student">Student</option>
+                  <option value="group_member">Student Rep (Group Member)</option>
                   <option value="teacher">Teacher</option>
                   <option value="evaluator">Evaluator</option>
                   <option value="admin">Admin</option>
@@ -731,6 +732,7 @@
         // Define routes to the actual role-specific HTML entry points
         const routes = {
           student: 'roles/student/student-dashboard.html',
+          group_member: 'roles/group_member/group-member-dashboard.html',
           teacher: 'roles/teacher/teacher-dashboard.html',
           evaluator: 'roles/evaluator/evaluation-dashboard.html',
           admin: 'roles/admin/admin-dashboard.html'

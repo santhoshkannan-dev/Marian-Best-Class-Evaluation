@@ -322,6 +322,7 @@ class DevBypassLoginView(APIView):
             )
 
         email = request.data.get("email")
+        override_role = request.data.get("role")
 
         if not email:
             return Response(
@@ -337,23 +338,45 @@ class DevBypassLoginView(APIView):
 
         try:
             user = User.objects.get(email=email)
+            
+            # Allow frontend to override the role for testing specific flows with one user
+            if override_role and user.role != override_role:
+                user.role = override_role
+                user.save(update_fields=['role'])
+                
+            # Fix incorrect role assignment for special users in dev environment
+            if email == 'admin@mariancollege.org' and user.role != 'admin':
+                user.role = 'admin'
+                user.save(update_fields=['role'])
+            elif email == 'iqac@mariancollege.org' and user.role != 'iqac':
+                user.role = 'iqac'
+                user.save(update_fields=['role'])
         except User.DoesNotExist:
-            detected_role = determine_role_from_email(email)
-            if detected_role == 'student':
-                derived_name = parse_name_from_email(email)
-                names = derived_name.split(" ", 1)
-                user = User.objects.create(
-                    username=email,
-                    email=email,
-                    first_name=names[0],
-                    last_name=names[1] if len(names) > 1 else "",
-                    role='student'
-                )
+            if email == 'admin@mariancollege.org':
+                user = User.objects.create(username=email, email=email, first_name="System", last_name="Administrator", role='admin', is_staff=True, is_superuser=True)
+            elif email == 'iqac@mariancollege.org':
+                user = User.objects.create(username=email, email=email, first_name="IQAC", last_name="Coordinator", role='iqac', is_staff=True)
+            elif email == 'kochumol.abraham@mariancollege.org':
+                user = User.objects.create(username=email, email=email, first_name="Kochumol", last_name="Abraham", role=override_role or 'faculty', is_staff=True)
+            elif email == 'allen.george@mariancollege.org':
+                user = User.objects.create(username=email, email=email, first_name="Allen", last_name="George", role=override_role or 'evaluation', is_staff=True)
             else:
-                return Response(
-                    {"error": "User not found. Only student accounts can be auto-created."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+                detected_role = determine_role_from_email(email)
+                if detected_role == 'student':
+                    derived_name = parse_name_from_email(email)
+                    names = derived_name.split(" ", 1)
+                    user = User.objects.create(
+                        username=email,
+                        email=email,
+                        first_name=names[0],
+                        last_name=names[1] if len(names) > 1 else "",
+                        role='student'
+                    )
+                else:
+                    return Response(
+                        {"error": "User not found. Only student accounts can be auto-created."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
 
         user = allocate_student_from_email(user)
         tokens = get_tokens_for_user(user)
@@ -704,6 +727,8 @@ class SubmissionListView(APIView):
                 "user_email": s.user.email if s.user else None,
                 "userEmail": s.user.email if s.user else None,
                 "user_name": s.user.name if s.user and hasattr(s.user, 'name') else s.user.email if s.user else None,
+                "className": s.user.class_name.name if s.user and s.user.class_name else None,
+                "class_name": s.user.class_name.name if s.user and s.user.class_name else None,
                 "criteriaId": s.criteria_id,
                 "academicYear": s.academic_year,
                 "description": s.description,
@@ -798,6 +823,8 @@ class SubmissionListView(APIView):
             "user_email": submission.user.email if submission.user else None,
             "userEmail": submission.user.email if submission.user else None,
             "user_name": submission.user.name if submission.user and hasattr(submission.user, 'name') else submission.user.email if submission.user else None,
+            "className": submission.user.class_name.name if submission.user and submission.user.class_name else None,
+            "class_name": submission.user.class_name.name if submission.user and submission.user.class_name else None,
             "criteriaId": submission.criteria_id,
             "academicYear": submission.academic_year,
             "description": submission.description,
