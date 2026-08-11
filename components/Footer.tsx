@@ -2,8 +2,18 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+  const isPortalRoute = ['/student', '/teacher', '/admin', '/evaluator', '/iqac'].some(
+    (prefix) => pathname.startsWith(prefix)
+  );
+
+  if (isPortalRoute) {
+    return null;
+  }
+
   return (
     <footer className="footer-premium-container">
       <div className="footer-premium-grid">

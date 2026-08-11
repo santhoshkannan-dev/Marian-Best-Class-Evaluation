@@ -24,13 +24,13 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
 
   const teacherNav = [
     { id: 'dashboard', label: 'Dashboard', href: '/teacher/dashboard' },
-    { id: 'verification', label: 'Verification', href: '/teacher/verification' },
+    { id: 'verification', label: 'Verification Desk', href: '/teacher/verification' },
     { id: 'student-management', label: 'Student Management', href: '/teacher/student-management' },
     { id: 'profile', label: 'My Profile', href: '/teacher/profile' },
   ];
 
   const currentNav = teacherNav.find((i) => pathname === i.href);
-  const headerTitle = currentNav ? currentNav.label : 'Teacher Dashboard';
+  const headerTitle = currentNav ? (currentNav.id === 'dashboard' ? 'Dashboard' : currentNav.label) : 'Dashboard';
 
   return (
     <div className="portal-shell-grid">
@@ -77,7 +77,10 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         </div>
 
         <div className="portal-sidebar-footer" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div>Class Teacher</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+            Class Teacher
+          </div>
           <button
             className="btn btn-secondary btn-sm mobile-logout-btn"
             style={{
@@ -103,27 +106,22 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         <div className="portal-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <div className="portal-content-area">
-        <div
+      <div className="portal-content-area" style={{ background: '#f8fafc' }}>
+        <header
+          className="portal-topbar"
           style={{
-            position: 'fixed',
-            bottom: '-10%',
-            right: '-5%',
-            width: '650px',
-            height: '650px',
-            backgroundImage: 'url("/Assets/Images/hands_logo.png")',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            opacity: 0.06,
-            filter: 'blur(3px)',
-            pointerEvents: 'none',
-            zIndex: 0
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '24px 40px',
+            background: '#ffffff',
+            borderBottom: '1px solid #f1f5f9',
+            position: 'sticky',
+            top: 0,
+            zIndex: 20
           }}
-        />
-
-        <header className="portal-topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <button
               className="mobile-menu-toggle"
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -136,28 +134,43 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
               </svg>
             </button>
             <div>
-              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>{headerTitle}</h1>
-              <p className="muted" style={{ fontSize: '0.84rem' }}>Academic Year {selectedAcademicYear || '2025-2026'}</p>
+              <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>{headerTitle}</h1>
+              <p style={{ fontSize: '0.88rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
+                Academic Year {selectedAcademicYear || '2026–2027'}
+              </p>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <span
               style={{
-                padding: '6px 16px',
-                borderRadius: '20px',
-                background: '#dcfce7',
-                color: '#15803d',
-                fontSize: '0.84rem',
+                padding: '7px 20px',
+                borderRadius: '9999px',
+                background: '#d1fae5',
+                color: '#047857',
+                fontSize: '0.86rem',
                 fontWeight: 700,
-                textTransform: 'capitalize'
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
               Class Teacher
             </span>
             <button
-              className="btn btn-secondary"
-              style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700 }}
+              className="btn"
+              style={{
+                padding: '8px 22px',
+                borderRadius: '10px',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                background: '#ffffff',
+                color: '#0f172a',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
               onClick={() => {
                 logout();
                 router.push('/login');
@@ -168,7 +181,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
           </div>
         </header>
 
-        <main style={{ padding: '36px', flex: 1, position: 'relative', zIndex: 1 }}>
+        <main style={{ padding: '36px 40px', flex: 1, position: 'relative', zIndex: 1, maxWidth: '1440px', width: '100%', margin: '0 auto' }}>
           {children}
         </main>
       </div>
