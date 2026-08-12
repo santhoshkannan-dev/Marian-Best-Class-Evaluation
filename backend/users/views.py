@@ -144,6 +144,17 @@ def allocate_student_from_email(user):
     Allocates student user to the derived Department and Class objects based on their email.
     """
     if user.role != 'student' and determine_role_from_email(user.email) != 'student':
+        # Dynamic check for faculty / teacher: sync class_name and department if assigned as class_teacher
+        advisor_class = Class.objects.filter(class_teacher=user).first()
+        if advisor_class:
+            if user.class_name != advisor_class or user.department != advisor_class.department:
+                user.class_name = advisor_class
+                user.department = advisor_class.department
+                user.save(update_fields=['class_name', 'department'])
+        elif user.class_name:
+            if not Class.objects.filter(class_teacher=user).exists():
+                user.class_name = None
+                user.save(update_fields=['class_name'])
         return user
 
     parsed = parse_student_email(user.email)
@@ -503,6 +514,14 @@ class AcademicYearListView(APIView):
 
         return Response({"year": ay.year, "status": "Active" if ay.is_active else "Inactive"})
 
+    def delete(self, request):
+        year_str = request.data.get('year') or request.query_params.get('year')
+        if not year_str:
+            return Response({"error": "year is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        AcademicYear.objects.filter(year=year_str).delete()
+        return Response({"success": True, "deleted_year": year_str}, status=status.HTTP_200_OK)
+
 class DepartmentListView(APIView):
     permission_classes = [AllowAny]
 
@@ -587,7 +606,12 @@ class ClassListView(APIView):
 
         if teacher_email is not None:
             if teacher_email == "":
-                cls.class_teacher = None
+                if cls.class_teacher:
+                    old_teacher = cls.class_teacher
+                    cls.class_teacher = None
+                    if not Class.objects.filter(class_teacher=old_teacher).exclude(id=cls.id).exists():
+                        old_teacher.class_name = None
+                        old_teacher.save(update_fields=['class_name'])
             else:
                 try:
                     teacher = User.objects.get(email=teacher_email)
@@ -597,7 +621,17 @@ class ClassListView(APIView):
                         return Response({
                             "error": f"Faculty '{teacher.get_full_name() or teacher_email}' is already assigned as Class Advisor to '{other_class.name}'."
                         }, status=status.HTTP_400_BAD_REQUEST)
+
+                    if cls.class_teacher and cls.class_teacher != teacher:
+                        old_teacher = cls.class_teacher
+                        if not Class.objects.filter(class_teacher=old_teacher).exclude(id=cls.id).exists():
+                            old_teacher.class_name = None
+                            old_teacher.save(update_fields=['class_name'])
+
                     cls.class_teacher = teacher
+                    teacher.class_name = cls
+                    teacher.department = cls.department
+                    teacher.save(update_fields=['class_name', 'department'])
                 except User.DoesNotExist:
                     return Response({"error": f"Teacher with email '{teacher_email}' not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -939,9 +973,15 @@ class SystemSettingView(APIView):
 
     def post(self, request):
         for key, value in request.data.items():
+            if isinstance(value, bool):
+                val_str = 'true' if value else 'false'
+            elif value is None:
+                val_str = ''
+            else:
+                val_str = str(value)
             SystemSetting.objects.update_or_create(
                 key=key,
-                defaults={'value': str(value) if value is not None else ''}
+                defaults={'value': val_str}
             )
         return Response({"success": True}, status=status.HTTP_200_OK)
 

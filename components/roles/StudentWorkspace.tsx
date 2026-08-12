@@ -104,6 +104,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
 
+  const [submissionRemarksMap, setSubmissionRemarksMap] = useState<Record<number, string>>({});
+
   // Synchronize form states when editing a pending submission
   React.useEffect(() => {
     if (editingSubId) {
@@ -1522,54 +1524,88 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           </td>
                           <td>
                             {canVerify ? (
-                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                <button
-                                  className="btn btn-sm btn-primary"
-                                  onClick={() => {
-                                    const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
-                                    updateSubmission(sub.id, {
-                                      status: 'Student Rep Verified',
-                                      repVerifiedByName: repName,
-                                      repRemarks: 'Verified by Student Representative and forwarded to Class Advisor.'
-                                    });
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <input
+                                  id={`rep-remarks-${sub.id}`}
+                                  type="text"
+                                  placeholder="Add remarks (required for Correction/Reject)..."
+                                  value={submissionRemarksMap[sub.id] || ''}
+                                  onChange={(e) => setSubmissionRemarksMap((prev) => ({ ...prev, [sub.id]: e.target.value }))}
+                                  required
+                                  style={{
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #cbd5e1',
+                                    fontSize: '0.82rem',
+                                    outline: 'none',
+                                    background: '#ffffff',
+                                    minWidth: '220px'
                                   }}
-                                  title="Verify and forward to Class Teacher"
-                                  style={{ padding: '6px 12px', fontSize: '0.8rem', fontWeight: 700 }}
-                                >
-                                  ✓ Verify & Forward
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-secondary"
-                                  onClick={() => {
-                                    const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
-                                    const customRemarks = prompt('Enter correction note for student:') || 'Correction requested by Student Representative.';
-                                    updateSubmission(sub.id, {
-                                      status: 'Correction Requested',
-                                      repVerifiedByName: repName,
-                                      repRemarks: customRemarks
-                                    });
-                                  }}
-                                  title="Request correction"
-                                  style={{ padding: '6px 10px', fontSize: '0.8rem' }}
-                                >
-                                  Correction
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => {
-                                    const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
-                                    const customRemarks = prompt('Enter rejection reason:') || 'Rejected by Student Representative.';
-                                    updateSubmission(sub.id, {
-                                      status: 'Rejected',
-                                      repVerifiedByName: repName,
-                                      repRemarks: customRemarks
-                                    });
-                                  }}
-                                  title="Reject submission"
-                                  style={{ padding: '6px 10px', fontSize: '0.8rem' }}
-                                >
-                                  Reject
-                                </button>
+                                />
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                  <button
+                                    className="btn btn-sm btn-primary"
+                                    onClick={() => {
+                                      const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
+                                      const repRemarks = submissionRemarksMap[sub.id] || 'Verified by Student Representative and forwarded to Class Advisor.';
+                                      updateSubmission(sub.id, {
+                                        status: 'Student Rep Verified',
+                                        repVerifiedByName: repName,
+                                        repRemarks,
+                                        remarks: repRemarks
+                                      });
+                                    }}
+                                    title="Verify and forward to Class Teacher"
+                                    style={{ padding: '6px 12px', fontSize: '0.8rem', fontWeight: 700 }}
+                                  >
+                                    ✓ Verify & Forward
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-secondary"
+                                    onClick={() => {
+                                      const inputEl = document.getElementById(`rep-remarks-${sub.id}`) as HTMLInputElement;
+                                      const repRemarks = submissionRemarksMap[sub.id]?.trim();
+                                      if (!repRemarks) {
+                                        inputEl?.reportValidity();
+                                        return;
+                                      }
+                                      const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
+                                      updateSubmission(sub.id, {
+                                        status: 'Correction Requested',
+                                        repVerifiedByName: repName,
+                                        repRemarks,
+                                        remarks: repRemarks
+                                      });
+                                    }}
+                                    title="Request correction"
+                                    style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                                  >
+                                    Correction
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-danger"
+                                    onClick={() => {
+                                      const inputEl = document.getElementById(`rep-remarks-${sub.id}`) as HTMLInputElement;
+                                      const repRemarks = submissionRemarksMap[sub.id]?.trim();
+                                      if (!repRemarks) {
+                                        inputEl?.reportValidity();
+                                        return;
+                                      }
+                                      const repName = currentUserInfo?.name || 'Santhosh (Student Rep)';
+                                      updateSubmission(sub.id, {
+                                        status: 'Rejected',
+                                        repVerifiedByName: repName,
+                                        repRemarks,
+                                        remarks: repRemarks
+                                      });
+                                    }}
+                                    title="Reject submission"
+                                    style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
                               </div>
                             ) : (
                               <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>
