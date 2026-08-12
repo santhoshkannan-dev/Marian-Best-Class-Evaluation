@@ -21,7 +21,40 @@ import { useApp } from '@/context/AppContext';
 
 export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = 'dashboard' }) => {
   const router = useRouter();
-  const { evaluationOpen } = useApp();
+  const {
+    evaluationOpen,
+    submissions,
+    updateSubmission,
+    students,
+    criteriaCatalog,
+    currentUserInfo
+  } = useApp();
+
+  // Submissions forwarded from Class Teacher (Round 2) awaiting Evaluator Verification (Round 3)
+  const teacherApprovedSubmissions = submissions.filter((s) =>
+    ['Teacher Verified', 'Approved', 'Verified'].includes(s.status) && !s.evaluatorVerified && s.status !== 'Locked' && s.status !== 'Evaluated'
+  );
+
+  const handleVerifySubmissionEvaluator = (subId: number) => {
+    if (!evaluationOpen) {
+      alert('Evaluation access is currently CLOSED by system administrator.');
+      return;
+    }
+
+    const evaluatorName = currentUserInfo?.name || 'Dr. Allen George';
+    const assignedMarksStr = prompt('Enter evaluated marks for this submission:', '10') || '10';
+    const numMarks = parseFloat(assignedMarksStr) || 10;
+
+    updateSubmission(subId, {
+      status: 'Evaluated',
+      evaluatorVerified: true,
+      evaluatorVerifiedByName: evaluatorName,
+      evaluatorRemarks: 'Verified, Evaluated, and Locked by Evaluation Team.',
+      marks: numMarks
+    });
+
+    alert('Submission successfully verified, evaluated, and locked by Evaluation Team!');
+  };
 
   // Local interactive state for pending list to simulate live evaluation approvals
   const [pendingItems, setPendingItems] = useState<LockedSubmission[]>([
@@ -558,6 +591,47 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                       <div style={{ padding: '20px', background: '#fafaf9', borderTop: '1px solid var(--glass-border)' }}>
                         <h4 style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--color-primary)', marginBottom: '12px' }}>Pending Submissions in {dept.name}</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {/* Live Submissions Forwarded from Class Teacher (Round 2) */}
+                          {teacherApprovedSubmissions.map((sub) => {
+                            const studentObj = students.find((s) => s.id === sub.studentId);
+                            const itemObj = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
+                            const catObj = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
+                            const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
+
+                            return (
+                              <div key={`live-sub-${sub.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '14px 18px', border: '1.5px solid #6366f1', borderRadius: '10px', boxShadow: '0 2px 8px rgba(99, 102, 241, 0.08)' }}>
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                    <h5 style={{ fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                                      {studentObj ? studentObj.name : `Student #${sub.studentId}`}
+                                    </h5>
+                                    <span className="badge badge-verified" style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontSize: '0.72rem', fontWeight: 800 }}>
+                                      ✓ Approved by Class Advisor ({sub.teacherVerifiedByName || 'Teacher'})
+                                    </span>
+                                  </div>
+                                  <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
+                                    Category: {catObj?.category || 'General'} | Item: {itemObj?.title || sub.description}
+                                  </p>
+                                  {sub.proof && (
+                                    <div style={{ fontSize: '0.76rem', marginTop: '4px' }}>
+                                      Proof: <a href={isDriveUrl ? sub.proof : `/Assets/Proofs/${sub.proof}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 700 }}>{sub.proof}</a>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                  <button
+                                    className="btn btn-sm btn-primary"
+                                    style={{ background: '#4f46e5', color: '#ffffff', fontWeight: 800 }}
+                                    onClick={() => handleVerifySubmissionEvaluator(sub.id)}
+                                  >
+                                    Verify & Lock (Round 3)
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+
                           {pendingItems.filter((i) => i.dept === dept.name).map((item) => (
                             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '14px 18px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
                               <div>
@@ -579,7 +653,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                             </div>
                           ))}
 
-                          {pendingItems.filter((i) => i.dept === dept.name).length === 0 && (
+                          {teacherApprovedSubmissions.length === 0 && pendingItems.filter((i) => i.dept === dept.name).length === 0 && (
                             <p className="muted" style={{ fontSize: '0.84rem', margin: 0, textAlign: 'center' }}>No pending verification files for this department.</p>
                           )}
                         </div>

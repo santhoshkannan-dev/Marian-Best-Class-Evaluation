@@ -49,6 +49,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     academicYears: globalYears,
     activeAcademicYear: globalActiveYear,
     addAcademicYearGlobal,
+    deleteAcademicYearGlobal,
     setActiveAcademicYearGlobal,
     departments,
     classes,
@@ -60,6 +61,9 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     userGroups,
     addUserGlobal
   } = useApp();
+
+  const [confirmSubmissionModal, setConfirmSubmissionModal] = useState<boolean>(false);
+  const [confirmEvaluationModal, setConfirmEvaluationModal] = useState<boolean>(false);
 
   // ----------------------------------------------------
   // DATASET 1: ACADEMIC YEARS
@@ -98,6 +102,12 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
 
   const handleToggleYearStatus = (targetYear: string, isActive: boolean) => {
     setActiveAcademicYearGlobal(targetYear, isActive);
+  };
+
+  const handleDeleteYear = (targetYear: string) => {
+    if (window.confirm(`Are you sure you want to delete academic year "${targetYear}"?`)) {
+      deleteAcademicYearGlobal(targetYear);
+    }
   };
 
   // ----------------------------------------------------
@@ -479,7 +489,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                             <span className="badge badge-correction">Inactive</span>
                           )}
                         </td>
-                        <td>
+                        <td style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           {y.status === 'Active' ? (
                             <button
                               className="btn btn-sm btn-secondary"
@@ -497,6 +507,13 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                               Set Active
                             </button>
                           )}
+                          <button
+                            className="btn btn-sm"
+                            style={{ background: '#ef4444', color: '#ffffff', fontWeight: 700, padding: '6px 14px', fontSize: '0.78rem', border: 'none' }}
+                            onClick={() => handleDeleteYear(y.year)}
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1154,7 +1171,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                   )}
                   <button
                     className="btn btn-secondary btn-sm"
-                    onClick={toggleSubmissionOpen}
+                    onClick={() => setConfirmSubmissionModal(true)}
                   >
                     Toggle Submission ({submissionOpen ? 'ON' : 'OFF'})
                   </button>
@@ -1174,7 +1191,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                   )}
                   <button
                     className="btn btn-secondary btn-sm"
-                    onClick={toggleEvaluationOpen}
+                    onClick={() => setConfirmEvaluationModal(true)}
                   >
                     Toggle Evaluation ({evaluationOpen ? 'ON' : 'OFF'})
                   </button>
@@ -1245,6 +1262,225 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                 Manage academic years in the Academic Years module. Changing the active academic year updates the active year system-wide.
               </p>
             </div>
+            {/* Confirmation Modal for Submission Status */}
+            {confirmSubmissionModal && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                backdropFilter: 'blur(4px)',
+                zIndex: 99999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px'
+              }}>
+                <div className="card" style={{
+                  maxWidth: '480px',
+                  width: '100%',
+                  padding: '28px',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+                  borderRadius: '16px',
+                  background: '#ffffff',
+                  border: '1px solid rgba(15, 23, 42, 0.12)',
+                  animation: 'fadeIn 0.2s ease-out'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      background: submissionOpen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: submissionOpen ? '#ef4444' : '#16a34a',
+                      fontWeight: 800,
+                      fontSize: '1.2rem'
+                    }}>
+                      ⚠️
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
+                        Confirm Submission Status Change
+                      </h3>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                        Admin authorization required
+                      </p>
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.5, marginBottom: '20px' }}>
+                    {submissionOpen ? (
+                      <>Are you sure you want to turn <strong style={{ color: '#ef4444' }}>OFF</strong> system-wide submissions? Students will be blocked from submitting new activity claims until re-opened.</>
+                    ) : (
+                      <>Are you sure you want to turn <strong style={{ color: '#16a34a' }}>ON</strong> system-wide submissions? Students will be able to submit new activity claims.</>
+                    )}
+                  </p>
+
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: '#f8fafc',
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                    marginBottom: '24px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Status Transition:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={`badge ${submissionOpen ? 'badge-verified' : 'badge-correction'}`}>
+                        {submissionOpen ? 'ON' : 'OFF'}
+                      </span>
+                      <span style={{ color: '#94a3b8', fontWeight: 700 }}>➔</span>
+                      <span className={`badge ${!submissionOpen ? 'badge-verified' : 'badge-correction'}`}>
+                        {!submissionOpen ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setConfirmSubmissionModal(false)}
+                      style={{ fontWeight: 600 }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{
+                        background: submissionOpen ? '#dc2626' : '#16a34a',
+                        color: '#ffffff',
+                        fontWeight: 700
+                      }}
+                      onClick={() => {
+                        toggleSubmissionOpen();
+                        setConfirmSubmissionModal(false);
+                      }}
+                    >
+                      Confirm & Update Status
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Confirmation Modal for Evaluation Status */}
+            {confirmEvaluationModal && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                backdropFilter: 'blur(4px)',
+                zIndex: 99999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px'
+              }}>
+                <div className="card" style={{
+                  maxWidth: '480px',
+                  width: '100%',
+                  padding: '28px',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+                  borderRadius: '16px',
+                  background: '#ffffff',
+                  border: '1px solid rgba(15, 23, 42, 0.12)',
+                  animation: 'fadeIn 0.2s ease-out'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      background: evaluationOpen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: evaluationOpen ? '#ef4444' : '#16a34a',
+                      fontWeight: 800,
+                      fontSize: '1.2rem'
+                    }}>
+                      ⚠️
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
+                        Confirm Evaluation Status Change
+                      </h3>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                        Admin authorization required
+                      </p>
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.5, marginBottom: '20px' }}>
+                    {evaluationOpen ? (
+                      <>Are you sure you want to turn <strong style={{ color: '#ef4444' }}>OFF</strong> evaluation access? Class advisors and evaluators will be restricted from scoring claims.</>
+                    ) : (
+                      <>Are you sure you want to turn <strong style={{ color: '#16a34a' }}>ON</strong> evaluation access? Class advisors and evaluators will be allowed to score student claims.</>
+                    )}
+                  </p>
+
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: '#f8fafc',
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                    marginBottom: '24px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Status Transition:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={`badge ${evaluationOpen ? 'badge-verified' : 'badge-correction'}`}>
+                        {evaluationOpen ? 'ON' : 'OFF'}
+                      </span>
+                      <span style={{ color: '#94a3b8', fontWeight: 700 }}>➔</span>
+                      <span className={`badge ${!evaluationOpen ? 'badge-verified' : 'badge-correction'}`}>
+                        {!evaluationOpen ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setConfirmEvaluationModal(false)}
+                      style={{ fontWeight: 600 }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{
+                        background: evaluationOpen ? '#dc2626' : '#16a34a',
+                        color: '#ffffff',
+                        fontWeight: 700
+                      }}
+                      onClick={() => {
+                        toggleEvaluationOpen();
+                        setConfirmEvaluationModal(false);
+                      }}
+                    >
+                      Confirm & Update Status
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

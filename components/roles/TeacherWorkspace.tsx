@@ -21,6 +21,8 @@ interface VerificationDocItem {
   eventId?: string;
   proofUrl?: string;
   subId?: number;
+  isBulk?: boolean;
+  pendingIds?: number[];
 }
 
 export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
@@ -36,7 +38,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     setActivePage,
     criteriaCatalog,
     currentUserInfo,
-    classes
+    classes,
+    users
   } = useApp();
 
   const activeTab = view || activePage || 'dashboard';
@@ -59,7 +62,6 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   const [studentSearch, setStudentSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'pending' | 'completed' | 'all'>('pending');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [verificationPage, setVerificationPage] = useState(1);
   const verificationPageSize = 5;
 
@@ -80,14 +82,56 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
 
   // ----------------------------------------------------
+  // CLASS STUDENTS & CLASS SUBMISSIONS
+  // ----------------------------------------------------
+  // Helper to check if two class names match
+  const isSameClass = (c1?: string, c2?: string) => {
+    if (!c1 || !c2) return true;
+    const norm1 = c1.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
+    const norm2 = c2.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
+    return norm1 === norm2 || c1.toLowerCase().trim() === c2.toLowerCase().trim();
+  };
+
+  const rawClass = (currentUserInfo as any)?.class_name_display || (currentUserInfo as any)?.className || (currentUserInfo as any)?.class_name;
+  const teacherClass = (typeof rawClass === 'string' && isNaN(Number(rawClass))) ? rawClass : 'II MCA';
+  const teacherClassObject = classes?.find((c: any) => c.name === teacherClass);
+  const teacherDepartment = teacherClassObject?.department || currentUserInfo?.department || 'Computer Applications';
+
+  // Base list of students belonging to this teacher's class
+  const realStudents = users.filter(u => u.role === 'student').map(u => ({
+    id: u.id,
+    name: u.name || u.email.split('@')[0],
+    className: (u as any).class_name_display || u.className || (u as any).class_name || 'Unknown',
+    email: u.email
+  }));
+
+  const classStudents = realStudents.filter((student) => {
+    if (student.className && teacherClass && !isSameClass(student.className, teacherClass)) {
+      return false;
+    }
+    return true;
+  });
+
+  const classStudentIds = new Set(classStudents.map(s => s.id));
+  const classSubmissions = submissions.filter(s => classStudentIds.has(s.studentId));
+
+  // ----------------------------------------------------
   // METRIC COUNTS
   // ----------------------------------------------------
-  const totalSubmissionsDisplay = '1,248';
-  const verifiedDisplay = '982';
-  const pendingDisplay = Math.max(0, 266 - queueIndex).toString();
+  const totalSubmissionsDisplay = classSubmissions.length.toString();
+  const verifiedDisplay = classSubmissions.filter(s => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)).length.toString();
   
-  const totalScoreVal = 966.0;
-  const targetScoreVal = 971.0;
+  // Calculate total points earned by class vs target
+  const classTotalScore = classSubmissions.reduce((sum, s) => {
+    if (['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)) {
+      const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === s.criteriaId);
+      return sum + (criteriaItem?.marks || 0);
+    }
+    return sum;
+  }, 0);
+  
+  const totalScoreVal = classTotalScore;
+  const targetScoreVal = classStudents.length > 0 ? classStudents.length * 20 : 1000;
   const progressPercent = ((totalScoreVal / targetScoreVal) * 100).toFixed(1);
 
   // Helper function to get student status and styling
@@ -117,103 +161,61 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   };
 
   // Recent Student Progress list with Recently Submitted Document
-  const displayProgressStudents = [
-    {
-      id: 901,
-      name: 'Anika Sharma',
-      recentDoc: 'IEEE_Paper_Presentation.pdf',
-      recentActivity: 'International Conference Paper',
-      percent: 85,
-      ...getProgressDetails(85)
-    },
-    {
-      id: 902,
-      name: 'Rahul Menon',
-      recentDoc: 'Hackathon_Winner_Certificate.pdf',
-      recentActivity: 'State Level TechFest 1st Prize',
-      percent: 45,
-      ...getProgressDetails(45)
-    },
-    {
-      id: 903,
-      name: 'Sara Joseph',
-      recentDoc: 'Community_Camp_Report.pdf',
-      recentActivity: 'NSS Outreach Leadership',
-      percent: 60,
-      ...getProgressDetails(60)
+  const displayProgressStudents = classStudents.map(student => {
+    const studentSubs = classSubmissions.filter(s => s.studentId === student.id);
+    const verifiedPoints = studentSubs.filter(s => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)).reduce((sum, s) => {
+       const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === s.criteriaId);
+       return sum + (criteriaItem?.marks || 0);
+    }, 0);
+    const percent = Math.min(100, Math.round((verifiedPoints / 20) * 100)); // Target 20 per student
+    const recentSub = studentSubs.length > 0 ? studentSubs[studentSubs.length - 1] : null;
+    
+    let recentDoc = '';
+    let recentActivity = '';
+    if (recentSub) {
+       recentDoc = recentSub.proof && isNaN(Number(recentSub.proof)) && recentSub.proof.length > 2 ? recentSub.proof : `Proof_${recentSub.id}.pdf`;
+       const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === recentSub.criteriaId);
+       recentActivity = criteriaItem?.title || recentSub.description || 'Activity';
     }
-  ];
 
-  // Verification Queue Documents with real calendar dates
-  const defaultQueueItems: VerificationDocItem[] = [
-    {
-      id: 1,
-      fileName: 'Assignment_Final_v2.pdf',
-      studentName: 'Arjun Das',
-      activityTitle: 'NPTEL Cloud Computing Certification',
-      category: 'Online Courses',
-      description: 'Completed 12-week NPTEL course with Elite certificate score 88%',
-      marks: 10,
-      date: '11 Aug 2026, 02:45 PM'
-    },
-    {
-      id: 2,
-      fileName: 'IEEE_Paper_Presentation.pdf',
-      studentName: 'Anika Sharma',
-      activityTitle: 'International Conference Paper',
-      category: 'Research',
-      description: 'Presented research paper on NLP in IEEE Kerala Section conference.',
-      marks: 15,
-      date: '10 Aug 2026, 05:12 PM'
-    },
-    {
-      id: 3,
-      fileName: 'Hackathon_Winner_Certificate.pdf',
-      studentName: 'Rahul Menon',
-      activityTitle: 'State Level TechFest 1st Prize',
-      category: 'Prizes',
-      description: 'First prize in 24-hour Hackathon held at Marian College.',
-      marks: 10,
-      date: '14 Oct 2026, 11:30 AM'
-    },
-    {
-      id: 4,
-      fileName: 'Community_Camp_Report.pdf',
-      studentName: 'Sara Joseph',
-      activityTitle: 'NSS Outreach Leadership',
-      category: 'Social Responsibility',
-      description: 'Coordinated 7-day residential NSS Special Camp activities.',
-      marks: 5,
-      date: '12 Oct 2026, 04:20 PM'
-    }
-  ];
+    return {
+      id: student.id,
+      name: student.name,
+      recentDoc: recentDoc || 'No submissions yet',
+      recentActivity: recentActivity || '-',
+      percent,
+      ...getProgressDetails(percent)
+    };
+  }).filter(s => s.recentDoc !== 'No submissions yet').slice(-3).reverse();
 
   // Merge pending submissions with friendly filenames
-  const pendingSubs = submissions.filter((s) =>
-    ['Pending', 'Submitted', 'Student Rep Verified', 'Pending Rep Verification'].includes(s.status)
+  const pendingSubs = classSubmissions.filter((s) =>
+    ['Student Rep Verified', 'Verified by Student Rep'].includes(s.status)
   );
+
+  const pendingDisplay = Math.max(0, pendingSubs.length - queueIndex).toString();
 
   const queueList: VerificationDocItem[] = pendingSubs.length > 0
     ? pendingSubs.map((s, idx) => {
-        const student = students.find((st) => st.id === s.studentId);
+        const student = classStudents.find((st) => st.id === s.studentId) || realStudents.find((st) => st.id === s.studentId);
         let nameToDisplay = s.proof && s.proof.includes('.') ? s.proof : `Assignment_Final_v${idx + 2}.pdf`;
         const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === s.criteriaId);
         const categoryItem = criteriaCatalog.find((c) => c.items.some((it) => it.id === s.criteriaId));
         return {
           id: s.id,
           fileName: nameToDisplay,
-          studentName: student ? student.name : 'Arjun Das',
+          studentName: student ? student.name : ((s as any).user_name || 'Unknown Student'),
           activityTitle: criteriaItem?.title || s.description || 'Verified Claim',
           category: categoryItem?.category || 'Academics',
           description: s.description || 'Verified class evaluation claim submitted with valid institutional proof.',
           marks: criteriaItem?.marks || 5,
-          date: '11 Aug 2026, 02:45 PM',
+          date: (s as any).date || '11 Aug 2026, 02:45 PM',
           subId: s.id
         };
       })
-    : defaultQueueItems;
+    : [];
 
-  const currentQueueDoc = queueList[queueIndex % queueList.length] || defaultQueueItems[0];
+  const currentQueueDoc = queueList.length > 0 ? queueList[queueIndex % queueList.length] : { id: 0, fileName: 'No Pending Documents', studentName: '-', activityTitle: '-', category: 'N/A' };
   const teacherName = currentUserInfo?.name || 'Prof. Kochumol Abraham';
 
   // Quick Action Handlers
@@ -240,70 +242,46 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   const handleModalAction = (status: 'Approved' | 'Rejected' | 'Correction Requested') => {
     if (!previewModalDoc) return;
 
-    if (previewModalDoc.subId) {
+    if (status === 'Rejected' || status === 'Correction Requested') {
+      const textarea = document.getElementById('modal-remarks-textarea') as HTMLTextAreaElement;
+      if (textarea && !modalRemarks.trim()) {
+        textarea.reportValidity();
+        return;
+      }
+    }
+
+    if (previewModalDoc.isBulk && previewModalDoc.pendingIds) {
+      let count = 0;
+      previewModalDoc.pendingIds.forEach((id) => {
+        updateSubmission(id, {
+          status,
+          verifiedByName: teacherName,
+          remarks: modalRemarks || (status === 'Approved' ? 'Verified & Approved by Class Advisor' : status === 'Rejected' ? 'Rejected by Class Advisor' : 'Correction required by Class Advisor')
+        });
+        count++;
+      });
+      
+      if (status === 'Approved') showToast(`✓ Bulk Approved ${count} submissions`);
+      else if (status === 'Rejected') showToast(`✗ Bulk Rejected ${count} submissions`);
+      else showToast(`⚠️ Bulk Correction requested for ${count} submissions`);
+    } else if (previewModalDoc.subId) {
       updateSubmission(previewModalDoc.subId, {
         status,
         verifiedByName: teacherName,
         remarks: modalRemarks || (status === 'Approved' ? 'Verified & Approved by Class Advisor' : status === 'Rejected' ? 'Rejected by Class Advisor' : 'Correction required by Class Advisor')
       });
-    }
 
-    if (status === 'Approved') {
-      showToast(`✓ Approved "${previewModalDoc.fileName}" for ${previewModalDoc.studentName}`);
-    } else if (status === 'Rejected') {
-      showToast(`✗ Rejected "${previewModalDoc.fileName}"`);
-    } else {
-      showToast(`⚠️ Correction requested for "${previewModalDoc.fileName}"`);
+      if (status === 'Approved') {
+        showToast(`✓ Approved "${previewModalDoc.fileName}" for ${previewModalDoc.studentName}`);
+      } else if (status === 'Rejected') {
+        showToast(`✗ Rejected "${previewModalDoc.fileName}"`);
+      } else {
+        showToast(`⚠️ Correction requested for "${previewModalDoc.fileName}"`);
+      }
     }
 
     setPreviewModalDoc(null);
-    setQueueIndex((prev) => (prev + 1) % queueList.length);
-  };
-
-  // Helper to calculate student submission stats
-  const getStudentStats = (studentId: number) => {
-    let studentSubs = submissions.filter((s) => s.studentId === studentId);
-    if (selectedCategoryFilter !== 'all') {
-      studentSubs = studentSubs.filter((s) => {
-        const cat = criteriaCatalog.find((c) =>
-          c.items.some((i) => i.id === s.criteriaId)
-        );
-        return cat ? cat.category.toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim() : false;
-      });
-    }
-    const verified = studentSubs.filter((s) => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)).length;
-    const total = studentSubs.length;
-    const pending = studentSubs.filter((s) => ['Student Rep Verified', 'Pending Rep Verification', 'Pending', 'Submitted'].includes(s.status)).length;
-    
-    let percent = 0;
-    if (total > 0) {
-      percent = Math.round((verified / total) * 100);
-    }
-    
-    return { verified, total, pending, percent };
-  };
-
-  // Helper to retrieve latest submission date for student (Real calendar date format)
-  const getStudentLastDate = (studentId: number) => {
-    const studentSubs = submissions.filter((s) => s.studentId === studentId);
-    if (studentSubs.length === 0) return '—';
-    const latest = studentSubs[studentSubs.length - 1];
-    
-    if ((latest as any).date && !(latest as any).date.includes('Today') && !(latest as any).date.includes('Yesterday')) {
-      return (latest as any).date;
-    }
-
-    const defaultDates: Record<number, string> = {
-      1: '11 Aug 2026, 02:45 PM',
-      2: '10 Aug 2026, 05:12 PM',
-      3: '14 Oct 2026, 11:30 AM',
-      4: '12 Oct 2026, 04:20 PM',
-      5: '10 Oct 2026, 09:15 AM',
-      901: '11 Aug 2026, 01:15 PM',
-      902: '10 Aug 2026, 04:30 PM',
-      903: '13 Oct 2026, 10:00 AM'
-    };
-    return defaultDates[studentId] || '11 Aug 2026, 02:30 PM';
+    setQueueIndex(0);
   };
 
   // Helper to format clean file name
@@ -329,52 +307,41 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     return 'Academic Excellence Claim';
   };
 
-  // Helper to check if two class names match
-  const isSameClass = (c1?: string, c2?: string) => {
-    if (!c1 || !c2) return true;
-    const norm1 = c1.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
-    const norm2 = c2.toLowerCase().replace(/^(i|ii|iii|\d+)\s+/, '').trim();
-    return norm1 === norm2 || c1.toLowerCase().trim() === c2.toLowerCase().trim();
-  };
+  // Calculate status counts for filter buttons based on submissions
+  const pendingCount = classSubmissions.filter((s) => ['Student Rep Verified', 'Verified by Student Rep'].includes(s.status)).length;
+  const completedCount = classSubmissions.filter((s) => ['Approved', 'Verified', 'Evaluated', 'Locked', 'Correction Requested', 'Rejected'].includes(s.status)).length;
+  const allCount = classSubmissions.length;
 
-  const teacherClass = (currentUserInfo as any)?.className || (currentUserInfo as any)?.class_name || 'BSc CS A';
-  const teacherClassObject = classes?.find((c: any) => c.name === teacherClass);
-  const teacherDepartment = teacherClassObject?.department || currentUserInfo?.department || 'Computer Applications';
+  // Filtered submissions list for verification desk
+  const filteredTeacherSubmissions = classSubmissions.filter((sub) => {
+    const student = classStudents.find((st) => st.id === sub.studentId) || realStudents.find((st) => st.id === sub.studentId);
+    const studentName = student ? student.name : ((sub as any).user_name || '');
+    const studentEmail = studentName.toLowerCase().replace(/\s+/g, '.') + '@college.edu';
+    const activityTitle = formatActivityTitle(sub);
 
-  // Base list of students belonging to this teacher's class
-  const classStudents = students.filter((student) => {
-    if (student.className && teacherClass && !isSameClass(student.className, teacherClass)) {
-      return false;
-    }
-    return true;
-  });
-
-  // Calculate status counts for filter buttons
-  const pendingCount = classStudents.filter((s) => getStudentStats(s.id).pending > 0).length;
-  const completedCount = classStudents.filter((s) => {
-    const stats = getStudentStats(s.id);
-    return stats.pending === 0 && stats.verified > 0;
-  }).length;
-  const allCount = classStudents.length;
-
-  // Filtered student list for verification desk
-  const filteredStudents = classStudents.filter((student) => {
-    const stats = getStudentStats(student.id);
-    const studentEmail = student.name.toLowerCase().replace(/\s+/g, '.') + '@college.edu';
     const matchesSearch =
-      student.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
-      studentEmail.toLowerCase().includes(studentSearch.toLowerCase());
+      studentName.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      studentEmail.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      activityTitle.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      (sub.description || '').toLowerCase().includes(studentSearch.toLowerCase());
+
+    const isPending = ['Student Rep Verified', 'Verified by Student Rep'].includes(sub.status);
+    const isCompleted = ['Approved', 'Verified', 'Evaluated', 'Locked', 'Correction Requested', 'Rejected'].includes(sub.status);
 
     const matchesStatus =
       statusFilter === 'all' ||
-      (statusFilter === 'pending' && stats.pending > 0) ||
-      (statusFilter === 'completed' && stats.pending === 0 && stats.verified > 0);
+      (statusFilter === 'pending' && isPending) ||
+      (statusFilter === 'completed' && isCompleted);
 
-    return matchesSearch && matchesStatus;
-  });
+    const categoryItem = criteriaCatalog.find((c) => c.items.some((it) => it.id === sub.criteriaId));
+    const matchesCategory =
+      selectedCategoryFilter === 'all' || (categoryItem?.category === selectedCategoryFilter);
 
-  const totalVerificationPages = Math.ceil(filteredStudents.length / verificationPageSize) || 1;
-  const paginatedVerificationStudents = filteredStudents.slice(
+    return matchesSearch && matchesStatus && matchesCategory;
+  }).sort((a, b) => b.id - a.id);
+
+  const totalVerificationPages = Math.ceil(filteredTeacherSubmissions.length / verificationPageSize) || 1;
+  const paginatedTeacherSubmissions = filteredTeacherSubmissions.slice(
     (verificationPage - 1) * verificationPageSize,
     verificationPage * verificationPageSize
   );
@@ -382,28 +349,31 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   // ----------------------------------------------------
   // BULK SELECTION & APPROVAL ACTIONS
   // ----------------------------------------------------
-  const handleToggleSelectStudent = (studentId: number) => {
+  const handleToggleSelectSubmission = (subId: number) => {
     setSelectedStudentIds((prev) =>
-      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
+      prev.includes(subId) ? prev.filter((id) => id !== subId) : [...prev, subId]
     );
   };
 
   const handleToggleSelectAll = () => {
-    const visibleIds = paginatedVerificationStudents.map((s) => s.id);
-    const allSelected = visibleIds.every((id) => selectedStudentIds.includes(id));
+    const visiblePendingIds = paginatedTeacherSubmissions
+      .filter((s) => ['Student Rep Verified', 'Verified by Student Rep'].includes(s.status))
+      .map((s) => s.id);
+    if (visiblePendingIds.length === 0) return;
+    const allSelected = visiblePendingIds.every((id) => selectedStudentIds.includes(id));
     if (allSelected) {
-      setSelectedStudentIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+      setSelectedStudentIds((prev) => prev.filter((id) => !visiblePendingIds.includes(id)));
     } else {
-      setSelectedStudentIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+      setSelectedStudentIds((prev) => Array.from(new Set([...prev, ...visiblePendingIds])));
     }
   };
 
   const handleSelectAllPending = () => {
-    const pendingIds = filteredStudents
-      .filter((s) => getStudentStats(s.id).pending > 0)
+    const pendingIds = filteredTeacherSubmissions
+      .filter((s) => ['Student Rep Verified', 'Verified by Student Rep'].includes(s.status))
       .map((s) => s.id);
     setSelectedStudentIds(pendingIds);
-    showToast(`Selected ${pendingIds.length} student(s) with pending submissions.`);
+    showToast(`Selected ${pendingIds.length} pending submission(s).`);
   };
 
   const handleBulkApproveSelected = () => {
@@ -414,25 +384,22 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     if (selectedStudentIds.length === 0) return;
 
     let totalApproved = 0;
-    selectedStudentIds.forEach((studentId) => {
-      const studentSubs = submissions.filter(
-        (s) => s.studentId === studentId &&
-        ['Pending', 'Submitted', 'Student Rep Verified', 'Pending Rep Verification'].includes(s.status)
-      );
-      studentSubs.forEach((sub) => {
-        updateSubmission(sub.id, {
+    selectedStudentIds.forEach((subId) => {
+      const sub = classSubmissions.find((s) => s.id === subId);
+      if (sub && ['Student Rep Verified', 'Verified by Student Rep'].includes(sub.status)) {
+        updateSubmission(subId, {
           status: 'Approved',
-          verifiedByName: teacherName,
-          remarks: 'Bulk verified & approved by Class Advisor'
+          teacherVerifiedByName: teacherName,
+          teacherRemarks: 'Bulk Approved by Class Advisor',
+          remarks: 'Verified & Approved by Class Advisor'
         });
-        totalApproved++;
-      });
+      }
     });
 
     if (totalApproved > 0) {
-      showToast(`✓ Approved ${totalApproved} pending submission(s) for ${selectedStudentIds.length} student(s)!`);
+      showToast(`Successfully verified & approved ${totalApproved} submissions.`);
     } else {
-      showToast(`Selected student(s) have no pending submissions to approve.`);
+      showToast(`Selected items have no pending submissions to approve.`);
     }
     setSelectedStudentIds([]);
   };
@@ -443,8 +410,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
       return;
     }
     const pendingSubsToApprove = submissions.filter(
-      (s) => ['Pending', 'Submitted', 'Student Rep Verified', 'Pending Rep Verification'].includes(s.status) &&
-      filteredStudents.some((stud) => stud.id === s.studentId)
+      (s) => ['Student Rep Verified', 'Verified by Student Rep'].includes(s.status) &&
+      classStudents.some((stud) => stud.id === s.studentId)
     );
 
     if (pendingSubsToApprove.length === 0) {
@@ -462,42 +429,6 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
 
     showToast(`✓ Approved all ${pendingSubsToApprove.length} pending submission(s) across class!`);
     setSelectedStudentIds([]);
-  };
-
-  const selectedStudentSubmissions = selectedStudent
-    ? submissions.filter((s) => {
-        const matchesStudent = s.studentId === selectedStudent.id;
-        if (!matchesStudent) return false;
-        if (selectedCategoryFilter === 'all') return true;
-
-        const cat = criteriaCatalog.find((c) =>
-          c.items.some((i) => i.id === s.criteriaId)
-        );
-        return cat ? cat.category.toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim() : false;
-      })
-    : [];
-
-  const handleVerifySubmission = (subId: number, status: 'Approved' | 'Rejected' | 'Correction Requested') => {
-    if (!evaluationOpen) {
-      alert('Evaluation access is currently CLOSED by system administrator.');
-      return;
-    }
-
-    const customRemarks = submissionRemarksMap[subId] || (status === 'Approved' ? 'Verified and Approved by Class Advisor' : status === 'Rejected' ? 'Rejected by Class Advisor' : 'Correction required by Class Advisor');
-
-    updateSubmission(subId, {
-      status,
-      verifiedByName: teacherName,
-      remarks: customRemarks
-    });
-    
-    if (status === 'Approved') {
-      showToast('✓ Submission verified and approved successfully.');
-    } else if (status === 'Rejected') {
-      showToast('✗ Submission marked as rejected.');
-    } else {
-      showToast('⚠️ Correction requested from student.');
-    }
   };
 
   const handleManualAddStudent = (e: React.FormEvent) => {
@@ -688,31 +619,51 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   </div>
                 </div>
 
-                <a
-                  href={`/Assets/Proofs/${previewModalDoc.fileName}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    padding: '8px 14px',
-                    borderRadius: '10px',
-                    background: '#ffffff',
-                    color: '#4f46e5',
-                    border: '1px solid #c7d2fe',
-                    fontSize: '0.82rem',
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <span>Open File</span>
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </a>
+                {previewModalDoc.isBulk ? (
+                  <div
+                    style={{
+                      background: '#f1f5f9',
+                      color: '#64748b',
+                      padding: '8px 16px',
+                      borderRadius: '10px',
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    Multiple Files
+                  </div>
+                ) : (
+                  <a
+                    href={`/Assets/Proofs/${previewModalDoc.fileName}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      background: '#ffffff',
+                      color: '#4338ca',
+                      border: '1px solid #c7d2fe',
+                      padding: '8px 16px',
+                      borderRadius: '10px',
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                    }}
+                  >
+                    <span>Open File</span>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                )}
               </div>
 
               {/* Metadata Details Grid */}
@@ -745,47 +696,53 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   </div>
                 </div>
 
-                <div>
-                  <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
-                    Category
-                  </span>
-                  <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#047857', marginTop: '2px' }}>
-                    {previewModalDoc.category}
-                  </div>
-                </div>
+                {!previewModalDoc.isBulk && (
+                  <>
+                    <div>
+                      <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
+                        Category
+                      </span>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#047857', marginTop: '2px' }}>
+                        {previewModalDoc.category}
+                      </div>
+                    </div>
 
-                <div>
-                  <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
-                    Claimed Points
-                  </span>
-                  <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
-                    +{previewModalDoc.marks || 10} Points
-                  </div>
-                </div>
+                    <div>
+                      <span style={{ fontSize: '0.74rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
+                        Claimed Points
+                      </span>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
+                        +{previewModalDoc.marks ?? 10} Points
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Activity Description */}
-              <div>
-                <span style={{ fontSize: '0.76rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
-                  Activity / Description
-                </span>
-                <div
-                  style={{
-                    background: '#f8fafc',
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    fontSize: '0.88rem',
-                    color: '#334155',
-                    marginTop: '6px',
-                    border: '1px solid #f1f5f9'
-                  }}
-                >
-                  <strong style={{ color: '#0f172a', display: 'block', marginBottom: '4px' }}>
-                    {previewModalDoc.activityTitle}
-                  </strong>
-                  {previewModalDoc.description || 'Valid institutional proof submitted for evaluation.'}
+              {!previewModalDoc.isBulk && (
+                <div>
+                  <span style={{ fontSize: '0.76rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
+                    Activity / Description
+                  </span>
+                  <div
+                    style={{
+                      background: '#f8fafc',
+                      padding: '12px 14px',
+                      borderRadius: '12px',
+                      fontSize: '0.88rem',
+                      color: '#334155',
+                      marginTop: '6px',
+                      border: '1px solid #f1f5f9'
+                    }}
+                  >
+                    <strong style={{ color: '#0f172a', display: 'block', marginBottom: '4px' }}>
+                      {previewModalDoc.activityTitle}
+                    </strong>
+                    {previewModalDoc.description || 'Valid institutional proof submitted for evaluation.'}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Feedback / Remarks input */}
               <div>
@@ -793,6 +750,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   Remarks / Feedback (Optional)
                 </label>
                 <textarea
+                  id="modal-remarks-textarea"
+                  required
                   className="input"
                   rows={2}
                   placeholder="Enter remarks or correction instructions..."
@@ -877,439 +836,6 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   <span>✓</span> Approve
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ---------------------------------------------------- */}
-      {/* RIGHT-SIDE SLIDE-OVER REVIEW DRAWER FOR STUDENT      */}
-      {/* ---------------------------------------------------- */}
-      {selectedStudent && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 999998 }}>
-          {/* Backdrop Overlay */}
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(15, 23, 42, 0.6)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              animation: 'fadeIn 0.2s ease'
-            }}
-            onClick={() => setSelectedStudent(null)}
-          />
-
-          {/* Right Slide-over Panel */}
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: '660px',
-              maxWidth: '95vw',
-              background: '#ffffff',
-              zIndex: 999999,
-              boxShadow: '-15px 0 50px rgba(0, 0, 0, 0.25)',
-              display: 'flex',
-              flexDirection: 'column',
-              animation: 'slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
-            }}
-          >
-            {/* Drawer Header */}
-            <div
-              style={{
-                padding: '24px 28px',
-                borderBottom: '1px solid #f1f5f9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: '#f8fafc'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #047857, #065f46)',
-                    color: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: '1.25rem',
-                    boxShadow: '0 4px 14px rgba(4, 120, 87, 0.25)'
-                  }}
-                >
-                  {selectedStudent.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                      {selectedStudent.name}
-                    </h2>
-                    <span
-                      style={{
-                        background: '#dcfce7',
-                        color: '#15803d',
-                        padding: '3px 10px',
-                        borderRadius: '9999px',
-                        fontSize: '0.74rem',
-                        fontWeight: 700
-                      }}
-                    >
-                      {teacherClass || 'BSc CS A'}
-                    </span>
-                  </div>
-                  <p style={{ margin: '3px 0 0 0', fontSize: '0.84rem', color: '#64748b' }}>
-                    {selectedStudent.name.toLowerCase().replace(/\s+/g, '.') + '@college.edu'}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setSelectedStudent(null)}
-                style={{
-                  background: '#e2e8f0',
-                  border: 'none',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#475569',
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s'
-                }}
-                title="Close review panel"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Drawer Sub-Header Stats Banner */}
-            {(() => {
-              const currentStats = getStudentStats(selectedStudent.id);
-              return (
-                <div
-                  style={{
-                    padding: '16px 28px',
-                    background: '#f1f5f9',
-                    borderBottom: '1px solid #e2e8f0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '16px'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#475569' }}>
-                      Verification Progress:
-                    </span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#047857' }}>
-                      {currentStats.verified} / {currentStats.total} Verified ({currentStats.percent}%)
-                    </span>
-                  </div>
-                  {currentStats.pending > 0 ? (
-                    <span style={{ background: '#fef3c7', color: '#b45309', padding: '4px 12px', borderRadius: '9999px', fontSize: '0.76rem', fontWeight: 700 }}>
-                      {currentStats.pending} Pending Review
-                    </span>
-                  ) : (
-                    <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '9999px', fontSize: '0.76rem', fontWeight: 700 }}>
-                      All Verified
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Drawer Submissions List (Scrollable) */}
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: '24px 28px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '22px'
-              }}
-            >
-              {selectedStudentSubmissions.map((sub) => {
-                const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === sub.criteriaId);
-                const categoryItem = criteriaCatalog.find((c) => c.items.some((it) => it.id === sub.criteriaId));
-                const currentRemarks = submissionRemarksMap[sub.id] ?? (sub.remarks || '');
-                const fileNameToDisplay = formatFileName(sub);
-                const activityTitle = formatActivityTitle(sub);
-
-                const getStatusBadgeStyle = (st: string) => {
-                  if (['Approved', 'Verified', 'Evaluated', 'Locked'].includes(st)) {
-                    return { bg: '#dcfce7', color: '#15803d', label: 'Approved' };
-                  }
-                  if (st === 'Rejected') {
-                    return { bg: '#fee2e2', color: '#dc2626', label: 'Rejected' };
-                  }
-                  if (st === 'Correction Requested') {
-                    return { bg: '#fef3c7', color: '#b45309', label: 'Correction Required' };
-                  }
-                  return { bg: '#ede9fe', color: '#6366f1', label: 'Pending Review' };
-                };
-
-                const statusStyle = getStatusBadgeStyle(sub.status);
-
-                return (
-                  <div
-                    key={sub.id}
-                    style={{
-                      background: '#ffffff',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '20px',
-                      padding: '22px',
-                      boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '16px',
-                      transition: 'border-color 0.2s'
-                    }}
-                  >
-                    {/* Submission Card Top Header */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div
-                          style={{
-                            width: '42px',
-                            height: '42px',
-                            borderRadius: '12px',
-                            background: '#fee2e2',
-                            color: '#dc2626',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 800,
-                            fontSize: '0.72rem'
-                          }}
-                        >
-                          PDF
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#0f172a' }}>
-                            {fileNameToDisplay}
-                          </div>
-                          <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>
-                            {categoryItem?.category || 'Academics'} • <strong style={{ color: '#0f172a' }}>+{criteriaItem?.marks || 5} Points</strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span
-                          style={{
-                            background: statusStyle.bg,
-                            color: statusStyle.color,
-                            padding: '4px 12px',
-                            borderRadius: '9999px',
-                            fontSize: '0.76rem',
-                            fontWeight: 700
-                          }}
-                        >
-                          {statusStyle.label}
-                        </span>
-
-                        <a
-                          href={`/Assets/Proofs/${sub.proof || fileNameToDisplay}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            background: '#f8fafc',
-                            color: '#4f46e5',
-                            border: '1px solid #c7d2fe',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                          title="Open document proof in new tab"
-                        >
-                          <span>Open</span>
-                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                            <polyline points="15 3 21 3 21 9" />
-                            <line x1="10" y1="14" x2="21" y2="3" />
-                          </svg>
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Activity Title & Description */}
-                    <div
-                      style={{
-                        background: '#f8fafc',
-                        padding: '14px 16px',
-                        borderRadius: '14px',
-                        fontSize: '0.86rem',
-                        color: '#334155',
-                        border: '1px solid #f1f5f9'
-                      }}
-                    >
-                      <strong style={{ color: '#0f172a', display: 'block', marginBottom: '4px', fontSize: '0.92rem' }}>
-                        {activityTitle}
-                      </strong>
-                      {sub.description && isNaN(Number(sub.description)) && sub.description.length > 3
-                        ? sub.description
-                        : 'Institutional certificate verified for class performance evaluation.'}
-                    </div>
-
-                    {/* Remarks Input */}
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Add remarks or correction instructions (optional)..."
-                        value={currentRemarks}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSubmissionRemarksMap((prev) => ({ ...prev, [sub.id]: val }));
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '10px 14px',
-                          borderRadius: '10px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '0.84rem',
-                          outline: 'none',
-                          background: '#ffffff'
-                        }}
-                      />
-                    </div>
-
-                    {/* 3 Action Buttons: Approve, Correction, Reject */}
-                    <div style={{ display: 'flex', gap: '10px', paddingTop: '2px' }}>
-                      <button
-                        onClick={() => handleVerifySubmission(sub.id, 'Approved')}
-                        style={{
-                          flex: 1.3,
-                          background: '#047857',
-                          color: '#ffffff',
-                          border: 'none',
-                          padding: '10px 16px',
-                          borderRadius: '12px',
-                          fontSize: '0.86rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          boxShadow: '0 2px 8px rgba(4, 120, 87, 0.25)',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <span>✓</span> Approve
-                      </button>
-
-                      <button
-                        onClick={() => handleVerifySubmission(sub.id, 'Correction Requested')}
-                        style={{
-                          flex: 1.2,
-                          background: '#fef3c7',
-                          color: '#b45309',
-                          border: '1px solid #fcd34d',
-                          padding: '10px 14px',
-                          borderRadius: '12px',
-                          fontSize: '0.86rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <span>⚠️</span> Correction
-                      </button>
-
-                      <button
-                        onClick={() => handleVerifySubmission(sub.id, 'Rejected')}
-                        style={{
-                          flex: 1,
-                          background: '#fee2e2',
-                          color: '#dc2626',
-                          border: '1px solid #fca5a5',
-                          padding: '10px 14px',
-                          borderRadius: '12px',
-                          fontSize: '0.86rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <span>✗</span> Reject
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {selectedStudentSubmissions.length === 0 && (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    padding: '48px 20px',
-                    color: '#64748b',
-                    background: '#f8fafc',
-                    borderRadius: '18px',
-                    border: '1.5px dashed #cbd5e1'
-                  }}
-                >
-                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📂</div>
-                  <div style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>
-                    No Submissions Found
-                  </div>
-                  <div style={{ fontSize: '0.84rem', marginTop: '4px' }}>
-                    This student hasn't submitted any claim documents for the selected category yet.
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Drawer Footer */}
-            <div
-              style={{
-                padding: '18px 28px',
-                borderTop: '1px solid #f1f5f9',
-                background: '#f8fafc',
-                display: 'flex',
-                justifyContent: 'flex-end'
-              }}
-            >
-              <button
-                onClick={() => setSelectedStudent(null)}
-                style={{
-                  background: '#e2e8f0',
-                  color: '#334155',
-                  border: 'none',
-                  padding: '10px 22px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer'
-                }}
-              >
-                Done Reviewing
-              </button>
             </div>
           </div>
         </div>
@@ -1855,7 +1381,19 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   </button>
 
                   <button
-                    onClick={() => handleOpenPreview(currentQueueDoc)}
+                    onClick={() => {
+                      const pendingIds = queueList.map(q => q.subId).filter(Boolean) as number[];
+                      handleOpenPreview({
+                        id: -1,
+                        fileName: queueList.length > 0 ? `${queueList.length} Pending Documents` : 'No Pending Documents',
+                        studentName: queueList.length > 0 ? `${queueList.length} Students in Queue` : '0 Students',
+                        activityTitle: 'Bulk Verification Queue',
+                        category: 'Multiple Categories',
+                        description: queueList.length > 0 ? 'Review and verify all pending documents currently in the verification queue at once.' : 'There are currently no pending documents to verify.',
+                        isBulk: true,
+                        pendingIds
+                      });
+                    }}
                     style={{
                       flex: 1,
                       background: '#e0e7ff',
@@ -2173,13 +1711,12 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                 <table className="table" style={{ width: '100%' }}>
                   <thead>
                     <tr>
-                      {/* Checkbox column with Select All */}
                       <th style={{ width: '42px', padding: '12px 12px', textAlign: 'center' }}>
                         <input
                           type="checkbox"
                           checked={
-                            paginatedVerificationStudents.length > 0 &&
-                            paginatedVerificationStudents.every((s) => selectedStudentIds.includes(s.id))
+                            paginatedTeacherSubmissions.some((s) => ['Student Rep Verified', 'Verified by Student Rep'].includes(s.status)) &&
+                            paginatedTeacherSubmissions.filter((s) => ['Student Rep Verified', 'Verified by Student Rep'].includes(s.status)).every((s) => selectedStudentIds.includes(s.id))
                           }
                           onChange={handleToggleSelectAll}
                           style={{
@@ -2189,111 +1726,215 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                             accentColor: '#047857',
                             borderRadius: '4px'
                           }}
-                          title="Select all visible students on this page"
+                          title="Select all visible submissions on this page"
                         />
                       </th>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Name</th>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Email</th>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Progress</th>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Date</th>
+                      <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Student</th>
+                      <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Category</th>
+                      <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Item</th>
+                      <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Proof File</th>
                       <th style={{ textAlign: 'left', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Status</th>
-                      <th style={{ textAlign: 'right', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Action</th>
+                      <th style={{ textAlign: 'right', padding: '12px 16px', color: '#64748b', fontWeight: 700, fontSize: '0.82rem' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedVerificationStudents.map((stud) => {
-                      const stats = getStudentStats(stud.id);
-                      const studentEmail = stud.name.toLowerCase().replace(/\s+/g, '.') + '@college.edu';
-                      const lastDate = getStudentLastDate(stud.id);
-                      const isSelectedDrawer = selectedStudent?.id === stud.id;
-                      const isChecked = selectedStudentIds.includes(stud.id);
+                    {paginatedTeacherSubmissions.map((sub) => {
+                      const studentObj = classStudents.find((s) => s.id === sub.studentId) || realStudents.find((st) => st.id === sub.studentId);
+                      const displayName = studentObj ? studentObj.name : ((sub as any).user_name || `Student #${sub.studentId}`);
+                      const displayClass = studentObj?.className || teacherClass;
+                      
+                      const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
+                      const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
+                      const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
+                      const isEventId = sub.eventId || sub.proof?.startsWith('Event ID:');
+                      const displayEventId = sub.eventId || (sub.proof?.startsWith('Event ID:') ? sub.proof.replace('Event ID: ', '') : sub.proof);
+                      const isChecked = selectedStudentIds.includes(sub.id);
+
+                      const canVerify = ['Student Rep Verified', 'Verified by Student Rep'].includes(sub.status);
+
+                      const getStatusBadgeStyle = (st: string) => {
+                        if (['Approved', 'Verified', 'Evaluated', 'Locked'].includes(st)) {
+                          return { bg: '#dcfce7', color: '#15803d', label: 'Approved' };
+                        }
+                        if (st === 'Rejected') {
+                          return { bg: '#fee2e2', color: '#dc2626', label: 'Rejected' };
+                        }
+                        if (st === 'Correction Requested') {
+                          return { bg: '#fef3c7', color: '#b45309', label: 'Correction Required' };
+                        }
+                        return { bg: '#ede9fe', color: '#6366f1', label: 'Pending Review' };
+                      };
+
+                      const statusStyle = getStatusBadgeStyle(sub.status);
 
                       return (
                         <tr
-                          key={stud.id}
+                          key={sub.id}
                           style={{
                             borderBottom: '1px solid #f1f5f9',
-                            background: isChecked ? '#ecfdf5' : isSelectedDrawer ? '#f0fdf4' : 'transparent',
+                            background: isChecked ? '#ecfdf5' : 'transparent',
                             transition: 'background 0.15s ease'
                           }}
                         >
                           <td style={{ width: '42px', padding: '14px 12px', textAlign: 'center' }}>
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => handleToggleSelectStudent(stud.id)}
-                              style={{
-                                width: '17px',
-                                height: '17px',
-                                cursor: 'pointer',
-                                accentColor: '#047857',
-                                borderRadius: '4px'
-                              }}
-                            />
+                            {canVerify && (
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleToggleSelectSubmission(sub.id)}
+                                style={{
+                                  width: '17px',
+                                  height: '17px',
+                                  cursor: 'pointer',
+                                  accentColor: '#047857',
+                                  borderRadius: '4px'
+                                }}
+                              />
+                            )}
                           </td>
                           <td style={{ fontWeight: 700, padding: '14px 16px', color: '#0f172a' }}>
-                            {stud.name}
+                            {displayName}
+                            <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 500 }}>{displayClass}</div>
                           </td>
-                          <td style={{ padding: '14px 16px', color: '#64748b' }}>
-                            {studentEmail}
+                          <td style={{ padding: '14px 16px', color: '#0f172a', fontWeight: 600, fontSize: '0.9rem' }}>
+                            {cat?.category || 'General'}
                           </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '180px' }}>
-                              <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${stats.percent}%`, background: '#047857', borderRadius: '3px' }} />
-                              </div>
-                              <span style={{ fontSize: '0.78rem', color: '#64748b', minWidth: '55px' }}>
-                                {stats.verified}/{stats.total} ({stats.percent}%)
-                              </span>
-                            </div>
-                          </td>
-                          <td style={{ padding: '14px 16px', color: '#475569', fontSize: '0.84rem', fontWeight: 600 }}>
-                            {lastDate}
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            {stats.pending > 0 ? (
-                              <span style={{ background: '#fef3c7', color: '#b45309', padding: '4px 12px', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 700 }}>
-                                Pending ({stats.pending})
+                          <td style={{ padding: '14px 16px', color: '#475569', fontSize: '0.86rem' }}>
+                            {sub.evidence?.submissionType ? (
+                              <span style={{ background: '#e0e7ff', color: '#3730a3', padding: '4px 8px', borderRadius: '6px', fontWeight: 700, fontSize: '0.76rem' }}>
+                                📊 {sub.evidence.submissionType}
                               </span>
                             ) : (
-                              <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 700 }}>
-                                Completed
+                              item?.title || 'Activity'
+                            )}
+                            <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '4px', maxWidth: '200px' }}>
+                              {sub.description || 'No additional description.'}
+                            </div>
+                          </td>
+                          <td style={{ padding: '14px 16px' }}>
+                            {isEventId ? (
+                              <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '4px 10px', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', border: '1px solid #bfdbfe' }}>
+                                🎫 Event ID: {displayEventId}
                               </span>
+                            ) : sub.proof ? (
+                              <a
+                                href={isDriveUrl ? sub.proof : `/Assets/Proofs/${sub.proof}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: '#4f46e5', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontSize: '0.86rem' }}
+                                title="Open Proof Document"
+                              >
+                                📁 {sub.proof.length > 18 ? sub.proof.substring(0, 18) + '...' : sub.proof}
+                              </a>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>-</span>
+                            )}
+                          </td>
+                          <td style={{ padding: '14px 16px' }}>
+                            <span style={{ background: statusStyle.bg, color: statusStyle.color, padding: '4px 12px', borderRadius: '9999px', fontSize: '0.76rem', fontWeight: 700 }}>
+                              {statusStyle.label}
+                            </span>
+                            {sub.repRemarks && (
+                              <div style={{ fontSize: '0.74rem', color: '#64748b', fontStyle: 'italic', marginTop: '4px', background: '#f8fafc', padding: '4px 8px', borderRadius: '6px', border: '1px dashed #e2e8f0', maxWidth: '160px' }}>
+                                💬 Rep: {sub.repRemarks}
+                              </div>
                             )}
                           </td>
                           <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                            <button
-                              onClick={() => setSelectedStudent(stud)}
-                              style={{
-                                background: isSelectedDrawer ? '#047857' : '#e0e7ff',
-                                color: isSelectedDrawer ? '#ffffff' : '#4338ca',
-                                border: isSelectedDrawer ? 'none' : '1px solid #c7d2fe',
-                                borderRadius: '10px',
-                                padding: '8px 16px',
-                                fontSize: '0.84rem',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                transition: 'all 0.15s ease'
-                              }}
-                            >
-                              <span>Review Submissions</span>
-                              <span>→</span>
-                            </button>
+                            {canVerify ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <input
+                                  id={`teacher-remarks-${sub.id}`}
+                                  type="text"
+                                  placeholder="Add remarks (required for Correction/Reject)..."
+                                  value={submissionRemarksMap[sub.id] || ''}
+                                  onChange={(e) => setSubmissionRemarksMap((prev) => ({ ...prev, [sub.id]: e.target.value }))}
+                                  required
+                                  style={{
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #cbd5e1',
+                                    fontSize: '0.82rem',
+                                    outline: 'none',
+                                    background: '#ffffff',
+                                    minWidth: '220px'
+                                  }}
+                                />
+                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                  <button
+                                    onClick={() => {
+                                      const teacherRemarks = submissionRemarksMap[sub.id] || 'Verified & Approved by Class Advisor';
+                                      updateSubmission(sub.id, {
+                                        status: 'Approved',
+                                        teacherVerifiedByName: teacherName,
+                                        teacherRemarks,
+                                        remarks: teacherRemarks
+                                      });
+                                    }}
+                                    style={{ background: '#047857', color: '#ffffff', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 6px rgba(4, 120, 87, 0.2)' }}
+                                  >
+                                    ✓ Approve
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const inputEl = document.getElementById(`teacher-remarks-${sub.id}`) as HTMLInputElement;
+                                      const teacherRemarks = submissionRemarksMap[sub.id]?.trim();
+                                      if (!teacherRemarks) {
+                                        inputEl?.reportValidity();
+                                        return;
+                                      }
+                                      updateSubmission(sub.id, {
+                                        status: 'Correction Requested',
+                                        teacherVerifiedByName: teacherName,
+                                        teacherRemarks,
+                                        remarks: teacherRemarks
+                                      });
+                                    }}
+                                    style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '6px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
+                                  >
+                                    Correction
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const inputEl = document.getElementById(`teacher-remarks-${sub.id}`) as HTMLInputElement;
+                                      const teacherRemarks = submissionRemarksMap[sub.id]?.trim();
+                                      if (!teacherRemarks) {
+                                        inputEl?.reportValidity();
+                                        return;
+                                      }
+                                      updateSubmission(sub.id, {
+                                        status: 'Rejected',
+                                        teacherVerifiedByName: teacherName,
+                                        teacherRemarks,
+                                        remarks: teacherRemarks
+                                      });
+                                    }}
+                                    style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '6px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>
+                                <span style={{ color: ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) ? '#16a34a' : '#1e40af' }}>
+                                  {sub.status === 'Approved' ? '✓ Evaluated' : 'Reviewed'}
+                                </span>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );
                     })}
 
-                    {paginatedVerificationStudents.length === 0 && (
+                    {paginatedTeacherSubmissions.length === 0 && (
                       <tr>
                         <td colSpan={7} style={{ textAlign: 'center', padding: '36px 16px', color: '#64748b' }}>
                           <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>🔍</div>
-                          <div style={{ fontWeight: 700, color: '#0f172a' }}>No students found</div>
+                          <div style={{ fontWeight: 700, color: '#0f172a' }}>No submissions found</div>
                           <div style={{ fontSize: '0.82rem', marginTop: '2px' }}>
-                            No students match the current status and category filters.
+                            No submissions match the current status and category filters.
                           </div>
                         </td>
                       </tr>

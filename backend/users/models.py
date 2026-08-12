@@ -71,6 +71,7 @@ class Submission(models.Model):
         ('Pending', 'Pending'),
         ('Pending Rep Verification', 'Pending Rep Verification'),
         ('Student Rep Verified', 'Student Rep Verified'),
+        ('Teacher Verified', 'Teacher Verified'),
         ('Correction Requested', 'Correction Requested'),
         ('Rejected', 'Rejected'),
         ('Draft', 'Draft'),

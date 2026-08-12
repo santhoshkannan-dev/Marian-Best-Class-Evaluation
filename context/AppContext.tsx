@@ -78,6 +78,7 @@ interface AppContextType {
   classes: any[];
   departments: any[];
   addAcademicYearGlobal: (year: string) => Promise<void>;
+  deleteAcademicYearGlobal: (year: string) => Promise<void>;
   setActiveAcademicYearGlobal: (year: string, isActive?: boolean) => Promise<void>;
   addDepartmentGlobal: (name: string, code: string) => Promise<void>;
   deleteDepartmentGlobal: (code: string) => Promise<void>;
@@ -297,8 +298,14 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           .then(res => res.ok ? res.json() : null)
           .then(settingsData => {
             if (settingsData) {
-              if (settingsData.submissionOpen !== undefined) setSubmissionOpen(settingsData.submissionOpen === 'true');
-              if (settingsData.evaluationOpen !== undefined) setEvaluationOpen(settingsData.evaluationOpen === 'true');
+              if (settingsData.submissionOpen !== undefined) {
+                const val = String(settingsData.submissionOpen).toLowerCase().trim();
+                setSubmissionOpen(val === 'true' || val === '1');
+              }
+              if (settingsData.evaluationOpen !== undefined) {
+                const val = String(settingsData.evaluationOpen).toLowerCase().trim();
+                setEvaluationOpen(val === 'true' || val === '1');
+              }
               if (settingsData.submissionWindowStart !== undefined) setSubmissionWindowStart(settingsData.submissionWindowStart);
               if (settingsData.submissionWindowEnd !== undefined) setSubmissionWindowEnd(settingsData.submissionWindowEnd);
             }
@@ -572,8 +579,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const tempId = Date.now();
     const userEmail = currentUserInfo?.email || users.find((u) => u.id === currentUserId)?.email || '';
 
-    const userClass = (currentUserInfo as any)?.className || (currentUserInfo as any)?.class_name || '';
-    const userName = currentUserInfo?.name || '';
+    const parsedClass = userEmail ? parseStudentEmail(userEmail)?.className : '';
+    const userClass = (currentUserInfo as any)?.className || (currentUserInfo as any)?.class_name || parsedClass || '';
+    const userName = currentUserInfo?.name || (userEmail ? userEmail.split('@')[0] : '');
 
     const createdTempSub: Submission = {
       ...newSub,
@@ -586,7 +594,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       className: userClass,
       class_name: userClass,
       academicYear: selectedAcademicYear || '2025-2026',
-      status: newSub.status || 'Pending Verification',
+      status: newSub.status || 'Pending Rep Verification',
       remarks: newSub.remarks || ''
     };
 
@@ -606,7 +614,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           criteriaId: newSub.criteriaId,
           academicYear: selectedAcademicYear || '2025-2026',
           description: newSub.description,
-          status: newSub.status || 'Pending Verification',
+          status: newSub.status || 'Pending Rep Verification',
           remarks: newSub.remarks || '',
           marks: newSub.marks || null,
           proof: newSub.proof || '',
@@ -651,7 +659,14 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             proof: updates.proof,
             eventId: updates.eventId,
             evidence: updates.evidence,
-            evaluatorVerified: updates.evaluatorVerified
+            evaluatorVerified: updates.evaluatorVerified,
+            verifiedByName: updates.verifiedByName,
+            teacherVerifiedByName: updates.teacherVerifiedByName,
+            teacherRemarks: updates.teacherRemarks,
+            repVerifiedByName: updates.repVerifiedByName,
+            repRemarks: updates.repRemarks,
+            evaluatorVerifiedByName: updates.evaluatorVerifiedByName,
+            evaluatorRemarks: updates.evaluatorRemarks
           })
         });
         if (res.ok) {
@@ -828,6 +843,26 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const deleteAcademicYearGlobal = async (year: string) => {
+    setAcademicYears((prev) => prev.filter((y) => y !== year));
+    if (activeAcademicYear === year) {
+      setActiveAcademicYear('');
+    }
+    if (selectedAcademicYear === year) {
+      setSelectedAcademicYear('');
+    }
+
+    try {
+      await fetch('http://localhost:8000/api/academic-years/', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year })
+      });
+    } catch (e) {
+      console.error('Failed to delete academic year from backend API:', e);
+    }
+  };
+
   const addDepartmentGlobal = async (name: string, code: string) => {
     const newDeptObj = { name, code };
     setDepartments((prev) => [...prev.filter((d) => d.code !== code && d.name !== name), newDeptObj]);
@@ -893,14 +928,90 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const updateClassMapping = async (name: string, teacherEmail: string, dqcEmail: string) => {
-    // Optimistically update local state immediately
+    const cleanTeacher = teacherEmail ? teacherEmail.trim().toLowerCase() : '';
+    const cleanDqc = dqcEmail ? dqcEmail.trim().toLowerCase() : '';
+
+    const targetClass = classes.find((c) => c.name === name);
+    const deptName = targetClass?.department || '';
+    const deptCode = targetClass?.department_code || '';
+
+    // Optimistically update local classes with exclusivity logic
     setClasses((prev) =>
-      prev.map((c) => (c.name === name ? { ...c, classTeacher: teacherEmail, dqcMember: dqcEmail } : c))
+      prev.map((c) => {
+        if (c.name === name) {
+          return { ...c, classTeacher: teacherEmail, dqcMember: dqcEmail };
+        } else if (cleanTeacher && c.classTeacher && c.classTeacher.trim().toLowerCase() === cleanTeacher) {
+          return { ...c, classTeacher: '' };
+        }
+        return c;
+      })
     );
 
-    // Auto-sync group memberships
-    if (teacherEmail) addUserToGroup('grp-class-teachers', teacherEmail);
-    if (dqcEmail) addUserToGroup('grp-student-reps', dqcEmail);
+    // Sync users list state
+    setUsers((prev) =>
+      prev.map((u) => {
+        const uEmail = u.email.trim().toLowerCase();
+        if (cleanTeacher && uEmail === cleanTeacher) {
+          return { ...u, className: name, department: deptName };
+        }
+        if (u.className === name && (!cleanTeacher || uEmail !== cleanTeacher)) {
+          return { ...u, className: undefined };
+        }
+        return u;
+      })
+    );
+
+    // Sync currentUserInfo if currently logged in user's class assignment changed
+    setCurrentUserInfo((prev) => {
+      if (!prev) return null;
+      const currEmail = (prev.email || '').trim().toLowerCase();
+      if (cleanTeacher && currEmail === cleanTeacher) {
+        return {
+          ...prev,
+          class_name: name,
+          className: name,
+          department: deptName || prev.department,
+          department_code: deptCode || prev.department_code
+        };
+      }
+      if (prev.class_name === name && currEmail !== cleanTeacher) {
+        return {
+          ...prev,
+          class_name: null,
+          className: null
+        };
+      }
+      return prev;
+    });
+
+    // Auto-sync group memberships directly in state
+    if (teacherEmail) {
+      setUserGroups((prev) =>
+        prev.map((g) => {
+          if (g.id === 'grp-class-teachers' && !g.emails.some((e) => e.toLowerCase() === cleanTeacher)) {
+            return { ...g, emails: [...g.emails, cleanTeacher] };
+          }
+          return g;
+        })
+      );
+    }
+
+    if (dqcEmail) {
+      setUserGroups((prev) =>
+        prev.map((g) => {
+          if (
+            (g.id === 'grp-student-reps' || g.id.includes('student-rep')) &&
+            !g.emails.some((e) => e.toLowerCase() === cleanDqc)
+          ) {
+            return { ...g, emails: [...g.emails, cleanDqc] };
+          }
+          return g;
+        })
+      );
+      setUsers((prev) =>
+        prev.map((u) => (u.email.toLowerCase().trim() === cleanDqc ? { ...u, isStudentRep: true } : u))
+      );
+    }
 
     try {
       const res = await fetch('http://localhost:8000/api/auth/classes/', {
@@ -971,8 +1082,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           prev.map((u) => (u.email.toLowerCase().trim() === cleanEmail ? { ...u, isStudentRep: true } : u))
         );
 
-        // Assign dqcMember ONLY to the corresponding class the student belongs to
-        updateClassMapping(targetClass, '', cleanEmail);
+        // Update dqcMember ONLY for the corresponding class, preserving existing classTeacher and avoiding infinite recursion with updateClassMapping
+        setClasses((prev) =>
+          prev.map((c) => (c.name === targetClass ? { ...c, dqcMember: cleanEmail } : c))
+        );
       }
     }
 
@@ -1072,6 +1185,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         classes,
         departments,
         addAcademicYearGlobal,
+        deleteAcademicYearGlobal,
         setActiveAcademicYearGlobal,
         addDepartmentGlobal,
         deleteDepartmentGlobal,

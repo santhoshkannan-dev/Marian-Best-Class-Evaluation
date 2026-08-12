@@ -23,6 +23,7 @@ export interface Student {
   id: number;
   name: string;
   className: string;
+  email?: string;
 }
 
 export interface SubmissionEvidence {
@@ -49,7 +50,7 @@ export interface Submission {
   criteriaId: number;
   academicYear?: string;
   description: string;
-  status: 'Approved' | 'Pending' | 'Pending Verification' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
+  status: 'Approved' | 'Pending' | 'Pending Verification' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Verified by Student Rep' | 'Teacher Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
   remarks?: string;
   marks?: number | null;
   proof?: string;
@@ -60,6 +61,9 @@ export interface Submission {
   user_email?: string;
   userEmail?: string;
   email?: string;
+  user_name?: string;
+  className?: string;
+  class_name?: string;
   repVerifiedByName?: string;
   repRemarks?: string;
   teacherVerifiedByName?: string;
