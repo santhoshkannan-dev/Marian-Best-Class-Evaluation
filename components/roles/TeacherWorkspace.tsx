@@ -65,6 +65,20 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   const [verificationPage, setVerificationPage] = useState(1);
   const verificationPageSize = 5;
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const searchParam = params.get('search');
+      if (searchParam) {
+        setStudentSearch(searchParam);
+      }
+      const statusParam = params.get('status');
+      if (statusParam === 'pending' || statusParam === 'completed' || statusParam === 'all') {
+        setStatusFilter(statusParam);
+      }
+    }
+  }, []);
+
   // Bulk Selection for Verification Desk
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
 
@@ -80,6 +94,9 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   // AI / Quick prompt search in student progress
   const [quickPrompt, setQuickPrompt] = useState('');
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
+
+  // Dashboard Student Progress Search
+  const [dashboardStudentSearch, setDashboardStudentSearch] = useState('');
 
   // ----------------------------------------------------
   // CLASS STUDENTS & CLASS SUBMISSIONS
@@ -161,7 +178,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   };
 
   // Recent Student Progress list with Recently Submitted Document
-  const displayProgressStudents = classStudents.map(student => {
+  let displayProgressStudents = classStudents.map(student => {
     const studentSubs = classSubmissions.filter(s => s.studentId === student.id);
     const verifiedPoints = studentSubs.filter(s => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)).reduce((sum, s) => {
        const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === s.criteriaId);
@@ -184,9 +201,21 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
       recentDoc: recentDoc || 'No submissions yet',
       recentActivity: recentActivity || '-',
       percent,
+      lastActivityId: recentSub ? recentSub.id : 0,
       ...getProgressDetails(percent)
     };
-  }).filter(s => s.recentDoc !== 'No submissions yet').slice(-3).reverse();
+  }).filter(s => s.recentDoc !== 'No submissions yet');
+
+  // Sort by most recent activity
+  displayProgressStudents.sort((a, b) => b.lastActivityId - a.lastActivityId);
+
+  // Filter by dashboard search
+  if (dashboardStudentSearch.trim()) {
+    displayProgressStudents = displayProgressStudents.filter(s => s.name.toLowerCase().includes(dashboardStudentSearch.toLowerCase()));
+  } else {
+    // Only show top 5 when not searching
+    displayProgressStudents = displayProgressStudents.slice(0, 5);
+  }
 
   // Merge pending submissions with friendly filenames
   const pendingSubs = classSubmissions.filter((s) =>
@@ -1084,12 +1113,32 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                       borderRadius: '8px'
                     }}
                     onClick={() => {
+                      setStudentSearch('');
+                      setStatusFilter('all');
                       setActivePage('verification');
-                      router.push('/teacher/verification');
+                      router.push('/teacher/verification?status=all');
                     }}
                   >
                     View All
                   </button>
+                </div>
+
+                {/* Search Bar for Student Progress */}
+                <div style={{ marginBottom: '4px' }}>
+                  <input
+                    type="text"
+                    placeholder="Search student by name..."
+                    value={dashboardStudentSearch}
+                    onChange={(e) => setDashboardStudentSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '0.9rem',
+                      outline: 'none'
+                    }}
+                  />
                 </div>
 
                 {/* Student Progress List */}
@@ -1097,13 +1146,25 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   {displayProgressStudents.map((s) => (
                     <div
                       key={s.id}
+                      onClick={() => {
+                        setStudentSearch(s.name);
+                        setStatusFilter('all');
+                        setActivePage('verification');
+                        router.push(`/teacher/verification?search=${encodeURIComponent(s.name)}&status=all`);
+                      }}
+                      title="Click to view all submissions by this student"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         gap: '16px',
-                        padding: '6px 0'
+                        padding: '8px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
                       }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     >
                       {/* Name + Recently Submitted Document */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '150px' }}>
@@ -1111,7 +1172,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                           {s.name}
                         </span>
                         <div
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleOpenPreview({
                               id: s.id,
                               fileName: s.recentDoc,
