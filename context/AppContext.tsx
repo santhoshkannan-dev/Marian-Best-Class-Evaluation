@@ -50,9 +50,12 @@ interface AppContextType {
   addSubmission: (newSub: Omit<Submission, 'id'>) => void;
   updateSubmission: (id: number, updates: Partial<Submission>) => void;
   deleteSubmission: (id: number) => void;
-  addCriteriaItem: (categoryId: string, item: Omit<CriteriaItem, 'id'>) => void;
-  updateCriteriaItem: (categoryId: string, itemId: number, item: Partial<CriteriaItem>) => void;
-  deleteCriteriaItem: (categoryId: string, itemId: number) => void;
+  addCriteriaItem: (categoryId: string | number, item: Omit<CriteriaItem, 'id'>) => void;
+  updateCriteriaItem: (categoryId: string | number, itemId: number, item: Partial<CriteriaItem>) => void;
+  deleteCriteriaItem: (categoryId: string | number, itemId: number) => void;
+  addCriteriaCategory: (category: Omit<CriteriaCategory, 'id' | 'items'>) => void;
+  updateCriteriaCategory: (categoryId: string | number, category: Partial<CriteriaCategory>) => void;
+  deleteCriteriaCategory: (categoryId: string | number) => void;
   addUser: (user: Omit<AppUser, 'id'>) => void;
   toggleUserApproval: (userId: number) => void;
   toggleSubmissionOpen: () => void;
@@ -549,6 +552,30 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const fetchCriteriaCatalog = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/criteria-categories/');
+      if (res.ok) {
+        const data = await res.json();
+        setCriteriaCatalog(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchUserGroups = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/user-groups/');
+      if (res.ok) {
+        const data = await res.json();
+        setUserGroups(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     if (loggedIn) {
       fetchSubmissions();
@@ -556,6 +583,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       fetchDepartments();
       fetchClasses();
       fetchUsers();
+      fetchCriteriaCatalog();
+      fetchUserGroups();
     }
   }, [loggedIn, jwtToken]);
 
@@ -700,26 +729,47 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  const addCriteriaItem = (categoryId: string, item: Omit<CriteriaItem, 'id'>) => {
-    const allItems = criteriaCatalog.flatMap((c) => c.items);
-    const nextId = allItems.reduce((max, i) => Math.max(max, i.id), 0) + 1;
+  const addCriteriaItem = async (categoryId: string | number, item: Omit<CriteriaItem, 'id'>) => {
+    // Optimistic update
+    const tempId = Date.now();
     setCriteriaCatalog((prev) =>
       prev.map((cat) => {
-        if (cat.id === categoryId) {
-          return {
-            ...cat,
-            items: [...cat.items, { ...item, id: nextId }]
-          };
+        if (cat.id == categoryId) {
+          return { ...cat, items: [...cat.items, { ...item, id: tempId }] };
         }
         return cat;
       })
     );
+    try {
+      const res = await fetch('http://localhost:8000/api/criteria-items/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...item, category: categoryId })
+      });
+      if (res.ok) {
+        const createdItem = await res.json();
+        setCriteriaCatalog((prev) =>
+          prev.map((cat) => {
+            if (cat.id == categoryId) {
+              return {
+                ...cat,
+                items: cat.items.map(i => i.id === tempId ? createdItem : i)
+              };
+            }
+            return cat;
+          })
+        );
+      }
+    } catch (e) {
+      console.error('Failed to add criteria item', e);
+    }
   };
 
-  const updateCriteriaItem = (categoryId: string, itemId: number, updates: Partial<CriteriaItem>) => {
+  const updateCriteriaItem = async (categoryId: string | number, itemId: number, updates: Partial<CriteriaItem>) => {
+    // Optimistic update
     setCriteriaCatalog((prev) =>
       prev.map((cat) => {
-        if (cat.id === categoryId) {
+        if (cat.id == categoryId) {
           return {
             ...cat,
             items: cat.items.map((i) => (i.id === itemId ? { ...i, ...updates } : i))
@@ -728,12 +778,35 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         return cat;
       })
     );
+    try {
+      const res = await fetch(`http://localhost:8000/api/criteria-items/${itemId}/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const updatedItem = await res.json();
+        setCriteriaCatalog((prev) =>
+          prev.map((cat) => {
+            if (cat.id == categoryId) {
+              return {
+                ...cat,
+                items: cat.items.map(i => i.id === itemId ? updatedItem : i)
+              };
+            }
+            return cat;
+          })
+        );
+      }
+    } catch (e) {
+      console.error('Failed to update criteria item', e);
+    }
   };
 
-  const deleteCriteriaItem = (categoryId: string, itemId: number) => {
+  const deleteCriteriaItem = async (categoryId: string | number, itemId: number) => {
     setCriteriaCatalog((prev) =>
       prev.map((cat) => {
-        if (cat.id === categoryId) {
+        if (cat.id == categoryId) {
           return {
             ...cat,
             items: cat.items.filter((i) => i.id !== itemId)
@@ -742,6 +815,62 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         return cat;
       })
     );
+    try {
+      await fetch(`http://localhost:8000/api/criteria-items/${itemId}/`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (e) {
+      console.error('Failed to delete criteria item', e);
+    }
+  };
+
+  const addCriteriaCategory = async (category: Omit<CriteriaCategory, 'id' | 'items'>) => {
+    const tempId = Date.now().toString();
+    setCriteriaCatalog((prev) => [...prev, { ...category, id: tempId, items: [] } as CriteriaCategory]);
+    
+    try {
+      const res = await fetch('http://localhost:8000/api/criteria-categories/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(category)
+      });
+      if (res.ok) {
+        const createdCategory = await res.json();
+        setCriteriaCatalog((prev) => prev.map(c => c.id === tempId ? createdCategory : c));
+      }
+    } catch (e) {
+      console.error('Failed to add criteria category', e);
+    }
+  };
+
+  const updateCriteriaCategory = async (categoryId: string | number, updates: Partial<CriteriaCategory>) => {
+    setCriteriaCatalog((prev) => prev.map((cat) => (cat.id == categoryId ? { ...cat, ...updates } : cat)));
+    try {
+      const res = await fetch(`http://localhost:8000/api/criteria-categories/${categoryId}/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const updatedCategory = await res.json();
+        setCriteriaCatalog((prev) => prev.map((cat) => (cat.id == categoryId ? updatedCategory : cat)));
+      }
+    } catch (e) {
+      console.error('Failed to update criteria category', e);
+    }
+  };
+
+  const deleteCriteriaCategory = async (categoryId: string | number) => {
+    setCriteriaCatalog((prev) => prev.filter((cat) => cat.id != categoryId));
+    try {
+      await fetch(`http://localhost:8000/api/criteria-categories/${categoryId}/`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (e) {
+      console.error('Failed to delete criteria category', e);
+    }
   };
 
   const addUser = (newUser: Omit<AppUser, 'id'>) => {
@@ -794,10 +923,25 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setStudents((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const addUserGroup = (newGrp: Omit<UserGroup, 'id'>) => {
+  const addUserGroup = async (newGrp: Omit<UserGroup, 'id'>) => {
     const id = `grp-${Date.now()}`;
     const group: UserGroup = { ...newGrp, id, emails: newGrp.emails || [] };
     setUserGroups((prev) => [...prev, group]);
+
+    try {
+      await fetch('http://localhost:8000/api/user-groups/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: group.id,
+          name: group.name,
+          description: group.desc || '',
+          members: group.emails
+        })
+      });
+    } catch (e) {
+      console.error('Failed to add user group', e);
+    }
   };
 
   const addAcademicYearGlobal = async (year: string) => {
@@ -1044,8 +1188,15 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  const deleteUserGroup = (groupId: string) => {
+  const deleteUserGroup = async (groupId: string) => {
     setUserGroups((prev) => prev.filter((g) => g.id !== groupId));
+    try {
+      await fetch(`http://localhost:8000/api/user-groups/${groupId}/`, {
+        method: 'DELETE'
+      });
+    } catch (e) {
+      console.error('Failed to delete user group', e);
+    }
   };
 
   const addUserToGroup = (groupId: string, email: string) => {
@@ -1058,7 +1209,13 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (g.id === groupId || (groupId === 'grp-student-reps' && g.id === 'grp-student-reps')) {
           if (!g.emails.map((e) => e.toLowerCase()).includes(cleanEmail)) {
             added = true;
-            return { ...g, emails: [...g.emails, cleanEmail] };
+            const newEmails = [...g.emails, cleanEmail];
+            fetch(`http://localhost:8000/api/user-groups/${g.id}/`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ members: newEmails })
+            }).catch(console.error);
+            return { ...g, emails: newEmails };
           }
         }
         return g;
@@ -1120,10 +1277,17 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const removeUserFromGroup = (groupId: string, email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
     setUserGroups((prev) =>
       prev.map((g) => {
         if (g.id === groupId) {
-          return { ...g, emails: g.emails.filter((e) => e.toLowerCase() !== email.toLowerCase()) };
+          const newEmails = g.emails.filter((e) => e.toLowerCase() !== cleanEmail);
+          fetch(`http://localhost:8000/api/user-groups/${groupId}/`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ members: newEmails })
+          }).catch(console.error);
+          return { ...g, emails: newEmails };
         }
         return g;
       })
@@ -1160,6 +1324,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         addCriteriaItem,
         updateCriteriaItem,
         deleteCriteriaItem,
+        addCriteriaCategory,
+        updateCriteriaCategory,
+        deleteCriteriaCategory,
         addUser,
         toggleUserApproval,
         toggleSubmissionOpen,

@@ -59,7 +59,13 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     updateClassMapping,
     users,
     userGroups,
-    addUserGlobal
+    addUserGlobal,
+    criteriaCatalog,
+    addCriteriaCategory,
+    addCriteriaItem,
+    updateCriteriaItem,
+    deleteCriteriaItem,
+    deleteCriteriaCategory
   } = useApp();
 
   const [confirmSubmissionModal, setConfirmSubmissionModal] = useState<boolean>(false);
@@ -113,25 +119,10 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
   // ----------------------------------------------------
   // DATASET 2: CRITERIA MANAGEMENT
   // ----------------------------------------------------
-  const [criteriaCategories, setCriteriaCategories] = useState<CriteriaCategory[]>([
-    { id: '1', title: 'Academics', desc: 'Criteria related to academic performance and coursework.', icon: '🎓' },
-    { id: '2', title: 'Online Courses', desc: 'Certifications and modules from online learning platforms.', icon: '💻' },
-    { id: '3', title: 'Internships', desc: 'Evaluations for external placements and practical experience.', icon: '💼' },
-    { id: '4', title: 'Competitive Exams', desc: 'Performance in state, national, and international exams.', icon: '📝' },
-    { id: '5', title: 'Scholarships', desc: 'Recognition and financial support for merit or need.', icon: '💰' },
-    { id: '6', title: 'Research', desc: 'Criteria for methodology, publications, and lab work.', icon: '🧪' },
-    { id: '7', title: 'Prizes', desc: 'Awards and honors won in various competitions.', icon: '🏆' },
-    { id: '8', title: 'Leadership', desc: 'Roles in student bodies, clubs, and organizations.', icon: '🤝' },
-    { id: '9', title: 'Programs Organized', desc: 'Management and coordination of various events.', icon: '📅' },
-    { id: '10', title: 'Social Responsibility', desc: 'Participation in NSS, NCC, and community service.', icon: '🌏' },
-    { id: '11', title: 'Career Advancement', desc: 'Placement success and higher studies preparation.', icon: '🚀' },
-    { id: '12', title: 'Documentation', desc: 'Submission quality and verification proofs.', icon: '📁' }
-  ]);
-
   const [selectedYear, setSelectedYear] = useState('2025-2026');
 
   // Criteria Items detailed view states
-  const [selectedCategory, setSelectedCategory] = useState<CriteriaCategory | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
   const [showAddItemForm, setShowAddItemForm] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState('');
   const [newItemType, setNewItemType] = useState('Count Based');
@@ -149,104 +140,24 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     details: string;
   }
 
-  const [criteriaItemsMap, setCriteriaItemsMap] = useState<Record<string, CriteriaItemDetail[]>>({
-    '1': [ // Academics
-      { id: '1-1', title: 'S Grade Course', type: 'Count Based', marks: 5, details: 'per count x 5' },
-      { id: '1-2', title: 'A+ Grade Course', type: 'Count Based', marks: 3, details: 'per count x 3' },
-      { id: '1-3', title: 'A Grade Course', type: 'Count Based', marks: 1, details: 'per count x 1' },
-      { id: '1-4', title: 'Failed Course', type: 'Negative Marks', marks: 0, details: 'penalty per count x -2' },
-      { id: '1-5', title: 'Class Pass Percentage', type: 'Range Based', marks: 20, details: '95-100:20, 90-94.99:15, 85-89.99:10, 80-84.99:5' }
-    ],
-    '2': [ // Online Courses
-      { id: '2-1', title: 'NPTEL Course Completed', type: 'Count Based', marks: 10, details: 'per count x 10' },
-      { id: '2-2', title: 'MOOC Course Completed', type: 'Count Based', marks: 5, details: 'per count x 5' },
-      { id: '2-3', title: 'Other Recognized Online Course', type: 'Count Based', marks: 3, details: 'per count x 3' }
-    ],
-    '3': [ // Internships
-      { id: '3-1', title: 'Offline Internship', type: 'Count Based', marks: 5, details: 'per count x 5' },
-      { id: '3-2', title: 'Online Internship', type: 'Count Based', marks: 3, details: 'per count x 3' }
-    ],
-    '4': [ // Competitive Exams
-      { id: '4-1', title: 'JRF Qualified', type: 'Fixed', marks: 20, details: 'fixed: 20' },
-      { id: '4-2', title: 'NET Qualified', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '4-3', title: 'SET Qualified', type: 'Fixed', marks: 5, details: 'fixed: 5' }
-    ],
-    '5': [ // Scholarships
-      { id: '5-1', title: 'International Scholarship', type: 'Fixed', marks: 20, details: 'fixed: 20' },
-      { id: '5-2', title: 'National Scholarship', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '5-3', title: 'State Scholarship', type: 'Fixed', marks: 5, details: 'fixed: 5' }
-    ],
-    '6': [ // Research
-      { id: '6-1', title: 'Research Publication', type: 'Count Based', marks: 15, details: 'per count x 15' },
-      { id: '6-2', title: 'Patent Filed or Published', type: 'Count Based', marks: 20, details: 'per count x 20' },
-      { id: '6-3', title: 'Funded or Approved Student Project', type: 'Count Based', marks: 10, details: 'per count x 10' }
-    ],
-    '7': [ // Prizes
-      { id: '7-1', title: 'Outside College Individual First Prize', type: 'Count Based', marks: 10, details: 'per count x 10' },
-      { id: '7-2', title: 'Outside College Individual Second Prize', type: 'Count Based', marks: 8, details: 'per count x 8' },
-      { id: '7-3', title: 'Outside College Individual Third Prize', type: 'Count Based', marks: 5, details: 'per count x 5' },
-      { id: '7-4', title: 'Outside College Group First Prize', type: 'Count Based', marks: 6, details: 'per count x 6' },
-      { id: '7-5', title: 'Outside College Group Second Prize', type: 'Count Based', marks: 4, details: 'per count x 4' },
-      { id: '7-6', title: 'Outside College Group Third Prize', type: 'Count Based', marks: 3, details: 'per count x 3' },
-      { id: '7-7', title: 'Inside College Individual First Prize', type: 'Count Based', marks: 5, details: 'per count x 5' },
-      { id: '7-8', title: 'Inside College Individual Second Prize', type: 'Count Based', marks: 3, details: 'per count x 3' },
-      { id: '7-9', title: 'Inside College Individual Third Prize', type: 'Count Based', marks: 2, details: 'per count x 2' },
-      { id: '7-10', title: 'Inside College Group First Prize', type: 'Count Based', marks: 3, details: 'per count x 3' },
-      { id: '7-11', title: 'Inside College Group Second Prize', type: 'Count Based', marks: 2, details: 'per count x 2' },
-      { id: '7-12', title: 'Inside College Group Third Prize', type: 'Count Based', marks: 1, details: 'per count x 1' }
-    ],
-    '8': [ // Leadership
-      { id: '8-1', title: 'Class Representative', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '8-2', title: 'Association or Club Office Bearer', type: 'Fixed', marks: 8, details: 'fixed: 8' },
-      { id: '8-3', title: 'Event Coordinator Role', type: 'Count Based', marks: 5, details: 'per count x 5' }
-    ],
-    '9': [ // Programs Organized
-      { id: '9-1', title: 'Department Level Program Organized', type: 'Count Based', marks: 5, details: 'per count x 5' },
-      { id: '9-2', title: 'Interdepartment Program Organized', type: 'Count Based', marks: 8, details: 'per count x 8' },
-      { id: '9-3', title: 'State or National Level Program Organized', type: 'Count Based', marks: 15, details: 'per count x 15' }
-    ],
-    '10': [ // Social Responsibility
-      { id: '10-1', title: 'NSS/NCC/Service Activity Participation', type: 'Count Based', marks: 5, details: 'per count x 5' },
-      { id: '10-2', title: 'Community Outreach Activity', type: 'Count Based', marks: 3, details: 'per count x 3' },
-      { id: '10-3', title: 'Blood Donation or Health Camp Participation', type: 'Count Based', marks: 2, details: 'per count x 2' }
-    ],
-    '11': [ // Career Advancement
-      { id: '11-1', title: 'Placement Offer Received', type: 'Fixed', marks: 20, details: 'fixed: 20' },
-      { id: '11-2', title: 'Higher Studies Admission Secured', type: 'Fixed', marks: 15, details: 'fixed: 15' },
-      { id: '11-3', title: 'Professional Certification Completed', type: 'Count Based', marks: 8, details: 'per count x 8' },
-      { id: '11-4', title: 'Career Workshop Participation', type: 'Count Based', marks: 2, details: 'per count x 2' }
-    ],
-    '12': [ // Documentation
-      { id: '12-1', title: 'Complete Best Class File Submitted', type: 'Fixed', marks: 10, details: 'fixed: 10' },
-      { id: '12-2', title: 'Valid Proof Uploaded for All Claims', type: 'Fixed', marks: 5, details: 'fixed: 5' },
-      { id: '12-3', title: 'Late or Incomplete Documentation', type: 'Negative Marks', marks: 0, details: 'penalty per count x -5' }
-    ]
-  });
-
   const handleAddCategory = () => {
     const title = prompt('Enter Category Name:');
     if (!title) return;
     const desc = prompt('Enter Category Description:') || 'Custom category description.';
-    const id = (criteriaCategories.length + 1).toString();
-    setCriteriaCategories((prev) => [...prev, { id, title, desc, icon: '⚡' }]);
+    const id = (criteriaCatalog.length + 1).toString();
+    addCriteriaCategory({ code: `cat-${Date.now()}`, category: title, accessLevel: 'all_students' });
   };
 
   const handleCreateCriteriaItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCategory || !newItemTitle.trim()) return;
 
-    const newItem: CriteriaItemDetail = {
-      id: `${selectedCategory.id}-${Date.now()}`,
+    addCriteriaItem(selectedCategory.id, {
       title: newItemTitle.trim(),
       type: newItemType,
       marks: newItemMarks,
       details: newItemDetails.trim()
-    };
-
-    setCriteriaItemsMap((prev) => ({
-      ...prev,
-      [selectedCategory.id]: [...(prev[selectedCategory.id] || []), newItem]
-    }));
+    });
 
     setNewItemTitle('');
     setNewItemDetails('');
@@ -255,16 +166,14 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
 
   const handleDeleteCriteriaItem = (catId: string, itemId: string) => {
     if (window.confirm('Are you sure you want to delete this evaluation item?')) {
-      setCriteriaItemsMap((prev) => ({
-        ...prev,
-        [catId]: (prev[catId] || []).filter((item) => item.id !== itemId)
-      }));
+      deleteCriteriaItem(catId, parseInt(itemId, 10));
     }
   };
 
   const handleEditCriteriaItemPrompt = (catId: string, itemId: string) => {
-    const items = criteriaItemsMap[catId] || [];
-    const item = items.find((i) => i.id === itemId);
+    const cat = criteriaCatalog.find(c => String(c.id) === String(catId));
+    if (!cat) return;
+    const item = cat.items.find((i: any) => String(i.id) === String(itemId));
     if (!item) return;
 
     const newTitle = prompt('Edit Title:', item.title);
@@ -274,14 +183,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     const newDetails = prompt('Edit Details:', item.details);
     if (newDetails === null) return;
 
-    setCriteriaItemsMap((prev) => ({
-      ...prev,
-      [catId]: (prev[catId] || []).map((i) =>
-        i.id === itemId
-          ? { ...i, title: newTitle || i.title, marks: Number(newMarksStr) || 0, details: newDetails || i.details }
-          : i
-      )
-    }));
+    updateCriteriaItem(catId, parseInt(itemId, 10), { title: newTitle || item.title, marks: Number(newMarksStr) || 0, details: newDetails || item.details });
   };
 
   // ----------------------------------------------------
@@ -577,7 +479,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                 {/* Add Item form */}
                 {showAddItemForm && (
                   <div className="card" style={{ border: '1.5px solid var(--primary)', background: '#ffffff' }}>
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '16px' }}>Add Criteria Item to {selectedCategory.title}</h3>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '16px' }}>Add Criteria Item to {selectedCategory.category}</h3>
                     <form onSubmit={handleCreateCriteriaItem} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       <div className="form-group">
                         <label className="form-label">Item Title</label>
@@ -635,7 +537,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                 {/* Items list card */}
                 <div className="card">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {(criteriaItemsMap[selectedCategory.id] || []).map((item) => (
+                    {((criteriaCatalog.find(c => c.id === selectedCategory.id)?.items) || []).map((item: any) => (
                       <div
                         key={item.id}
                         style={{
@@ -672,7 +574,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                         </div>
                       </div>
                     ))}
-                    {(criteriaItemsMap[selectedCategory.id] || []).length === 0 && (
+                    {((criteriaCatalog.find(c => c.id === selectedCategory.id)?.items) || []).length === 0 && (
                       <p className="muted" style={{ fontSize: '0.88rem', textAlign: 'center', padding: '20px' }}>No evaluation items added to this module yet.</p>
                     )}
                   </div>
@@ -707,7 +609,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
 
                 {/* Criteria Grid */}
                 <div className="criteria-grid-wrapper">
-                  {criteriaCategories.map((c) => (
+                  {criteriaCatalog.map((c) => (
                     <div
                       key={c.id}
                       className="card"
@@ -726,11 +628,25 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                     >
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '1.5rem' }}>{c.icon}</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: '1.2rem', cursor: 'pointer' }}>&rarr;</span>
+                          <span style={{ fontSize: '1.5rem' }}>⚡</span>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button
+                                className="btn btn-sm"
+                                style={{ background: 'transparent', color: '#ef4444', border: 'none', padding: 0 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (window.confirm('Delete this category?')) {
+                                    deleteCriteriaCategory(c.id);
+                                  }
+                                }}
+                            >
+                                Delete
+                            </button>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '1.2rem', cursor: 'pointer' }}>&rarr;</span>
+                          </div>
                         </div>
-                        <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 6px 0', color: '#0f172a' }}>{c.title}</h3>
-                        <p className="muted" style={{ fontSize: '0.8rem', margin: 0, lineHeight: 1.4 }}>{c.desc}</p>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 6px 0', color: '#0f172a' }}>{c.category}</h3>
+                        <p className="muted" style={{ fontSize: '0.8rem', margin: 0, lineHeight: 1.4 }}>{(c as any).desc || 'No description provided.'}</p>
                       </div>
                     </div>
                   ))}

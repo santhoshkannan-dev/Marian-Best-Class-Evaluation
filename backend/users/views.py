@@ -1026,3 +1026,110 @@ class UserGroupListView(APIView):
             "description": group.description,
             "members": group.members
         }, status=status.HTTP_200_OK)
+from .models import CriteriaCategory, CriteriaItem
+from .serializers import CriteriaCategorySerializer, CriteriaItemSerializer
+
+class CriteriaCategoryListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        categories = CriteriaCategory.objects.prefetch_related('items').all().order_by('id')
+        serializer = CriteriaCategorySerializer(categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = CriteriaCategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CriteriaCategoryDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def put(self, request, pk):
+        try:
+            category = CriteriaCategory.objects.get(pk=pk)
+        except CriteriaCategory.DoesNotExist:
+            return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = CriteriaCategorySerializer(category, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            category = CriteriaCategory.objects.get(pk=pk)
+            category.delete()
+        except CriteriaCategory.DoesNotExist:
+            pass
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+class CriteriaItemListView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = CriteriaItemSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CriteriaItemDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def put(self, request, pk):
+        try:
+            item = CriteriaItem.objects.get(pk=pk)
+        except CriteriaItem.DoesNotExist:
+            return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = CriteriaItemSerializer(item, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            item = CriteriaItem.objects.get(pk=pk)
+            item.delete()
+        except CriteriaItem.DoesNotExist:
+            pass
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+class UserGroupDetailView(APIView):
+    permission_classes = [AllowAny]
+    
+    def put(self, request, pk):
+        try:
+            group = UserGroupModel.objects.get(group_id=pk)
+        except UserGroupModel.DoesNotExist:
+            return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        name = request.data.get('name', group.name)
+        description = request.data.get('description', group.description)
+        members = request.data.get('members', group.members)
+        
+        group.name = name
+        group.description = description
+        group.members = members
+        group.save()
+        
+        return Response({
+            "id": group.group_id,
+            "name": group.name,
+            "description": group.description,
+            "members": group.members
+        }, status=status.HTTP_200_OK)
+        
+    def delete(self, request, pk):
+        try:
+            group = UserGroupModel.objects.get(group_id=pk)
+            group.delete()
+        except UserGroupModel.DoesNotExist:
+            pass
+        return Response({"success": True}, status=status.HTTP_200_OK)
