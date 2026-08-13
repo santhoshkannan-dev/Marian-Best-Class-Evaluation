@@ -10,7 +10,12 @@ from .views import (
     DepartmentListView,
     UserManagementView,
     SystemSettingView,
-    UserGroupListView
+    UserGroupListView,
+    UserGroupDetailView,
+    CriteriaCategoryListView,
+    CriteriaCategoryDetailView,
+    CriteriaItemListView,
+    CriteriaItemDetailView
 )
 
 urlpatterns = [
@@ -25,4 +30,9 @@ urlpatterns = [
     path('submissions/<int:pk>/', SubmissionDetailView.as_view(), name='submission-detail'),
     path('settings/', SystemSettingView.as_view(), name='system-settings'),
     path('user-groups/', UserGroupListView.as_view(), name='user-groups'),
+    path('user-groups/<str:pk>/', UserGroupDetailView.as_view(), name='user-group-detail'),
+    path('criteria-categories/', CriteriaCategoryListView.as_view(), name='criteria-categories'),
+    path('criteria-categories/<int:pk>/', CriteriaCategoryDetailView.as_view(), name='criteria-category-detail'),
+    path('criteria-items/', CriteriaItemListView.as_view(), name='criteria-items'),
+    path('criteria-items/<int:pk>/', CriteriaItemDetailView.as_view(), name='criteria-item-detail'),
 ]
