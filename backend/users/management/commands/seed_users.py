@@ -24,17 +24,19 @@ class Command(BaseCommand):
 
         # 2. Seed Departments
         departments_data = [
-            {"name": "Department of Communicative English", "code": "BACE"},
+            {"name": "Department of Computer Applications", "code": "DCA"},
             {"name": "Department of Commerce", "code": "COMMERCE"},
             {"name": "Department of Business Administration", "code": "BBA_MBA"},
             {"name": "Department of Social Work", "code": "SOCIAL_WORK"},
-            {"name": "Department of Mathematics", "code": "MATHS"},
+            {"name": "Department of Physics", "code": "PHYSICS"},
             {"name": "Department of Economics", "code": "ECONOMICS"},
+            {"name": "Department of Mathematics", "code": "MATHS"},
+            {"name": "Department of English / Communicative English", "code": "BACE"},
+            {"name": "Department of Communication & Media Studies", "code": "MCMS"},
+            {"name": "Department of Hospitality & Tourism Management", "code": "MHTM"},
+            {"name": "Department of Psychology", "code": "PSYCHOLOGY"},
             {"name": "The Under-Graduate Department of Computer Applications", "code": "UGDCA"},
             {"name": "The Post-Graduate Department of Computer Applications", "code": "PGDCA"},
-            {"name": "Department of Physics", "code": "PHYSICS"},
-            {"name": "Department of Psychology", "code": "PSYCHOLOGY"},
-            {"name": "Department of Hospitality & Tourism Management", "code": "MHTM"},
             {"name": "Computer Science", "code": "CS"},
             {"name": "Internal Quality Assurance Cell", "code": "IQAC"},
             {"name": "Administration", "code": "ADMIN"},
@@ -43,100 +45,110 @@ class Command(BaseCommand):
         departments = {}
         for dept in departments_data:
             obj, created = Department.objects.get_or_create(code=dept["code"], defaults={"name": dept["name"]})
+            if not created and obj.name != dept["name"]:
+                obj.name = dept["name"]
+                obj.save()
             departments[dept["code"]] = obj
             if created:
                 self.stdout.write(f"Created Department: {obj.name}")
 
         # 3. Seed Classes
         classes_data = [
-            # Department of Communicative English
-            {"name": "I BACE", "dept_code": "BACE"},
-            {"name": "II BACE", "dept_code": "BACE"},
-            {"name": "III BACE", "dept_code": "BACE"},
+            # 1. Department of Computer Applications
+            {"name": "I BCA A", "dept_code": "DCA"},
+            {"name": "I BCA B", "dept_code": "DCA"},
+            {"name": "II BCA A", "dept_code": "DCA"},
+            {"name": "II BCA B", "dept_code": "DCA"},
+            {"name": "III BCA A", "dept_code": "DCA"},
+            {"name": "III BCA B", "dept_code": "DCA"},
+            {"name": "I MCA", "dept_code": "DCA"},
+            {"name": "II MCA", "dept_code": "DCA"},
 
-            # Department of Commerce
+            # 2. Department of Commerce
             {"name": "I BCOM A", "dept_code": "COMMERCE"},
-            {"name": "II BCOM A", "dept_code": "COMMERCE"},
-            {"name": "III BCOM A", "dept_code": "COMMERCE"},
             {"name": "I BCOM B", "dept_code": "COMMERCE"},
-            {"name": "II BCOM B", "dept_code": "COMMERCE"},
-            {"name": "III BCOM B", "dept_code": "COMMERCE"},
             {"name": "I BCOM C", "dept_code": "COMMERCE"},
-            {"name": "II BCOM C", "dept_code": "COMMERCE"},
-            {"name": "III BCOM C", "dept_code": "COMMERCE"},
             {"name": "I BCOM (FINTECH)", "dept_code": "COMMERCE"},
+            {"name": "II BCOM A", "dept_code": "COMMERCE"},
+            {"name": "II BCOM B", "dept_code": "COMMERCE"},
+            {"name": "II BCOM C", "dept_code": "COMMERCE"},
+            {"name": "III BCOM A", "dept_code": "COMMERCE"},
+            {"name": "III BCOM B", "dept_code": "COMMERCE"},
+            {"name": "III BCOM C", "dept_code": "COMMERCE"},
             {"name": "I MCOM A", "dept_code": "COMMERCE"},
-            {"name": "II MCOM A", "dept_code": "COMMERCE"},
             {"name": "I MCOM B", "dept_code": "COMMERCE"},
+            {"name": "II MCOM A", "dept_code": "COMMERCE"},
             {"name": "II MCOM B", "dept_code": "COMMERCE"},
 
-            # Department of Business Administration
+            # 3. Department of Business Administration
             {"name": "I BBA A", "dept_code": "BBA_MBA"},
-            {"name": "II BBA A", "dept_code": "BBA_MBA"},
-            {"name": "III BBA A", "dept_code": "BBA_MBA"},
             {"name": "I BBA B", "dept_code": "BBA_MBA"},
+            {"name": "II BBA A", "dept_code": "BBA_MBA"},
             {"name": "II BBA B", "dept_code": "BBA_MBA"},
+            {"name": "III BBA A", "dept_code": "BBA_MBA"},
             {"name": "III BBA B", "dept_code": "BBA_MBA"},
             {"name": "I MBA A", "dept_code": "BBA_MBA"},
-            {"name": "II MBA A", "dept_code": "BBA_MBA"},
             {"name": "I MBA B", "dept_code": "BBA_MBA"},
-            {"name": "II MBA B", "dept_code": "BBA_MBA"},
             {"name": "I MBA C", "dept_code": "BBA_MBA"},
+            {"name": "II MBA A", "dept_code": "BBA_MBA"},
+            {"name": "II MBA B", "dept_code": "BBA_MBA"},
             {"name": "II MBA C", "dept_code": "BBA_MBA"},
 
-            # Department of Social Work
+            # 4. Department of Social Work
             {"name": "I BSW A", "dept_code": "SOCIAL_WORK"},
-            {"name": "II BSW A", "dept_code": "SOCIAL_WORK"},
-            {"name": "III BSW A", "dept_code": "SOCIAL_WORK"},
             {"name": "I BSW B", "dept_code": "SOCIAL_WORK"},
+            {"name": "II BSW A", "dept_code": "SOCIAL_WORK"},
             {"name": "II BSW B", "dept_code": "SOCIAL_WORK"},
+            {"name": "III BSW A", "dept_code": "SOCIAL_WORK"},
             {"name": "III BSW B", "dept_code": "SOCIAL_WORK"},
             {"name": "I MSW", "dept_code": "SOCIAL_WORK"},
             {"name": "II MSW", "dept_code": "SOCIAL_WORK"},
 
-            # Department of Mathematics
-            {"name": "I MATHS", "dept_code": "MATHS"},
-            {"name": "II MATHS", "dept_code": "MATHS"},
-            {"name": "III MATHS", "dept_code": "MATHS"},
-
-            # Department of Economics
-            {"name": "I ECONOMICS", "dept_code": "ECONOMICS"},
-            {"name": "II ECONOMICS", "dept_code": "ECONOMICS"},
-            {"name": "III ECONOMICS", "dept_code": "ECONOMICS"},
-
-            # Computer Applications (UG & PG)
-            {"name": "I BCA A", "dept_code": "UGDCA"},
-            {"name": "II BCA A", "dept_code": "UGDCA"},
-            {"name": "III BCA A", "dept_code": "UGDCA"},
-            {"name": "I BCA B", "dept_code": "UGDCA"},
-            {"name": "II BCA B", "dept_code": "UGDCA"},
-            {"name": "III BCA B", "dept_code": "UGDCA"},
-            {"name": "I MCA", "dept_code": "PGDCA"},
-            {"name": "II MCA", "dept_code": "PGDCA"},
-            {"name": "I MCMS", "dept_code": "PGDCA"},
-            {"name": "II MCMS", "dept_code": "PGDCA"},
-            {"name": "BCA A", "dept_code": "CS"},
-            {"name": "MCA", "dept_code": "PGDCA"},
-
-            # Department of Physics
+            # 5. Department of Physics
             {"name": "I MSC PHYSICS", "dept_code": "PHYSICS"},
             {"name": "II MSC PHYSICS", "dept_code": "PHYSICS"},
             {"name": "III MSC PHYSICS", "dept_code": "PHYSICS"},
             {"name": "IV MSC PHYSICS", "dept_code": "PHYSICS"},
             {"name": "V MSC PHYSICS", "dept_code": "PHYSICS"},
 
-            # Department of Psychology
-            {"name": "I PSYCHOLOGY", "dept_code": "PSYCHOLOGY"},
+            # 6. Department of Economics
+            {"name": "I ECONOMICS", "dept_code": "ECONOMICS"},
+            {"name": "II ECONOMICS", "dept_code": "ECONOMICS"},
+            {"name": "III ECONOMICS", "dept_code": "ECONOMICS"},
 
-            # Department of Hospitality & Tourism Management
+            # 7. Department of Mathematics
+            {"name": "I MATHS", "dept_code": "MATHS"},
+            {"name": "II MATHS", "dept_code": "MATHS"},
+            {"name": "III MATHS", "dept_code": "MATHS"},
+
+            # 8. Department of English / Communicative English
+            {"name": "I BACE", "dept_code": "BACE"},
+            {"name": "II BACE", "dept_code": "BACE"},
+            {"name": "III BACE", "dept_code": "BACE"},
+
+            # 9. Department of Communication & Media Studies
+            {"name": "I MCMS", "dept_code": "MCMS"},
+            {"name": "II MCMS", "dept_code": "MCMS"},
+
+            # 10. Department of Hospitality & Tourism Management
             {"name": "I MHTM", "dept_code": "MHTM"},
             {"name": "II MHTM", "dept_code": "MHTM"},
+
+            # 11. Department of Psychology
+            {"name": "I PSYCHOLOGY", "dept_code": "PSYCHOLOGY"},
+
+            # Legacy / Alias references
+            {"name": "BCA A", "dept_code": "CS"},
+            {"name": "MCA", "dept_code": "PGDCA"},
         ]
 
         classes = {}
         for cls in classes_data:
             dept = departments[cls["dept_code"]]
             obj, created = Class.objects.get_or_create(name=cls["name"], defaults={"department": dept})
+            if not created and obj.department != dept:
+                obj.department = dept
+                obj.save()
             classes[cls["name"]] = obj
             if created:
                 self.stdout.write(f"Created Class: {obj.name}")
