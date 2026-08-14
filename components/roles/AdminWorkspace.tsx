@@ -341,81 +341,94 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
         {/* TAB 1: ACADEMIC YEARS                                */}
         {/* ---------------------------------------------------- */}
         {activeTab === 'years' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="flex flex-col gap-6">
+            {/* Section Intro */}
             <div>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Academic Year Management</h1>
-              <p className="muted" style={{ fontSize: '0.88rem' }}>Add new academic years and activate the current session.</p>
+              <h1 className="text-2xl font-black text-[#111827] tracking-tight">Academic Year Management</h1>
+              <p className="text-sm font-semibold text-slate-500 mt-1">Add new academic years and activate the current session.</p>
             </div>
 
-            {/* Add Academic Year Form Card */}
-            <div className="card">
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>Add Academic Year</h3>
-              <form onSubmit={handleAddYear} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div className="form-group">
-                  <label className="form-label">Year Format (e.g. 2026-2027)</label>
+            {/* Card 1 — Create / Add Section */}
+            <div className="bg-white rounded-3xl border border-[#E5E7EB] p-7 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)]">
+              <h3 className="text-lg font-extrabold text-[#111827] mb-5">Add Academic Year</h3>
+              <form onSubmit={handleAddYear} className="flex flex-col gap-4 max-w-lg">
+                <div>
+                  <label className="text-[11px] font-extrabold uppercase tracking-widest text-[#9CA3AF] block mb-2">
+                    YEAR FORMAT (E.G. 2026-2027)
+                  </label>
                   <input
                     type="text"
-                    className="input"
+                    className="w-full rounded-full px-5 py-3 border border-[#E5E7EB] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/40 text-sm font-semibold text-slate-800 bg-slate-50/50 focus:bg-white transition-all"
                     placeholder="YYYY-YYYY"
                     value={newYearInput}
                     onChange={(e) => setNewYearInput(e.target.value)}
                     required
                   />
                 </div>
-                <button type="submit" className="btn" style={{ background: '#f97316', color: '#ffffff', fontWeight: 700, width: 'fit-content' }}>
-                  Add Year
-                </button>
+                <div>
+                  <button
+                    type="submit"
+                    className="bg-[#FF6B2C] hover:bg-[#E0571C] text-white font-bold rounded-full px-8 py-3 text-sm shadow-md shadow-orange-500/20 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <span>+</span> Add Year
+                  </button>
+                </div>
               </form>
             </div>
 
-            {/* Academic Years List Card */}
-            <div className="card">
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>Academic Years List</h3>
-              <div className="table-container">
-                <table className="table">
+            {/* Card 2 — Data Table Section */}
+            <div className="bg-white rounded-3xl border border-[#E5E7EB] p-7 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)]">
+              <h3 className="text-lg font-extrabold text-[#111827] mb-5">Academic Years List</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr>
-                      <th>Academic Year</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+                    <tr className="border-b border-[#E5E7EB]">
+                      <th className="text-[11px] font-extrabold uppercase tracking-widest text-[#9CA3AF] pb-4">ACADEMIC YEAR</th>
+                      <th className="text-[11px] font-extrabold uppercase tracking-widest text-[#9CA3AF] pb-4">STATUS</th>
+                      <th className="text-[11px] font-extrabold uppercase tracking-widest text-[#9CA3AF] pb-4 text-right">ACTIONS</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-[#E5E7EB]">
                     {academicYears.map((y) => (
-                      <tr key={y.year}>
-                        <td style={{ fontWeight: 700 }}>{y.year}</td>
-                        <td>
+                      <tr key={y.year} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-4 font-bold text-slate-900 text-sm">{y.year}</td>
+                        <td className="py-4">
                           {y.status === 'Active' ? (
-                            <span className="badge badge-verified">Active</span>
+                            <span className="bg-[#DCFCE7] text-[#15803D] rounded-full px-3.5 py-1 text-xs font-black inline-flex items-center gap-1.5 shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#15803D] animate-pulse" />
+                              Active
+                            </span>
                           ) : (
-                            <span className="badge badge-correction">Inactive</span>
+                            <span className="bg-[#FFEDD5] text-[#C2410C] rounded-full px-3.5 py-1 text-xs font-black inline-flex items-center gap-1.5 shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#C2410C]" />
+                              Inactive
+                            </span>
                           )}
                         </td>
-                        <td style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          {y.status === 'Active' ? (
+                        <td className="py-4 text-right">
+                          <div className="inline-flex items-center gap-2.5 justify-end">
+                            {y.status === 'Active' ? (
+                              <button
+                                className="border border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                                onClick={() => handleToggleYearStatus(y.year, false)}
+                              >
+                                Set Inactive
+                              </button>
+                            ) : (
+                              <button
+                                className="bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 shadow-xs hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                                onClick={() => handleToggleYearStatus(y.year, true)}
+                              >
+                                Set Active
+                              </button>
+                            )}
                             <button
-                              className="btn btn-sm btn-secondary"
-                              style={{ fontSize: '0.78rem', padding: '6px 14px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', fontWeight: 700 }}
-                              onClick={() => handleToggleYearStatus(y.year, false)}
+                              className="bg-[#EF4444] hover:bg-[#DC2626] text-white text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 shadow-xs hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                              onClick={() => handleDeleteYear(y.year)}
                             >
-                              Set Inactive
+                              Delete
                             </button>
-                          ) : (
-                            <button
-                              className="btn btn-sm"
-                              style={{ background: '#10b981', color: '#ffffff', fontWeight: 700, padding: '6px 14px', fontSize: '0.78rem' }}
-                              onClick={() => handleToggleYearStatus(y.year, true)}
-                            >
-                              Set Active
-                            </button>
-                          )}
-                          <button
-                            className="btn btn-sm"
-                            style={{ background: '#ef4444', color: '#ffffff', fontWeight: 700, padding: '6px 14px', fontSize: '0.78rem', border: 'none' }}
-                            onClick={() => handleDeleteYear(y.year)}
-                          >
-                            Delete
-                          </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
