@@ -123,20 +123,20 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
     ]
   },
   {
-    id: "cat-internships",
-    category: "Internships",
-    items: [
-      { id: 301, title: "Offline Internship", marks: 5, type: "count" },
-      { id: 302, title: "Online Internship", marks: 3, type: "count" }
-    ]
-  },
-  {
     id: "cat-competitive-exams",
     category: "Competitive Exams",
     items: [
       { id: 401, title: "JRF Qualified", marks: 20, type: "fixed" },
       { id: 402, title: "NET Qualified", marks: 10, type: "fixed" },
       { id: 403, title: "SET Qualified", marks: 5, type: "fixed" }
+    ]
+  },
+  {
+    id: "cat-internships",
+    category: "Internships",
+    items: [
+      { id: 301, title: "Offline Internship", marks: 5, type: "count" },
+      { id: 302, title: "Online Internship", marks: 3, type: "count" }
     ]
   },
   {
@@ -155,6 +155,16 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
       { id: 601, title: "Research Publication", marks: 15, type: "count" },
       { id: 602, title: "Patent Filed or Published", marks: 20, type: "count" },
       { id: 603, title: "Funded or Approved Student Project", marks: 10, type: "count" }
+    ]
+  },
+  {
+    id: "cat-startups",
+    category: "Startups",
+    items: [
+      { id: 651, title: "Incubated Startup / Venture", marks: 20, type: "count" },
+      { id: 652, title: "Seed Funding Received", marks: 15, type: "count" },
+      { id: 653, title: "Registered Business Entity (LLP/Pvt Ltd)", marks: 10, type: "count" },
+      { id: 654, title: "Idea / Innovation Competition Winner", marks: 8, type: "count" }
     ]
   },
   {
@@ -177,7 +187,7 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
   },
   {
     id: "cat-leadership",
-    category: "Leadership",
+    category: "Leaderships",
     items: [
       { id: 801, title: "Class Representative", marks: 10, type: "fixed" },
       { id: 802, title: "Association or Club Office Bearer", marks: 8, type: "fixed" },
@@ -195,7 +205,7 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
   },
   {
     id: "cat-social-responsibility",
-    category: "Social Responsibility",
+    category: "Social Responsibilities",
     items: [
       { id: 1001, title: "NSS/NCC/Service Activity Participation", marks: 5, type: "count" },
       { id: 1002, title: "Community Outreach Activity", marks: 3, type: "count" },

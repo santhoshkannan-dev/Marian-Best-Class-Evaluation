@@ -231,12 +231,71 @@ class Command(BaseCommand):
                 ]
             },
             {
+                "code": "cat-competitive-exams",
+                "category": "Competitive Exams",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "JRF Qualified", "type": "fixed", "marks": 20.0},
+                    {"title": "NET Qualified", "type": "fixed", "marks": 10.0},
+                    {"title": "SET Qualified", "type": "fixed", "marks": 5.0},
+                ]
+            },
+            {
                 "code": "cat-internships",
                 "category": "Internships",
                 "access_level": "all_students",
                 "items": [
                     {"title": "Offline Internship", "type": "count", "marks": 5.0},
                     {"title": "Online Internship", "type": "count", "marks": 3.0},
+                ]
+            },
+            {
+                "code": "cat-scholarships",
+                "category": "Scholarships",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "International Scholarship", "type": "fixed", "marks": 20.0},
+                    {"title": "National Scholarship", "type": "fixed", "marks": 10.0},
+                    {"title": "State Scholarship", "type": "fixed", "marks": 5.0},
+                ]
+            },
+            {
+                "code": "cat-research",
+                "category": "Research",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Research Publication", "type": "count", "marks": 15.0},
+                    {"title": "Patent Filed or Published", "type": "count", "marks": 20.0},
+                    {"title": "Funded or Approved Student Project", "type": "count", "marks": 10.0},
+                ]
+            },
+            {
+                "code": "cat-startups",
+                "category": "Startups",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Incubated Startup / Venture", "type": "count", "marks": 20.0},
+                    {"title": "Seed Funding Received", "type": "count", "marks": 15.0},
+                    {"title": "Registered Business Entity (LLP/Pvt Ltd)", "type": "count", "marks": 10.0},
+                    {"title": "Idea / Innovation Competition Winner", "type": "count", "marks": 8.0},
+                ]
+            },
+            {
+                "code": "cat-prizes",
+                "category": "Prizes",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Outside College Individual First Prize", "type": "count", "marks": 10.0},
+                    {"title": "Inside College Individual First Prize", "type": "count", "marks": 5.0},
+                ]
+            },
+            {
+                "code": "cat-leadership",
+                "category": "Leaderships",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Class Representative", "type": "fixed", "marks": 10.0},
+                    {"title": "Association or Club Office Bearer", "type": "fixed", "marks": 8.0},
                 ]
             },
             {
@@ -247,6 +306,24 @@ class Command(BaseCommand):
                     {"title": "National Level Program Organized", "type": "count", "marks": 15.0},
                     {"title": "State/Regional Level Program Organized", "type": "count", "marks": 10.0},
                     {"title": "Department Level Program Organized", "type": "count", "marks": 5.0},
+                ]
+            },
+            {
+                "code": "cat-social-responsibility",
+                "category": "Social Responsibilities",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "NSS/NCC/Service Activity Participation", "type": "count", "marks": 5.0},
+                    {"title": "Community Outreach Activity", "type": "count", "marks": 3.0},
+                ]
+            },
+            {
+                "code": "cat-career-advancement",
+                "category": "Career Advancement",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Placement Offer Received", "type": "fixed", "marks": 20.0},
+                    {"title": "Higher Studies Admission Secured", "type": "fixed", "marks": 15.0},
                 ]
             },
             {
