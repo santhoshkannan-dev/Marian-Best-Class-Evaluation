@@ -19,7 +19,7 @@ export default function LoginPage() {
         router.push('/student/dashboard');
       } else if (role === 'teacher' || role === 'faculty') {
         router.push('/teacher/dashboard');
-      } else if (role === 'admin' || role === 'iqac') {
+      } else if (role === 'admin') {
         router.push('/admin/academic-years');
       } else if (role === 'evaluator' || role === 'evaluation') {
         router.push('/evaluator/dashboard');
@@ -172,7 +172,6 @@ export default function LoginPage() {
                     <option value="santhosh.25ubc154@mariancollege.org">UG Student (santhosh.25ubc154 - II BCA A)</option>
                     <option value={JSON.stringify({email: "kochumol.abraham@mariancollege.org", role: "faculty"})}>Class Teacher (Kochumol Abraham)</option>
                     <option value={JSON.stringify({email: "allen.george@mariancollege.org", role: "evaluation"})}>Evaluator (Allen George)</option>
-                    <option value={JSON.stringify({email: "iqac@mariancollege.org", role: "iqac"})}>IQAC Coordinator (iqac@mariancollege.org)</option>
                     <option value="admin@mariancollege.org">Admin</option>
                   </select>
                 </div>
