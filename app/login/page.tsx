@@ -17,11 +17,11 @@ export default function LoginPage() {
       const role = currentRole.toLowerCase();
       if (role === 'student') {
         router.push('/student/dashboard');
-      } else if (role === 'teacher') {
+      } else if (role === 'teacher' || role === 'faculty') {
         router.push('/teacher/dashboard');
-      } else if (role === 'admin') {
+      } else if (role === 'admin' || role === 'iqac') {
         router.push('/admin/academic-years');
-      } else if (role === 'evaluator') {
+      } else if (role === 'evaluator' || role === 'evaluation') {
         router.push('/evaluator/dashboard');
       }
     }
@@ -171,7 +171,8 @@ export default function LoginPage() {
                     <option value="amal.25pmc114@mariancollege.org">PG Student (amal.25pmc114 - II MCA)</option>
                     <option value="santhosh.25ubc154@mariancollege.org">UG Student (santhosh.25ubc154 - II BCA A)</option>
                     <option value={JSON.stringify({email: "kochumol.abraham@mariancollege.org", role: "faculty"})}>Class Teacher (Kochumol Abraham)</option>
-                    <option value={JSON.stringify({email: "kochumol.abraham@mariancollege.org", role: "evaluation"})}>Evaluator (Kochumol Abraham)</option>
+                    <option value={JSON.stringify({email: "allen.george@mariancollege.org", role: "evaluation"})}>Evaluator (Allen George)</option>
+                    <option value={JSON.stringify({email: "iqac@mariancollege.org", role: "iqac"})}>IQAC Coordinator (iqac@mariancollege.org)</option>
                     <option value="admin@mariancollege.org">Admin</option>
                   </select>
                 </div>
