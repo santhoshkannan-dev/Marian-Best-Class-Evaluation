@@ -34,56 +34,50 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const headerTitle = currentNav ? currentNav.label : 'Academic Years';
 
   return (
-    <div className="min-h-screen bg-[#F4F7FB] flex text-slate-800 relative font-sans antialiased selection:bg-indigo-500 selection:text-white">
-      {/* Background Watermark Geometry */}
-      <div 
-        className="fixed inset-0 pointer-events-none opacity-40 z-0"
-        style={{
-          backgroundImage: 'radial-gradient(#CBD5E1 1.2px, transparent 1.2px)',
-          backgroundSize: '20px 20px'
-        }}
-      />
-
+    <div className="portal-shell-grid">
       {/* Left Sidebar Navigation */}
-      <aside className={`fixed inset-y-0 left-0 w-72 bg-white border-r border-[#E5E7EB] z-40 flex flex-col justify-between p-6 transition-transform duration-300 ease-in-out md:translate-x-0 ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
-        <div>
-          {/* Mobile Sidebar Close */}
-          <button
-            className="md:hidden absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-1"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close Navigation"
-          >
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+      <aside className={`portal-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <button
+          className="mobile-sidebar-close"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close Navigation"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
 
-          {/* Logo / Header */}
-          <div className="flex items-center gap-3.5 mb-8">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center p-1.5 shadow-sm">
-              <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Emblem" className="w-full h-full object-contain" />
-            </div>
+        <div>
+          <div className="portal-brand" style={{ marginBottom: '32px' }}>
+            <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Logo" style={{ width: '38px', height: '38px', objectFit: 'contain' }} />
             <div>
-              <h2 className="text-lg font-extrabold text-[#111827] tracking-tight leading-tight">Excellence Grid</h2>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#9CA3AF]">Evaluation Panel</p>
+              <h2 className="portal-brand-title" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111827' }}>Excellence Grid</h2>
+              <p className="portal-brand-sub" style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF' }}>Evaluation Panel</p>
             </div>
           </div>
 
-          {/* Nav Menu */}
           <nav>
-            <ul className="space-y-2">
+            <ul className="portal-nav-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: 0, margin: 0, listStyle: 'none' }}>
               {adminNav.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <li key={item.id}>
                     <Link
                       href={item.href}
-                      className={`flex items-center px-5 py-3 rounded-full text-xs font-bold transition-all duration-200 ${
-                        isActive
-                          ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/20'
-                          : 'text-[#4B5563] hover:bg-slate-100 hover:text-[#111827]'
-                      }`}
+                      className={`portal-nav-btn ${isActive ? 'active' : ''}`}
+                      style={{
+                        textDecoration: 'none',
+                        borderRadius: '9999px',
+                        padding: '12px 20px',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        display: 'block',
+                        transition: 'all 0.2s ease',
+                        background: isActive ? '#4F46E5' : 'transparent',
+                        color: isActive ? '#ffffff' : '#4B5563',
+                        boxShadow: isActive ? '0 4px 12px rgba(79, 70, 229, 0.25)' : 'none'
+                      }}
                       onClick={() => setSidebarOpen(false)}
                     >
                       {item.label}
@@ -95,31 +89,61 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
         </div>
 
-        {/* Footer Item Role Badge */}
-        <div className="border border-[#E5E7EB] bg-slate-50/70 rounded-2xl p-4 flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-extrabold text-slate-700 tracking-wide">Role: Admin</span>
+        {/* Footer Role Badge */}
+        <div style={{
+          border: '1px solid #E5E7EB',
+          background: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: '16px',
+          padding: '14px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: 'auto'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.84rem', color: '#374151' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
+            Role: Admin
           </div>
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-full">Active</span>
+          <span style={{
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            color: '#9CA3AF',
+            background: '#F3F4F6',
+            padding: '2px 10px',
+            borderRadius: '9999px'
+          }}>
+            Active
+          </span>
         </div>
       </aside>
 
-      {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 md:hidden"
-          onClick={() => setSidebarOpen(false)} 
-        />
+        <div className="portal-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 md:pl-72 flex flex-col min-h-screen relative z-10">
+      <div className="portal-content-area" style={{ background: '#F4F7FB', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         {/* Header Bar Area */}
-        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-[#E5E7EB] px-8 py-4 flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-4">
+        <header
+          className="portal-topbar"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '18px 36px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(8px)',
+            borderBottom: '1px solid #E5E7EB',
+            position: 'sticky',
+            top: 0,
+            zIndex: 20
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <button
-              className="md:hidden text-slate-600 hover:text-slate-900 p-1"
+              className="mobile-menu-toggle"
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label="Toggle Navigation"
             >
@@ -130,28 +154,60 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </svg>
             </button>
             <div>
-              <h1 className="text-2xl font-extrabold text-[#111827] tracking-tight leading-none mb-1">{headerTitle}</h1>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#9CA3AF]">
+              <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1.2 }}>{headerTitle}</h1>
+              <p style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF', marginTop: '3px', margin: 0 }}>
                 Academic Year {selectedAcademicYear || '2026-2027'}
               </p>
             </div>
           </div>
 
-          {/* Right Action Cluster */}
-          <div className="flex items-center gap-3">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <a
               href="http://localhost:8000/admin/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#1B4332] hover:bg-[#123024] text-white text-xs font-extrabold px-5 py-2.5 rounded-full transition-all duration-200 shadow-sm active:scale-95 text-decoration-none"
+              style={{
+                padding: '9px 20px',
+                borderRadius: '9999px',
+                fontSize: '0.82rem',
+                fontWeight: 800,
+                background: '#1B4332',
+                color: '#ffffff',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 8px rgba(27, 67, 50, 0.2)',
+                transition: 'all 0.2s ease'
+              }}
             >
-              <span>⚙</span> Open Django Administration
+              ⚙ Open Django Administration
             </a>
-            <span className="bg-[#F3E8FF] text-[#9333EA] text-xs font-extrabold px-4 py-1.5 rounded-full tracking-wide">
+            <span
+              style={{
+                padding: '6px 18px',
+                borderRadius: '9999px',
+                background: '#F3E8FF',
+                color: '#9333EA',
+                fontSize: '0.8rem',
+                fontWeight: 800,
+                textTransform: 'capitalize'
+              }}
+            >
               Admin
             </span>
             <button
-              className="border border-[#E5E7EB] bg-white text-[#4B5563] hover:bg-slate-50 hover:text-slate-900 text-xs font-bold px-5 py-2 rounded-full transition-all duration-200 active:scale-95"
+              style={{
+                padding: '8px 20px',
+                borderRadius: '9999px',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                background: '#ffffff',
+                color: '#4B5563',
+                border: '1px solid #E5E7EB',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
               onClick={() => {
                 logout();
                 router.push('/login');
@@ -162,8 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        {/* Main Content Body */}
-        <main className="flex-1 p-8 max-w-7xl w-full mx-auto">
+        <main style={{ padding: '36px', flex: 1, position: 'relative', zIndex: 1 }}>
           {children}
         </main>
       </div>
