@@ -87,12 +87,24 @@ def parse_student_email(email):
         (course_code.upper(), course_code.upper(), course_code.upper())
     )
 
-    if is_pg:
-        dept_name = f"The Post-Graduate Department of {field_name}"
-        dept_code = "PGDCA" if course_abbr == 'MCA' else f"PG-{course_abbr}"
+    if course_abbr in ['MCA', 'BCA']:
+        dept_name = "Department of Computer Applications"
+        dept_code = "DCA"
+    elif course_abbr in ['BBA', 'MBA']:
+        dept_name = "Department of Business Administration"
+        dept_code = "BBA_MBA"
+    elif course_abbr in ['BCOM', 'MCOM', 'Commerce']:
+        dept_name = "Department of Commerce"
+        dept_code = "COMMERCE"
+    elif course_abbr in ['BSW', 'MSW', 'Social Work']:
+        dept_name = "Department of Social Work"
+        dept_code = "SOCIAL_WORK"
+    elif is_pg:
+        dept_name = f"Department of {field_name}"
+        dept_code = f"PG-{course_abbr}"
     else:
-        dept_name = f"The Under-Graduate Department of {field_name}"
-        dept_code = "UGDCA" if course_abbr == 'BCA' else f"UG-{course_abbr}"
+        dept_name = f"Department of {field_name}"
+        dept_code = f"UG-{course_abbr}"
 
     section = ''
     if is_ug and roll_digits.isdigit():
