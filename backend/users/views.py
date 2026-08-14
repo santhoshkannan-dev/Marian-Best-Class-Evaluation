@@ -534,11 +534,58 @@ class AcademicYearListView(APIView):
         AcademicYear.objects.filter(year=year_str).delete()
         return Response({"success": True, "deleted_year": year_str}, status=status.HTTP_200_OK)
 
+OFFICIAL_DEPT_ORDER = [
+    'DCA',
+    'COMMERCE',
+    'BBA_MBA',
+    'SOCIAL_WORK',
+    'PHYSICS',
+    'ECONOMICS',
+    'MATHS',
+    'BACE',
+    'MCMS',
+    'MHTM',
+    'PSYCHOLOGY',
+    'IQAC',
+    'ADMIN'
+]
+
+OFFICIAL_CLASS_ORDER = [
+    # 1. Department of Computer Applications
+    "I BCA A", "I BCA B", "II BCA A", "II BCA B", "III BCA A", "III BCA B", "I MCA", "II MCA",
+    # 2. Department of Commerce
+    "I BCOM A", "I BCOM B", "I BCOM C", "I BCOM (FINTECH)", "II BCOM A", "II BCOM B", "II BCOM C", "III BCOM A", "III BCOM B", "III BCOM C", "I MCOM A", "I MCOM B", "II MCOM A", "II MCOM B",
+    # 3. Department of Business Administration
+    "I BBA A", "I BBA B", "II BBA A", "II BBA B", "III BBA A", "III BBA B", "I MBA A", "I MBA B", "I MBA C", "II MBA A", "II MBA B", "II MBA C",
+    # 4. Department of Social Work
+    "I BSW A", "I BSW B", "II BSW A", "II BSW B", "III BSW A", "III BSW B", "I MSW", "II MSW",
+    # 5. Department of Physics
+    "I MSC PHYSICS", "II MSC PHYSICS", "III MSC PHYSICS", "IV MSC PHYSICS", "V MSC PHYSICS",
+    # 6. Department of Economics
+    "I ECONOMICS", "II ECONOMICS", "III ECONOMICS",
+    # 7. Department of Mathematics
+    "I MATHS", "II MATHS", "III MATHS",
+    # 8. Department of English / Communicative English
+    "I BACE", "II BACE", "III BACE",
+    # 9. Department of Communication & Media Studies
+    "I MCMS", "II MCMS",
+    # 10. Department of Hospitality & Tourism Management
+    "I MHTM", "II MHTM",
+    # 11. Department of Psychology
+    "I PSYCHOLOGY"
+]
+
 class DepartmentListView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        depts = Department.objects.all().order_by('name')
+        depts = list(Department.objects.all())
+        def dept_sort_key(d):
+            try:
+                return OFFICIAL_DEPT_ORDER.index(d.code)
+            except ValueError:
+                return 999
+        depts.sort(key=dept_sort_key)
         return Response([
             {"name": d.name, "code": d.code}
             for d in depts
@@ -569,7 +616,17 @@ class ClassListView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        classes = Class.objects.select_related('department', 'class_teacher', 'dqc_member').all()
+        classes = list(Class.objects.select_related('department', 'class_teacher', 'dqc_member').all())
+        def class_sort_key(c):
+            dept_idx = 999
+            if c.department and c.department.code in OFFICIAL_DEPT_ORDER:
+                dept_idx = OFFICIAL_DEPT_ORDER.index(c.department.code)
+            class_idx = 999
+            if c.name in OFFICIAL_CLASS_ORDER:
+                class_idx = OFFICIAL_CLASS_ORDER.index(c.name)
+            return (dept_idx, class_idx)
+
+        classes.sort(key=class_sort_key)
         return Response([
             {
                 "id": c.id,
