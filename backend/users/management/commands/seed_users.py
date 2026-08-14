@@ -22,7 +22,11 @@ class Command(BaseCommand):
                 obj.is_active = ay["is_active"]
                 obj.save()
 
-        # 2. Seed Departments
+        # Purge outdated legacy departments and non-matching classes if any
+        outdated_dept_codes = ["UGDCA", "PGDCA", "CS"]
+        Department.objects.filter(code__in=outdated_dept_codes).delete()
+
+        # 2. Seed Departments in exact specified order
         departments_data = [
             {"name": "Department of Computer Applications", "code": "DCA"},
             {"name": "Department of Commerce", "code": "COMMERCE"},
@@ -35,9 +39,6 @@ class Command(BaseCommand):
             {"name": "Department of Communication & Media Studies", "code": "MCMS"},
             {"name": "Department of Hospitality & Tourism Management", "code": "MHTM"},
             {"name": "Department of Psychology", "code": "PSYCHOLOGY"},
-            {"name": "The Under-Graduate Department of Computer Applications", "code": "UGDCA"},
-            {"name": "The Post-Graduate Department of Computer Applications", "code": "PGDCA"},
-            {"name": "Computer Science", "code": "CS"},
             {"name": "Internal Quality Assurance Cell", "code": "IQAC"},
             {"name": "Administration", "code": "ADMIN"},
         ]
@@ -52,7 +53,7 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(f"Created Department: {obj.name}")
 
-        # 3. Seed Classes
+        # 3. Seed Classes in exact specified order
         classes_data = [
             # 1. Department of Computer Applications
             {"name": "I BCA A", "dept_code": "DCA"},
@@ -104,7 +105,7 @@ class Command(BaseCommand):
             {"name": "I MSW", "dept_code": "SOCIAL_WORK"},
             {"name": "II MSW", "dept_code": "SOCIAL_WORK"},
 
-            # 5. Department of Physics
+            # 5. Department of Physics (Integrated M.Sc. Physics)
             {"name": "I MSC PHYSICS", "dept_code": "PHYSICS"},
             {"name": "II MSC PHYSICS", "dept_code": "PHYSICS"},
             {"name": "III MSC PHYSICS", "dept_code": "PHYSICS"},
@@ -136,11 +137,10 @@ class Command(BaseCommand):
 
             # 11. Department of Psychology
             {"name": "I PSYCHOLOGY", "dept_code": "PSYCHOLOGY"},
-
-            # Legacy / Alias references
-            {"name": "BCA A", "dept_code": "CS"},
-            {"name": "MCA", "dept_code": "PGDCA"},
         ]
+
+        valid_class_names = [cls["name"] for cls in classes_data]
+        Class.objects.exclude(name__in=valid_class_names).delete()
 
         classes = {}
         for cls in classes_data:
@@ -155,11 +155,11 @@ class Command(BaseCommand):
 
         # 4. Seed Users
         users_data = [
-            ("santhosh.25pmc152@mariancollege.org", "student", "PGDCA", "II MCA", False, False, "Santhosh", "Kannan"),
-            ("amal.25pmc114@mariancollege.org", "student", "PGDCA", "II MCA", False, False, "Amal", "Thomas"),
-            ("santhosh.25ubc154@mariancollege.org", "student", "UGDCA", "II BCA A", False, False, "Santhosh", "Kannan"),
-            ("kochumol.abraham@mariancollege.org", "faculty", "PGDCA", None, True, False, "Kochumol", "Abraham"),
-            ("allen.george@mariancollege.org", "evaluation", "CS", None, True, False, "Allen", "George"),
+            ("santhosh.25pmc152@mariancollege.org", "student", "DCA", "II MCA", False, False, "Santhosh", "Kannan"),
+            ("amal.25pmc114@mariancollege.org", "student", "DCA", "II MCA", False, False, "Amal", "Thomas"),
+            ("santhosh.25ubc154@mariancollege.org", "student", "DCA", "II BCA A", False, False, "Santhosh", "Kannan"),
+            ("kochumol.abraham@mariancollege.org", "faculty", "DCA", None, True, False, "Kochumol", "Abraham"),
+            ("allen.george@mariancollege.org", "evaluation", "DCA", None, True, False, "Allen", "George"),
             ("iqac@mariancollege.org", "iqac", "IQAC", None, True, False, "IQAC", "Coordinator"),
             ("admin@mariancollege.org", "admin", "ADMIN", None, True, True, "System", "Administrator"),
         ]
