@@ -341,34 +341,73 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
         {/* TAB 1: ACADEMIC YEARS                                */}
         {/* ---------------------------------------------------- */}
         {activeTab === 'years' && (
-          <div className="flex flex-col gap-6">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Section Intro */}
             <div>
-              <h1 className="text-2xl font-black text-[#111827] tracking-tight">Academic Year Management</h1>
-              <p className="text-sm font-semibold text-slate-500 mt-1">Add new academic years and activate the current session.</p>
+              <h1 style={{ fontSize: '1.65rem', fontWeight: 900, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>Academic Year Management</h1>
+              <p style={{ fontSize: '0.88rem', fontWeight: 600, color: '#6B7280', marginTop: '4px', margin: 0 }}>Add new academic years and activate the current session.</p>
             </div>
 
             {/* Card 1 — Create / Add Section */}
-            <div className="bg-white rounded-3xl border border-[#E5E7EB] p-7 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)]">
-              <h3 className="text-lg font-extrabold text-[#111827] mb-5">Add Academic Year</h3>
-              <form onSubmit={handleAddYear} className="flex flex-col gap-4 max-w-lg">
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              border: '1px solid #E5E7EB',
+              padding: '28px',
+              boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.04)'
+            }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', marginTop: 0, marginBottom: '20px' }}>Add Academic Year</h3>
+              <form onSubmit={handleAddYear} style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '480px' }}>
                 <div>
-                  <label className="text-[11px] font-extrabold uppercase tracking-widest text-[#9CA3AF] block mb-2">
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    color: '#9CA3AF',
+                    marginBottom: '8px'
+                  }}>
                     YEAR FORMAT (E.G. 2026-2027)
                   </label>
                   <input
                     type="text"
-                    className="w-full rounded-full px-5 py-3 border border-[#E5E7EB] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/40 text-sm font-semibold text-slate-800 bg-slate-50/50 focus:bg-white transition-all"
                     placeholder="YYYY-YYYY"
                     value={newYearInput}
                     onChange={(e) => setNewYearInput(e.target.value)}
                     required
+                    style={{
+                      width: '100%',
+                      borderRadius: '9999px',
+                      padding: '12px 22px',
+                      border: '1px solid #E5E7EB',
+                      fontSize: '0.88rem',
+                      fontWeight: 600,
+                      color: '#1F2937',
+                      background: '#F9FAFB',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
                   />
                 </div>
                 <div>
                   <button
                     type="submit"
-                    className="bg-[#FF6B2C] hover:bg-[#E0571C] text-white font-bold rounded-full px-8 py-3 text-sm shadow-md shadow-orange-500/20 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer inline-flex items-center gap-2"
+                    style={{
+                      background: '#FF6B2C',
+                      color: '#FFFFFF',
+                      fontWeight: 800,
+                      borderRadius: '9999px',
+                      padding: '12px 30px',
+                      fontSize: '0.88rem',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(255, 107, 44, 0.25)',
+                      transition: 'all 0.2s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
                   >
                     <span>+</span> Add Year
                   </button>
@@ -377,53 +416,111 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
             </div>
 
             {/* Card 2 — Data Table Section */}
-            <div className="bg-white rounded-3xl border border-[#E5E7EB] p-7 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)]">
-              <h3 className="text-lg font-extrabold text-[#111827] mb-5">Academic Years List</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              border: '1px solid #E5E7EB',
+              padding: '28px',
+              boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.04)'
+            }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', marginTop: 0, marginBottom: '20px' }}>Academic Years List</h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
-                    <tr className="border-b border-[#E5E7EB]">
-                      <th className="text-[11px] font-extrabold uppercase tracking-widest text-[#9CA3AF] pb-4">ACADEMIC YEAR</th>
-                      <th className="text-[11px] font-extrabold uppercase tracking-widest text-[#9CA3AF] pb-4">STATUS</th>
-                      <th className="text-[11px] font-extrabold uppercase tracking-widest text-[#9CA3AF] pb-4 text-right">ACTIONS</th>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
+                      <th style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF', paddingBottom: '16px' }}>ACADEMIC YEAR</th>
+                      <th style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF', paddingBottom: '16px' }}>STATUS</th>
+                      <th style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF', paddingBottom: '16px', textAlign: 'right' }}>ACTIONS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E5E7EB]">
+                  <tbody>
                     {academicYears.map((y) => (
-                      <tr key={y.year} className="hover:bg-slate-50/60 transition-colors">
-                        <td className="py-4 font-bold text-slate-900 text-sm">{y.year}</td>
-                        <td className="py-4">
+                      <tr key={y.year} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                        <td style={{ padding: '16px 0', fontWeight: 700, color: '#111827', fontSize: '0.92rem' }}>{y.year}</td>
+                        <td style={{ padding: '16px 0' }}>
                           {y.status === 'Active' ? (
-                            <span className="bg-[#DCFCE7] text-[#15803D] rounded-full px-3.5 py-1 text-xs font-black inline-flex items-center gap-1.5 shadow-xs">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#15803D] animate-pulse" />
+                            <span style={{
+                              background: '#DCFCE7',
+                              color: '#15803D',
+                              borderRadius: '9999px',
+                              padding: '5px 16px',
+                              fontSize: '0.76rem',
+                              fontWeight: 800,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}>
+                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#15803D' }} />
                               Active
                             </span>
                           ) : (
-                            <span className="bg-[#FFEDD5] text-[#C2410C] rounded-full px-3.5 py-1 text-xs font-black inline-flex items-center gap-1.5 shadow-xs">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#C2410C]" />
+                            <span style={{
+                              background: '#FFEDD5',
+                              color: '#C2410C',
+                              borderRadius: '9999px',
+                              padding: '5px 16px',
+                              fontSize: '0.76rem',
+                              fontWeight: 800,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}>
+                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#C2410C' }} />
                               Inactive
                             </span>
                           )}
                         </td>
-                        <td className="py-4 text-right">
-                          <div className="inline-flex items-center gap-2.5 justify-end">
+                        <td style={{ padding: '16px 0', textAlign: 'right' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', justifyContent: 'flex-end' }}>
                             {y.status === 'Active' ? (
                               <button
-                                className="border border-[#EF4444] text-[#EF4444] hover:bg-[#FEF2F2] text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                                style={{
+                                  border: '1px solid #EF4444',
+                                  color: '#EF4444',
+                                  background: 'transparent',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 700,
+                                  padding: '8px 18px',
+                                  borderRadius: '9999px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease'
+                                }}
                                 onClick={() => handleToggleYearStatus(y.year, false)}
                               >
                                 Set Inactive
                               </button>
                             ) : (
                               <button
-                                className="bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 shadow-xs hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                                style={{
+                                  background: '#10B981',
+                                  color: '#FFFFFF',
+                                  border: 'none',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 700,
+                                  padding: '8px 18px',
+                                  borderRadius: '9999px',
+                                  cursor: 'pointer',
+                                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.2)',
+                                  transition: 'all 0.2s ease'
+                                }}
                                 onClick={() => handleToggleYearStatus(y.year, true)}
                               >
                                 Set Active
                               </button>
                             )}
                             <button
-                              className="bg-[#EF4444] hover:bg-[#DC2626] text-white text-xs font-bold px-4 py-2 rounded-full transition-all duration-200 shadow-xs hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                              style={{
+                                background: '#EF4444',
+                                color: '#FFFFFF',
+                                border: 'none',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                padding: '8px 18px',
+                                borderRadius: '9999px',
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 8px rgba(239, 68, 68, 0.2)',
+                                transition: 'all 0.2s ease'
+                              }}
                               onClick={() => handleDeleteYear(y.year)}
                             >
                               Delete
