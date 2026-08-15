@@ -81,25 +81,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return currentCategory.items.find((i) => matchItem(i, selectedCriteriaId)) || currentCategory.items[0];
   }, [currentCategory, selectedCriteriaId]);
 
-  // Sync category & criteria selection when catalog loads
-  React.useEffect(() => {
-    if (availableCriteriaCatalog && availableCriteriaCatalog.length > 0) {
-      const activeCat = availableCriteriaCatalog.find((c) => matchCategory(c, selectedCategory)) || availableCriteriaCatalog[0];
-      if (activeCat) {
-        const catVal = activeCat.id || activeCat.code || activeCat.category;
-        if (selectedCategory !== catVal) {
-          setSelectedCategory(catVal);
-        }
-        if (activeCat.items && activeCat.items.length > 0) {
-          const activeItem = activeCat.items.find((i) => matchItem(i, selectedCriteriaId)) || activeCat.items[0];
-          if (activeItem && selectedCriteriaId !== activeItem.id) {
-            setSelectedCriteriaId(activeItem.id);
-          }
-        }
-      }
-    }
-  }, [availableCriteriaCatalog]);
-
   // Academic Category State (Submission Types & Grade Breakdown)
   const [academicSubmissionType, setAcademicSubmissionType] = useState<'Sem Result' | 'SAVE Sem Result'>('Sem Result');
   const [sGradeCount, setSGradeCount] = useState<number>(0);
