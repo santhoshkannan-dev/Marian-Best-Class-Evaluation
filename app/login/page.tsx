@@ -11,21 +11,7 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirection when logged in
-  useEffect(() => {
-    if (loggedIn && currentRole) {
-      const role = currentRole.toLowerCase();
-      if (role === 'student') {
-        router.push('/student/dashboard');
-      } else if (role === 'teacher' || role === 'faculty') {
-        router.push('/teacher/dashboard');
-      } else if (role === 'admin') {
-        router.push('/admin/academic-years');
-      } else if (role === 'evaluator' || role === 'evaluation') {
-        router.push('/evaluator/dashboard');
-      }
-    }
-  }, [loggedIn, currentRole, router]);
+  // Allow user to view login page without forced auto-redirection
 
   // Load Google Identity Services SDK
   useEffect(() => {
@@ -65,7 +51,13 @@ export default function LoginPage() {
     setLoading(true);
     const result = await loginWithGoogleToken(response.credential);
     setLoading(false);
-    if (!result.success) {
+    if (result.success) {
+      const targetRole = (result.user?.role || currentRole || 'student').toLowerCase();
+      if (targetRole === 'student') router.push('/student/dashboard');
+      else if (targetRole === 'teacher' || targetRole === 'faculty') router.push('/teacher/dashboard');
+      else if (targetRole === 'admin') router.push('/admin/academic-years');
+      else if (targetRole === 'evaluator' || targetRole === 'evaluation') router.push('/evaluator/dashboard');
+    } else {
       setErrorMsg(result.error || 'Google Sign-In failed.');
     }
   };
@@ -93,7 +85,13 @@ export default function LoginPage() {
     setLoading(true);
     const result = await loginBypass(emailToUse, overrideRole);
     setLoading(false);
-    if (!result.success) {
+    if (result.success) {
+      const targetRole = (result.user?.role || overrideRole || 'student').toLowerCase();
+      if (targetRole === 'student') router.push('/student/dashboard');
+      else if (targetRole === 'teacher' || targetRole === 'faculty') router.push('/teacher/dashboard');
+      else if (targetRole === 'admin') router.push('/admin/academic-years');
+      else if (targetRole === 'evaluator' || targetRole === 'evaluation') router.push('/evaluator/dashboard');
+    } else {
       setErrorMsg(result.error || 'Bypass authentication failed.');
     }
   };
