@@ -208,8 +208,11 @@ class Command(BaseCommand):
             mca_class.save()
             self.stdout.write("Configured MCA Class Teacher and DQC member links")
 
-        # 6. Seed Criteria Catalog
+        # 6. Seed Criteria Catalog (Wipe and recreate clean 12 categories)
         from users.models import CriteriaCategory, CriteriaItem
+        CriteriaItem.objects.all().delete()
+        CriteriaCategory.objects.all().delete()
+
         criteria_catalog_data = [
             {
                 "code": "cat-academics",
@@ -320,16 +323,6 @@ class Command(BaseCommand):
                 ]
             },
             {
-                "code": "cat-programs-organized",
-                "category": "Programs Organized",
-                "access_level": "student_rep_only",
-                "items": [
-                    {"title": "National Level Program Organized", "type": "count", "marks": 15.0},
-                    {"title": "State/Regional Level Program Organized", "type": "count", "marks": 10.0},
-                    {"title": "Department Level Program Organized", "type": "count", "marks": 5.0},
-                ]
-            },
-            {
                 "code": "cat-social-responsibility",
                 "category": "Social Responsibilities",
                 "access_level": "all_students",
@@ -363,15 +356,17 @@ class Command(BaseCommand):
         ]
 
         for cat_data in criteria_catalog_data:
-            cat_obj, _ = CriteriaCategory.objects.get_or_create(
+            cat_obj = CriteriaCategory.objects.create(
                 code=cat_data["code"],
-                defaults={"category": cat_data["category"], "access_level": cat_data["access_level"]}
+                category=cat_data["category"],
+                access_level=cat_data["access_level"]
             )
             for item_data in cat_data["items"]:
-                CriteriaItem.objects.get_or_create(
+                CriteriaItem.objects.create(
                     category=cat_obj,
                     title=item_data["title"],
-                    defaults={"type": item_data["type"], "marks": item_data["marks"]}
+                    type=item_data["type"],
+                    marks=item_data["marks"]
                 )
 
         self.stdout.write(self.style.SUCCESS("Database seeding completed successfully!"))

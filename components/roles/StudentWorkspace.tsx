@@ -50,10 +50,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       const lower = c.category.toLowerCase().trim();
       return (
         c.id !== 'cat-academics' &&
-        c.id !== 'cat-programs-organized' &&
         c.id !== 'cat-documentation' &&
         lower !== 'academics' &&
-        lower !== 'programs organized' &&
         lower !== 'documentation'
       );
     });
