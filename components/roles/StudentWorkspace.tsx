@@ -749,7 +749,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     <label className="form-label">Category</label>
                     <select
                       className="select"
-                      value={selectCategoryValue}
+                      value={selectedCategory}
                       onChange={(e) => {
                         const catVal = e.target.value;
                         setSelectedCategory(catVal);
@@ -760,7 +760,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       }}
                     >
                       {availableCriteriaCatalog.map((cat) => {
-                        const optionVal = cat.code || String(cat.id) || cat.category;
+                        const optionVal = cat.id || cat.code || cat.category;
                         return (
                           <option key={cat.id || cat.code || cat.category} value={optionVal}>
                             {cat.category}

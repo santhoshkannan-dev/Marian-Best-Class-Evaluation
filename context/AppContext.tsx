@@ -564,10 +564,26 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const res = await fetch('http://localhost:8000/api/criteria-categories/');
       if (res.ok) {
         const data = await res.json();
-        setCriteriaCatalog(data);
+        if (Array.isArray(data) && data.length > 0) {
+          const merged = data.map((cat: any) => {
+            const defCat = defaultCriteriaCatalog.find(
+              (d) =>
+                (d.code && cat.code && d.code.toLowerCase() === cat.code.toLowerCase()) ||
+                (d.category && cat.category && d.category.toLowerCase().trim() === cat.category.toLowerCase().trim())
+            );
+            const items = cat.items && Array.isArray(cat.items) && cat.items.length > 0
+              ? cat.items
+              : (defCat ? defCat.items : []);
+            return {
+              ...cat,
+              items
+            };
+          });
+          setCriteriaCatalog(merged);
+        }
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to fetch criteria catalog:', e);
     }
   };
 
