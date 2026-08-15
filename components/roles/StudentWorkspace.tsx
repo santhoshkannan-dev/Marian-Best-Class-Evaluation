@@ -86,11 +86,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return currentCategory.items.find((i) => matchItem(i, selectedCriteriaId)) || currentCategory.items[0];
   }, [currentCategory, selectedCriteriaId]);
 
-  // Academic Category State (Submission Types & Grade Breakdown)
+  // Academic Category State (Submission Types & Mark Breakdown)
   const [academicSubmissionType, setAcademicSubmissionType] = useState<'Sem Result' | 'SAVE Sem Result'>('Sem Result');
-  const [sGradeCount, setSGradeCount] = useState<number>(0);
-  const [aPlusGradeCount, setAPlusGradeCount] = useState<number>(0);
-  const [aGradeCount, setAGradeCount] = useState<number>(0);
+  const [count90Above, setCount90Above] = useState<number>(0);
+  const [count80to90, setCount80to90] = useState<number>(0);
+  const [count70to80, setCount70to80] = useState<number>(0);
+  const [count60to70, setCount60to70] = useState<number>(0);
+  const [count50to60, setCount50to60] = useState<number>(0);
+  const [count40to50, setCount40to50] = useState<number>(0);
   const [failCount, setFailCount] = useState<number>(0);
   const [passPercentage, setPassPercentage] = useState<number>(0);
 
@@ -140,11 +143,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         if (sub.evidence?.submissionType) {
           setAcademicSubmissionType(sub.evidence.submissionType as 'Sem Result' | 'SAVE Sem Result');
         }
-        if (sub.evidence?.grades) {
-          setSGradeCount(sub.evidence.grades.S || 0);
-          setAPlusGradeCount(sub.evidence.grades.APlus || 0);
-          setAGradeCount(sub.evidence.grades.A || 0);
-          setFailCount(sub.evidence.grades.Fail || 0);
+        if (sub.evidence?.markBreakdown || sub.evidence?.grades) {
+          const mb = sub.evidence.markBreakdown || sub.evidence.grades || {};
+          setCount90Above(mb.count90Above ?? mb['90Above'] ?? mb.S ?? 0);
+          setCount80to90(mb.count80to90 ?? mb['80to90'] ?? mb.APlus ?? 0);
+          setCount70to80(mb.count70to80 ?? mb['70to80'] ?? mb.A ?? 0);
+          setCount60to70(mb.count60to70 ?? mb['60to70'] ?? 0);
+          setCount50to60(mb.count50to60 ?? mb['50to60'] ?? 0);
+          setCount40to50(mb.count40to50 ?? mb['40to50'] ?? 0);
+          setFailCount(mb.failCount ?? mb['below40'] ?? mb.Fail ?? 0);
         }
         if (sub.evidence?.classPassPercentage !== undefined) {
           setPassPercentage(sub.evidence.classPassPercentage);
@@ -425,10 +432,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
-    const totalStudents = sGradeCount + aPlusGradeCount + aGradeCount + failCount;
+    const totalStudents = count90Above + count80to90 + count70to80 + count60to70 + count50to60 + count40to50 + failCount;
+    const passedStudents = totalStudents - failCount;
+    const autoPassPercentage = totalStudents > 0 ? parseFloat(((passedStudents / totalStudents) * 100).toFixed(2)) : 0;
+    const effectivePassPercentage = passPercentage > 0 ? passPercentage : autoPassPercentage;
+
     let finalDescription = description.trim();
     if (isAcademicCategory && !finalDescription) {
-      finalDescription = `${academicSubmissionType} Grade Summary — S: ${sGradeCount}, A+: ${aPlusGradeCount}, A: ${aGradeCount}, Fail: ${failCount} (Pass: ${passPercentage}%, Total: ${totalStudents} students)`;
+      finalDescription = `${academicSubmissionType} Mark Summary — ≥90%: ${count90Above}, 80-89%: ${count80to90}, 70-79%: ${count70to80}, 60-69%: ${count60to70}, 50-59%: ${count50to60}, 40-49%: ${count40to50}, Below 40%: ${failCount} (Pass: ${effectivePassPercentage}%, Total: ${totalStudents} students)`;
     }
 
     if (!finalDescription) {
@@ -454,10 +465,19 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
     const computedEvidence = isAcademicCategory
       ? {
-          type: 'academic_grades',
+          type: 'academic_marks',
           submissionType: academicSubmissionType,
-          grades: { S: sGradeCount, APlus: aPlusGradeCount, A: aGradeCount, Fail: failCount },
-          classPassPercentage: passPercentage,
+          markBreakdown: {
+            count90Above,
+            count80to90,
+            count70to80,
+            count60to70,
+            count50to60,
+            count40to50,
+            failCount
+          },
+          grades: { S: count90Above, APlus: count80to90, A: count70to80, Fail: failCount },
+          classPassPercentage: effectivePassPercentage,
           totalStudents
         }
       : { type: currentItem?.type || 'count', count: countValue };
@@ -510,9 +530,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     setProofFile('');
     setEventId('');
     setCountValue(1);
-    setSGradeCount(0);
-    setAPlusGradeCount(0);
-    setAGradeCount(0);
+    setCount90Above(0);
+    setCount80to90(0);
+    setCount70to80(0);
+    setCount60to70(0);
+    setCount50to60(0);
+    setCount40to50(0);
     setFailCount(0);
     setPassPercentage(0);
     setActivePage('submissions');
@@ -822,64 +845,106 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   </div>
                 )}
 
-                {/* Academic Category Grade Breakdown Box */}
+                {/* Academic Category Mark Breakdown Box */}
                 {isAcademicCategory ? (
                   <div style={{ padding: '20px', background: 'rgba(99, 102, 241, 0.04)', border: '1.5px solid rgba(99, 102, 241, 0.2)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                       <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>
-                        📊 Academic Grade Breakdown ({academicSubmissionType})
+                        📊 Academic Mark Breakdown ({academicSubmissionType})
                       </h4>
                       <span className="badge badge-verified" style={{ padding: '6px 14px', fontSize: '0.82rem', background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe' }}>
-                        Total Students: {sGradeCount + aPlusGradeCount + aGradeCount + failCount}
+                        Total Students: {count90Above + count80to90 + count70to80 + count60to70 + count50to60 + count40to50 + failCount}
                       </span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#4f46e5', fontWeight: 800, fontSize: '0.82rem' }}>
-                          ⭐ S Grade
+                        <label className="form-label" style={{ color: '#4f46e5', fontWeight: 800, fontSize: '0.8rem' }}>
+                          ⭐ 90% and Above
                         </label>
                         <input
                           type="number"
                           className="input"
                           min={0}
-                          value={sGradeCount}
-                          onChange={(e) => setSGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          value={count90Above}
+                          onChange={(e) => setCount90Above(Math.max(0, parseInt(e.target.value) || 0))}
                           required
                         />
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#0284c7', fontWeight: 800, fontSize: '0.82rem' }}>
-                          🌟 A+ Grade
+                        <label className="form-label" style={{ color: '#0284c7', fontWeight: 800, fontSize: '0.8rem' }}>
+                          🌟 80% to 90%
                         </label>
                         <input
                           type="number"
                           className="input"
                           min={0}
-                          value={aPlusGradeCount}
-                          onChange={(e) => setAPlusGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          value={count80to90}
+                          onChange={(e) => setCount80to90(Math.max(0, parseInt(e.target.value) || 0))}
                           required
                         />
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#059669', fontWeight: 800, fontSize: '0.82rem' }}>
-                          🥇 A Grade
+                        <label className="form-label" style={{ color: '#059669', fontWeight: 800, fontSize: '0.8rem' }}>
+                          🥇 70% to 80%
                         </label>
                         <input
                           type="number"
                           className="input"
                           min={0}
-                          value={aGradeCount}
-                          onChange={(e) => setAGradeCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          value={count70to80}
+                          onChange={(e) => setCount70to80(Math.max(0, parseInt(e.target.value) || 0))}
                           required
                         />
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#dc2626', fontWeight: 800, fontSize: '0.82rem' }}>
-                          ❌ Fail Count
+                        <label className="form-label" style={{ color: '#0891b2', fontWeight: 800, fontSize: '0.8rem' }}>
+                          🥈 60% to 70%
+                        </label>
+                        <input
+                          type="number"
+                          className="input"
+                          min={0}
+                          value={count60to70}
+                          onChange={(e) => setCount60to70(Math.max(0, parseInt(e.target.value) || 0))}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#d97706', fontWeight: 800, fontSize: '0.8rem' }}>
+                          🥉 50% to 60%
+                        </label>
+                        <input
+                          type="number"
+                          className="input"
+                          min={0}
+                          value={count50to60}
+                          onChange={(e) => setCount50to60(Math.max(0, parseInt(e.target.value) || 0))}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#ea580c', fontWeight: 800, fontSize: '0.8rem' }}>
+                          📄 40% to 50%
+                        </label>
+                        <input
+                          type="number"
+                          className="input"
+                          min={0}
+                          value={count40to50}
+                          onChange={(e) => setCount40to50(Math.max(0, parseInt(e.target.value) || 0))}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#dc2626', fontWeight: 800, fontSize: '0.8rem' }}>
+                          ❌ Below 40 (Fail)
                         </label>
                         <input
                           type="number"
@@ -892,7 +957,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ color: '#7c3aed', fontWeight: 800, fontSize: '0.82rem' }}>
+                        <label className="form-label" style={{ color: '#7c3aed', fontWeight: 800, fontSize: '0.8rem' }}>
                           📈 Class Pass %
                         </label>
                         <input
@@ -902,7 +967,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           min={0}
                           max={100}
                           placeholder="e.g. 95.5"
-                          value={passPercentage}
+                          value={passPercentage > 0 ? passPercentage : (
+                            (count90Above + count80to90 + count70to80 + count60to70 + count50to60 + count40to50 + failCount) > 0
+                              ? parseFloat(((((count90Above + count80to90 + count70to80 + count60to70 + count50to60 + count40to50) / (count90Above + count80to90 + count70to80 + count60to70 + count50to60 + count40to50 + failCount)) * 100)).toFixed(2))
+                              : 0
+                          )}
                           onChange={(e) => setPassPercentage(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
                           required
                         />
@@ -1131,12 +1200,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           </td>
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              {sub.evidence?.type === 'academic_grades' || sub.evidence?.grades ? (
+                              {sub.evidence?.type === 'academic_marks' || sub.evidence?.type === 'academic_grades' || sub.evidence?.markBreakdown || sub.evidence?.grades ? (
                                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                                  <span style={{ color: '#4f46e5' }}>S: {sub.evidence.grades?.S || 0}</span> |
-                                  <span style={{ color: '#0284c7' }}>A+: {sub.evidence.grades?.APlus || 0}</span> |
-                                  <span style={{ color: '#059669' }}>A: {sub.evidence.grades?.A || 0}</span> |
-                                  <span style={{ color: '#dc2626' }}>Fail: {sub.evidence.grades?.Fail || 0}</span> |
+                                  <span style={{ color: '#4f46e5' }}>≥90%: {sub.evidence.markBreakdown?.count90Above ?? sub.evidence.grades?.S ?? 0}</span> |
+                                  <span style={{ color: '#0284c7' }}>80-90%: {sub.evidence.markBreakdown?.count80to90 ?? sub.evidence.grades?.APlus ?? 0}</span> |
+                                  <span style={{ color: '#059669' }}>70-80%: {sub.evidence.markBreakdown?.count70to80 ?? sub.evidence.grades?.A ?? 0}</span> |
+                                  <span style={{ color: '#0891b2' }}>60-70%: {sub.evidence.markBreakdown?.count60to70 ?? 0}</span> |
+                                  <span style={{ color: '#d97706' }}>50-60%: {sub.evidence.markBreakdown?.count50to60 ?? 0}</span> |
+                                  <span style={{ color: '#ea580c' }}>40-50%: {sub.evidence.markBreakdown?.count40to50 ?? 0}</span> |
+                                  <span style={{ color: '#dc2626' }}>Below 40: {sub.evidence.markBreakdown?.failCount ?? sub.evidence.grades?.Fail ?? 0}</span> |
                                   <span style={{ color: '#7c3aed' }}>Pass: {sub.evidence.classPassPercentage !== undefined ? `${sub.evidence.classPassPercentage}%` : '-'}</span>
                                 </div>
                               ) : (
