@@ -207,15 +207,7 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
       { id: 803, title: "Clubs & Associations Leadership Position", marks: 8, type: "fixed" }
     ]
   },
-  {
-    id: "cat-programs-organized",
-    category: "Programs Organized",
-    items: [
-      { id: 901, title: "Department Level Program Organized", marks: 5, type: "count" },
-      { id: 902, title: "Interdepartment Program Organized", marks: 8, type: "count" },
-      { id: 903, title: "State or National Level Program Organized", marks: 15, type: "count" }
-    ]
-  },
+
   {
     id: "cat-social-responsibility",
     category: "Social Responsibilities",
