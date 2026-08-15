@@ -741,11 +741,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 <div>
                   {isStudentRep ? (
                     <>
-                      <strong>Student Representative Access:</strong> All category options (including <em>Academics</em> and <em>Documentation</em>) are accessible for you.
+                      <strong>⭐ Student Representative Access:</strong> All 12 evaluation categories (including <em>Academics</em> and <em>Documentation</em>) are fully unlocked for class submissions.
                     </>
                   ) : (
                     <>
-                      <strong>Regular Student Access:</strong> Categories like <em>Academics</em> and <em>Documentation</em> are managed by your class <strong>Student Representative</strong> and are hidden here.
+                      <strong>ℹ️ Student Access:</strong> All 12 evaluation categories are fully accessible for your claim submissions.
                     </>
                   )}
                 </div>
