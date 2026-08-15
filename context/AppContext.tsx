@@ -281,8 +281,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (data.submissionWindowEnd !== undefined) setSubmissionWindowEnd(data.submissionWindowEnd);
           if (data.submissions) setSubmissions(data.submissions);
           if (data.users) setUsers(data.users);
-          if (data.criteriaCatalog && data.criteriaCatalog.length === 12) setCriteriaCatalog(data.criteriaCatalog);
-          else setCriteriaCatalog(defaultCriteriaCatalog);
+          setCriteriaCatalog(defaultCriteriaCatalog);
           if (data.academicYears) setAcademicYears(data.academicYears);
           if (data.students) setStudents(data.students);
           if (data.userGroups) setUserGroups(data.userGroups);
