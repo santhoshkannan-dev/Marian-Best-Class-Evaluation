@@ -410,12 +410,19 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const paginatedRepSubmissions = filteredRepSubmissions.slice((repPage - 1) * repPageSize, repPage * repPageSize);
 
   const handleNavToSubmit = (catId: string, itemId?: number) => {
-    setSelectedCategory(catId);
-    const cat = availableCriteriaCatalog.find((c) => c.id === catId);
-    if (cat && cat.items.length) {
-      setSelectedCriteriaId(itemId || cat.items[0].id);
+    const cat = availableCriteriaCatalog.find((c) => matchCategory(c, catId));
+    if (cat) {
+      const catVal = cat.id || cat.code || cat.category;
+      setSelectedCategory(catVal);
+      if (cat.items && cat.items.length) {
+        const itemToSet = itemId ? cat.items.find((i) => matchItem(i, itemId)) : cat.items[0];
+        setSelectedCriteriaId(itemToSet ? itemToSet.id : cat.items[0].id);
+      }
+    } else {
+      setSelectedCategory(catId);
     }
     setActivePage('submit');
+    router.push('/student/submit');
   };
 
   const handleFormSubmit = (status: 'Submitted' | 'Draft') => {
@@ -767,7 +774,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       }}
                     >
                       {availableCriteriaCatalog.map((cat) => (
-                        <option key={cat.id || cat.code || cat.category} value={cat.id}>
+                        <option key={cat.id || cat.code || cat.category} value={cat.id || cat.code || cat.category}>
                           {cat.category}
                         </option>
                       ))}
