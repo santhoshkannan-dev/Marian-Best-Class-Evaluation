@@ -699,11 +699,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 <div>
                   {isStudentRep ? (
                     <>
-                      <strong>Student Representative Access:</strong> All category options (including <em>Academics</em>, <em>Programs Organized</em>, and <em>Documentation</em>) are accessible for you.
+                      <strong>Student Representative Access:</strong> All category options (including <em>Academics</em> and <em>Documentation</em>) are accessible for you.
                     </>
                   ) : (
                     <>
-                      <strong>Regular Student Access:</strong> Categories like <em>Academics</em>, <em>Programs Organized</em>, and <em>Documentation</em> are managed by your class <strong>Student Representative</strong> and are hidden here.
+                      <strong>Regular Student Access:</strong> Categories like <em>Academics</em> and <em>Documentation</em> are managed by your class <strong>Student Representative</strong> and are hidden here.
                     </>
                   )}
                 </div>

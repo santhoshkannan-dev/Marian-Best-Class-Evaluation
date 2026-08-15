@@ -1254,12 +1254,18 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const isStudentRep = React.useMemo(() => {
     if (!currentUserEmail) return false;
     const cleanEmail = currentUserEmail.trim().toLowerCase();
+    const userObj = users.find((u) => u.email.trim().toLowerCase() === cleanEmail);
+    if (userObj && (userObj.isStudentRep || (userObj as any).is_student_rep || userObj.role === 'evaluator' || userObj.role === 'dqc_member')) {
+      return true;
+    }
     const repGroup = userGroups.find(
-      (g) => g.id === 'grp-student-reps' || g.name.toLowerCase().includes('student representative') || g.name.toLowerCase().includes('student rep')
+      (g) => g.id === 'grp-student-reps' || g.name.toLowerCase().includes('student representative') || g.name.toLowerCase().includes('student rep') || g.name.toLowerCase().includes('dqc')
     );
-    if (!repGroup || !Array.isArray(repGroup.emails)) return false;
-    return repGroup.emails.some((e) => e.trim().toLowerCase() === cleanEmail);
-  }, [currentUserEmail, userGroups]);
+    if (repGroup && Array.isArray(repGroup.emails)) {
+      return repGroup.emails.some((e) => e.trim().toLowerCase() === cleanEmail);
+    }
+    return false;
+  }, [currentUserEmail, userGroups, users]);
 
   const toggleStudentRepMode = () => {
     if (!currentUserEmail) return;
