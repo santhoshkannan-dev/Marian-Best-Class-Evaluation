@@ -35,6 +35,16 @@ export interface SubmissionEvidence {
   value?: number;
   checked?: boolean;
   submissionType?: string;
+  markBreakdown?: {
+    count90Above?: number;
+    count80to90?: number;
+    count70to80?: number;
+    count60to70?: number;
+    count50to60?: number;
+    count40to50?: number;
+    failCount?: number;
+    [key: string]: any;
+  };
   grades?: {
     S?: number;
     APlus?: number;
@@ -42,9 +52,11 @@ export interface SubmissionEvidence {
     Fail?: number;
     B?: number;
     C?: number;
+    [key: string]: any;
   };
   classPassPercentage?: number;
   totalStudents?: number;
+  [key: string]: any;
 }
 
 export interface Submission {
