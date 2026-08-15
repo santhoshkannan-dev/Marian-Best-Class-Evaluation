@@ -52,7 +52,7 @@ export default function LoginPage() {
     const result = await loginWithGoogleToken(response.credential);
     setLoading(false);
     if (result.success) {
-      const targetRole = (result.user?.role || currentRole || 'student').toLowerCase();
+      const targetRole = ((result as any).user?.role || currentRole || 'student').toLowerCase();
       if (targetRole === 'student') router.push('/student/dashboard');
       else if (targetRole === 'teacher' || targetRole === 'faculty') router.push('/teacher/dashboard');
       else if (targetRole === 'admin') router.push('/admin/academic-years');
@@ -86,7 +86,7 @@ export default function LoginPage() {
     const result = await loginBypass(emailToUse, overrideRole);
     setLoading(false);
     if (result.success) {
-      const targetRole = (result.user?.role || overrideRole || 'student').toLowerCase();
+      const targetRole = ((result as any).user?.role || overrideRole || 'student').toLowerCase();
       if (targetRole === 'student') router.push('/student/dashboard');
       else if (targetRole === 'teacher' || targetRole === 'faculty') router.push('/teacher/dashboard');
       else if (targetRole === 'admin') router.push('/admin/academic-years');
