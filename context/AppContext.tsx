@@ -412,7 +412,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       localStorage.setItem('bc_access_token', data.tokens.access);
       localStorage.setItem('bc_refresh_token', data.tokens.refresh);
 
-      return { success: true };
+      return { success: true, user: data.user };
     } catch (err: any) {
       return { success: false, error: err.message || 'Connection to authentication server failed' };
     }
@@ -449,7 +449,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       localStorage.setItem('bc_access_token', data.tokens.access);
       localStorage.setItem('bc_refresh_token', data.tokens.refresh);
 
-      return { success: true };
+      return { success: true, user: data.user };
     } catch (err: any) {
       return { success: false, error: err.message || 'Connection to development authentication server failed' };
     }
