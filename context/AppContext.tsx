@@ -935,7 +935,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         body: JSON.stringify({
           id: group.id,
           name: group.name,
-          description: group.desc || '',
+          description: (group as any).desc || group.description || '',
           members: group.emails
         })
       });

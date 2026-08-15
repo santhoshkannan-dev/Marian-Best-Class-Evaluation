@@ -225,9 +225,8 @@ class Command(BaseCommand):
                 "category": "Online Courses",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "NPTEL Course Completed", "type": "count", "marks": 10.0},
-                    {"title": "MOOC Course Completed", "type": "count", "marks": 5.0},
-                    {"title": "Other Recognized Online Course", "type": "count", "marks": 3.0},
+                    {"title": "Swayam / NPTEL Course", "type": "count", "marks": 10.0},
+                    {"title": "MOOC Course", "type": "count", "marks": 5.0},
                 ]
             },
             {
@@ -235,9 +234,10 @@ class Command(BaseCommand):
                 "category": "Competitive Exams",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "JRF Qualified", "type": "fixed", "marks": 20.0},
-                    {"title": "NET Qualified", "type": "fixed", "marks": 10.0},
-                    {"title": "SET Qualified", "type": "fixed", "marks": 5.0},
+                    {"title": "JRF Passed", "type": "fixed", "marks": 20.0},
+                    {"title": "NET Passed", "type": "fixed", "marks": 10.0},
+                    {"title": "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", "type": "fixed", "marks": 5.0},
+                    {"title": "Participation in Relevant Exam (UPSC / PSC Exams)", "type": "count", "marks": 3.0},
                 ]
             },
             {
@@ -245,8 +245,8 @@ class Command(BaseCommand):
                 "category": "Internships",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Offline Internship", "type": "count", "marks": 5.0},
-                    {"title": "Online Internship", "type": "count", "marks": 3.0},
+                    {"title": "Offline Internship (Min. 1 month)", "type": "count", "marks": 5.0},
+                    {"title": "Online Internship (Min. 1 month)", "type": "count", "marks": 3.0},
                 ]
             },
             {
@@ -254,9 +254,10 @@ class Command(BaseCommand):
                 "category": "Scholarships",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "International Scholarship", "type": "fixed", "marks": 20.0},
-                    {"title": "National Scholarship", "type": "fixed", "marks": 10.0},
-                    {"title": "State Scholarship", "type": "fixed", "marks": 5.0},
+                    {"title": "International Level Scholarship", "type": "fixed", "marks": 20.0},
+                    {"title": "National Level Scholarship", "type": "fixed", "marks": 10.0},
+                    {"title": "State Level Scholarship", "type": "fixed", "marks": 5.0},
+                    {"title": "District Level Scholarship", "type": "fixed", "marks": 3.0},
                 ]
             },
             {
@@ -264,9 +265,19 @@ class Command(BaseCommand):
                 "category": "Research",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Research Publication", "type": "count", "marks": 15.0},
-                    {"title": "Patent Filed or Published", "type": "count", "marks": 20.0},
-                    {"title": "Funded or Approved Student Project", "type": "count", "marks": 10.0},
+                    {"title": "Publication - Scopus / Web of Science", "type": "count", "marks": 15.0},
+                    {"title": "Publication - Conference Proceedings / Peer-Reviewed Article", "type": "count", "marks": 10.0},
+                    {"title": "Paper Presentation - Outside Marian College", "type": "count", "marks": 8.0},
+                    {"title": "Paper Presentation - Inside Marian College", "type": "count", "marks": 5.0},
+                    {"title": "Patent - Utility", "type": "count", "marks": 20.0},
+                    {"title": "Patent - Design", "type": "count", "marks": 15.0},
+                    {"title": "Book Published", "type": "count", "marks": 15.0},
+                    {"title": "Book Chapter Published", "type": "count", "marks": 8.0},
+                    {"title": "Article Published", "type": "count", "marks": 5.0},
+                    {"title": "Funded Project - International Level", "type": "count", "marks": 20.0},
+                    {"title": "Funded Project - National Level", "type": "count", "marks": 15.0},
+                    {"title": "Funded Project - State Level", "type": "count", "marks": 10.0},
+                    {"title": "Funded Project - Other", "type": "count", "marks": 5.0},
                 ]
             },
             {
@@ -274,10 +285,7 @@ class Command(BaseCommand):
                 "category": "Startups",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Incubated Startup / Venture", "type": "count", "marks": 20.0},
-                    {"title": "Seed Funding Received", "type": "count", "marks": 15.0},
-                    {"title": "Registered Business Entity (LLP/Pvt Ltd)", "type": "count", "marks": 10.0},
-                    {"title": "Idea / Innovation Competition Winner", "type": "count", "marks": 8.0},
+                    {"title": "Government-Registered Start-up", "type": "count", "marks": 20.0},
                 ]
             },
             {
@@ -285,8 +293,20 @@ class Command(BaseCommand):
                 "category": "Prizes",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Outside College Individual First Prize", "type": "count", "marks": 10.0},
-                    {"title": "Inside College Individual First Prize", "type": "count", "marks": 5.0},
+                    {"title": "Marian College - 1st Prize (Individual)", "type": "count", "marks": 5.0},
+                    {"title": "Marian College - 1st Prize (Group)", "type": "count", "marks": 3.0},
+                    {"title": "Marian College - 2nd Prize (Individual)", "type": "count", "marks": 3.0},
+                    {"title": "Marian College - 2nd Prize (Group)", "type": "count", "marks": 2.0},
+                    {"title": "Marian College - 3rd Prize (Individual)", "type": "count", "marks": 2.0},
+                    {"title": "Marian College - 3rd Prize (Group)", "type": "count", "marks": 1.0},
+                    {"title": "Outside Marian - 1st Prize (Individual)", "type": "count", "marks": 10.0},
+                    {"title": "Outside Marian - 1st Prize (Group)", "type": "count", "marks": 6.0},
+                    {"title": "Outside Marian - 2nd Prize (Individual)", "type": "count", "marks": 8.0},
+                    {"title": "Outside Marian - 2nd Prize (Group)", "type": "count", "marks": 4.0},
+                    {"title": "Outside Marian - 3rd Prize (Individual)", "type": "count", "marks": 5.0},
+                    {"title": "Outside Marian - 3rd Prize (Group)", "type": "count", "marks": 3.0},
+                    {"title": "Outside Marian - Participation (Individual)", "type": "count", "marks": 2.0},
+                    {"title": "Outside Marian - Participation (Group)", "type": "count", "marks": 1.0},
                 ]
             },
             {
@@ -294,8 +314,9 @@ class Command(BaseCommand):
                 "category": "Leaderships",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Class Representative", "type": "fixed", "marks": 10.0},
-                    {"title": "Association or Club Office Bearer", "type": "fixed", "marks": 8.0},
+                    {"title": "MCSC Executive Body Position", "type": "fixed", "marks": 10.0},
+                    {"title": "SAHYA Executive Body Position", "type": "fixed", "marks": 10.0},
+                    {"title": "Clubs & Associations Leadership Position", "type": "fixed", "marks": 8.0},
                 ]
             },
             {
@@ -313,8 +334,9 @@ class Command(BaseCommand):
                 "category": "Social Responsibilities",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "NSS/NCC/Service Activity Participation", "type": "count", "marks": 5.0},
-                    {"title": "Community Outreach Activity", "type": "count", "marks": 3.0},
+                    {"title": "Coordination of Event (Community Action / Outreach)", "type": "count", "marks": 5.0},
+                    {"title": "Participation in Event", "type": "count", "marks": 3.0},
+                    {"title": "News Media Coverage (Excluding Social Media)", "type": "count", "marks": 5.0},
                 ]
             },
             {
@@ -322,8 +344,12 @@ class Command(BaseCommand):
                 "category": "Career Advancement",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Placement Offer Received", "type": "fixed", "marks": 20.0},
-                    {"title": "Higher Studies Admission Secured", "type": "fixed", "marks": 15.0},
+                    {"title": "Library - Regular Footfall (Biometric / Entry)", "type": "count", "marks": 5.0},
+                    {"title": "Library - Academic & Career Books Issued/Read", "type": "count", "marks": 5.0},
+                    {"title": "LinkedIn - Profile Completion (Active Profile)", "type": "fixed", "marks": 5.0},
+                    {"title": "LinkedIn - Skill Badges Earned", "type": "count", "marks": 5.0},
+                    {"title": "LinkedIn - Micro-credentials / Learning Certifications", "type": "count", "marks": 5.0},
+                    {"title": "Repository Creation (Drive / GitHub / LMS / Website)", "type": "fixed", "marks": 10.0},
                 ]
             },
             {

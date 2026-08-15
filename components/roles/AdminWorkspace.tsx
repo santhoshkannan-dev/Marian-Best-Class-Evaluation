@@ -154,7 +154,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
 
     addCriteriaItem(selectedCategory.id, {
       title: newItemTitle.trim(),
-      type: newItemType,
+      type: newItemType as any,
       marks: newItemMarks,
       details: newItemDetails.trim()
     });
