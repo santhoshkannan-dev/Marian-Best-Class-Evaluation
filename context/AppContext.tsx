@@ -273,27 +273,34 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (saved) {
-          const data = JSON.parse(saved);
-          if (data.submissionOpen !== undefined) setSubmissionOpen(data.submissionOpen);
-          if (data.evaluationOpen !== undefined) setEvaluationOpen(data.evaluationOpen);
-          if (data.submissionWindowStart !== undefined) setSubmissionWindowStart(data.submissionWindowStart);
-          if (data.submissionWindowEnd !== undefined) setSubmissionWindowEnd(data.submissionWindowEnd);
-          if (data.submissions) setSubmissions(data.submissions);
-          if (data.users) setUsers(data.users);
-          setCriteriaCatalog(defaultCriteriaCatalog);
-          if (data.academicYears) setAcademicYears(data.academicYears);
-          if (data.students) setStudents(data.students);
-          if (data.userGroups) setUserGroups(data.userGroups);
-          if (data.activeAcademicYear) {
-            setActiveAcademicYear(data.activeAcademicYear);
-            setSelectedAcademicYear(data.activeAcademicYear);
+        if (saved && saved !== 'undefined' && saved !== 'null') {
+          try {
+            const data = JSON.parse(saved);
+            if (data) {
+              if (data.submissionOpen !== undefined) setSubmissionOpen(data.submissionOpen);
+              if (data.evaluationOpen !== undefined) setEvaluationOpen(data.evaluationOpen);
+              if (data.submissionWindowStart !== undefined) setSubmissionWindowStart(data.submissionWindowStart);
+              if (data.submissionWindowEnd !== undefined) setSubmissionWindowEnd(data.submissionWindowEnd);
+              if (data.submissions) setSubmissions(data.submissions);
+              if (data.users) setUsers(data.users);
+              setCriteriaCatalog(defaultCriteriaCatalog);
+              if (data.academicYears) setAcademicYears(data.academicYears);
+              if (data.students) setStudents(data.students);
+              if (data.userGroups) setUserGroups(data.userGroups);
+              if (data.activeAcademicYear) {
+                setActiveAcademicYear(data.activeAcademicYear);
+                setSelectedAcademicYear(data.activeAcademicYear);
+              }
+              if (data.loggedIn !== undefined) setLoggedIn(data.loggedIn);
+              if (data.currentRole) setCurrentRole(data.currentRole);
+              if (data.currentUserId) setCurrentUserId(data.currentUserId);
+              if (data.jwtToken) setJwtToken(data.jwtToken);
+              if (data.currentUserInfo) updateCurrentUserInfo(data.currentUserInfo);
+            }
+          } catch (jsonErr) {
+            console.warn('Invalid JSON in localStorage, clearing cache:', jsonErr);
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
           }
-          if (data.loggedIn !== undefined) setLoggedIn(data.loggedIn);
-          if (data.currentRole) setCurrentRole(data.currentRole);
-          if (data.currentUserId) setCurrentUserId(data.currentUserId);
-          if (data.jwtToken) setJwtToken(data.jwtToken);
-          if (data.currentUserInfo) updateCurrentUserInfo(data.currentUserInfo);
         }
 
         // Fetch persisted settings from Django DB backend
