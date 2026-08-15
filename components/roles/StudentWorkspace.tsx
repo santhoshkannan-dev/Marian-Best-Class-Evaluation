@@ -43,19 +43,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     }
   }, [activeTab]);
 
-  // Filter criteria categories based on Student Representative group membership
+  // All 12 criteria categories available for selection
   const availableCriteriaCatalog = React.useMemo(() => {
-    if (isStudentRep) return criteriaCatalog;
-    return criteriaCatalog.filter((c) => {
-      const lower = c.category.toLowerCase().trim();
-      return (
-        c.id !== 'cat-academics' &&
-        c.id !== 'cat-documentation' &&
-        lower !== 'academics' &&
-        lower !== 'documentation'
-      );
-    });
-  }, [criteriaCatalog, isStudentRep]);
+    return criteriaCatalog;
+  }, [criteriaCatalog]);
 
   const { activeAcademicYear } = useApp();
 
@@ -72,8 +63,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [passPercentage, setPassPercentage] = useState<number>(0);
 
   const isAcademicCategory =
-    selectedCategory === 'cat-academics' ||
-    availableCriteriaCatalog.find((c) => c.id === selectedCategory)?.category.toLowerCase().trim() === 'academics';
+    String(selectedCategory) === 'cat-academics' ||
+    currentCategory?.category.toLowerCase().trim() === 'academics';
 
   const existingAcademicSubmission = React.useMemo(() => {
     if (!isAcademicCategory) return null;
@@ -202,8 +193,25 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [checklistPage, setChecklistPage] = useState(1);
   const checklistPageSize = 5;
 
-  const currentCategory = availableCriteriaCatalog.find((c) => c.id === selectedCategory) || availableCriteriaCatalog[0];
-  const currentItem: CriteriaItem | undefined = currentCategory?.items.find((i) => i.id === selectedCriteriaId) || currentCategory?.items[0];
+  const currentCategory = React.useMemo(() => {
+    if (!availableCriteriaCatalog || availableCriteriaCatalog.length === 0) return null;
+    return (
+      availableCriteriaCatalog.find(
+        (c) =>
+          String(c.id) === String(selectedCategory) ||
+          (c.code && String(c.code) === String(selectedCategory)) ||
+          (c.category && c.category.toLowerCase().trim() === String(selectedCategory).toLowerCase().trim())
+      ) || availableCriteriaCatalog[0]
+    );
+  }, [availableCriteriaCatalog, selectedCategory]);
+
+  const currentItem: CriteriaItem | undefined = React.useMemo(() => {
+    if (!currentCategory || !currentCategory.items) return undefined;
+    return (
+      currentCategory.items.find((i) => String(i.id) === String(selectedCriteriaId)) ||
+      currentCategory.items[0]
+    );
+  }, [currentCategory, selectedCriteriaId]);
   const isProgramsOrganized = currentCategory?.id === 'cat-programs-organized' || currentCategory?.category.toLowerCase().trim() === 'programs organized';
 
   const currentEmail = (currentUserInfo?.email || '').toLowerCase().trim();
@@ -723,16 +731,23 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       className="select"
                       value={selectedCategory}
                       onChange={(e) => {
-                        const catId = e.target.value;
-                        setSelectedCategory(catId);
-                        const cat = availableCriteriaCatalog.find((c) => c.id === catId);
-                        if (cat && cat.items[0]) {
+                        const catVal = e.target.value;
+                        setSelectedCategory(catVal);
+                        const cat = availableCriteriaCatalog.find(
+                          (c) =>
+                            String(c.id) === String(catVal) ||
+                            (c.code && String(c.code) === String(catVal)) ||
+                            (c.category && c.category.toLowerCase().trim() === String(catVal).toLowerCase().trim())
+                        );
+                        if (cat && cat.items && cat.items[0]) {
                           setSelectedCriteriaId(cat.items[0].id);
                         }
                       }}
                     >
                       {availableCriteriaCatalog.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.category}</option>
+                        <option key={cat.id || cat.code || cat.category} value={cat.id}>
+                          {cat.category}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -757,7 +772,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         value={selectedCriteriaId}
                         onChange={(e) => setSelectedCriteriaId(Number(e.target.value))}
                       >
-                        {currentCategory?.items.map((item) => (
+                        {currentCategory?.items?.map((item) => (
                           <option key={item.id} value={item.id}>
                             {item.title}
                           </option>
