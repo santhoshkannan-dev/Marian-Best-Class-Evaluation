@@ -11,8 +11,12 @@ from rest_framework.permissions import AllowAny
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+try:
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+except ImportError:
+    id_token = None
+    google_requests = None
 
 from .models import User, Class, Department, Submission, AcademicYear, SystemSetting, UserGroupModel
 
@@ -239,6 +243,12 @@ class GoogleLoginView(APIView):
         if not settings.GOOGLE_CLIENT_ID:
             return Response(
                 {"error": "GOOGLE_CLIENT_ID is not configured."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        if not id_token or not google_requests:
+            return Response(
+                {"error": "google-auth package is missing in server environment."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
