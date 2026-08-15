@@ -56,23 +56,32 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
   const currentCategory = React.useMemo(() => {
     if (!availableCriteriaCatalog || availableCriteriaCatalog.length === 0) return null;
-    return (
-      availableCriteriaCatalog.find(
-        (c) =>
-          String(c.id) === String(selectedCategory) ||
-          (c.code && String(c.code) === String(selectedCategory)) ||
-          (c.category && c.category.toLowerCase().trim() === String(selectedCategory).toLowerCase().trim())
-      ) || availableCriteriaCatalog[0]
-    );
+    return availableCriteriaCatalog.find((c) => matchCategory(c, selectedCategory)) || availableCriteriaCatalog[0];
   }, [availableCriteriaCatalog, selectedCategory]);
 
   const currentItem: CriteriaItem | undefined = React.useMemo(() => {
     if (!currentCategory || !currentCategory.items) return undefined;
-    return (
-      currentCategory.items.find((i) => String(i.id) === String(selectedCriteriaId)) ||
-      currentCategory.items[0]
-    );
+    return currentCategory.items.find((i) => matchItem(i, selectedCriteriaId)) || currentCategory.items[0];
   }, [currentCategory, selectedCriteriaId]);
+
+  // Sync category & criteria selection when catalog loads
+  React.useEffect(() => {
+    if (availableCriteriaCatalog && availableCriteriaCatalog.length > 0) {
+      const activeCat = availableCriteriaCatalog.find((c) => matchCategory(c, selectedCategory)) || availableCriteriaCatalog[0];
+      if (activeCat) {
+        const catVal = activeCat.id || activeCat.code || activeCat.category;
+        if (selectedCategory !== catVal) {
+          setSelectedCategory(catVal);
+        }
+        if (activeCat.items && activeCat.items.length > 0) {
+          const activeItem = activeCat.items.find((i) => matchItem(i, selectedCriteriaId)) || activeCat.items[0];
+          if (activeItem && selectedCriteriaId !== activeItem.id) {
+            setSelectedCriteriaId(activeItem.id);
+          }
+        }
+      }
+    }
+  }, [availableCriteriaCatalog]);
 
   // Academic Category State (Submission Types & Grade Breakdown)
   const [academicSubmissionType, setAcademicSubmissionType] = useState<'Sem Result' | 'SAVE Sem Result'>('Sem Result');
@@ -734,13 +743,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       onChange={(e) => {
                         const catVal = e.target.value;
                         setSelectedCategory(catVal);
-                        const cat = availableCriteriaCatalog.find(
-                          (c) =>
-                            String(c.id) === String(catVal) ||
-                            (c.code && String(c.code) === String(catVal)) ||
-                            (c.category && c.category.toLowerCase().trim() === String(catVal).toLowerCase().trim())
-                        );
-                        if (cat && cat.items && cat.items[0]) {
+                        const cat = availableCriteriaCatalog.find((c) => matchCategory(c, catVal));
+                        if (cat && cat.items && Array.isArray(cat.items) && cat.items.length > 0) {
                           setSelectedCriteriaId(cat.items[0].id);
                         }
                       }}
