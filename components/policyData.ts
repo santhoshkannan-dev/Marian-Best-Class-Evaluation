@@ -60,7 +60,7 @@ export const policyCategories: PolicyCategory[] = [
     description: 'Scientific articles, publications, patents, and projects.',
     badge: '🔬 Innovations',
     icon: '🔬',
-    detailsLabel: '5 Components',
+    detailsLabel: 'Publications & Patents',
     gradient: 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)'
   },
   {
@@ -92,33 +92,24 @@ export const policyCategories: PolicyCategory[] = [
   },
   {
     id: '10',
-    title: 'Programs Organized',
-    description: 'Event coordination, seminar management, and editor roles.',
-    badge: '🎉 Coordination',
-    icon: '🎉',
-    detailsLabel: 'Event Management',
-    gradient: 'linear-gradient(135deg, #e11d48 0%, #9f1239 100%)'
-  },
-  {
-    id: '11',
     title: 'Social Responsibilities',
-    description: 'Community outreach, NSS/NCC camps, and discipline files.',
+    description: 'Community outreach, NSS/NCC camps, and media coverage.',
     badge: '❤️ Social Value',
     icon: '❤️',
     detailsLabel: 'Outreach & Conduct',
     gradient: 'linear-gradient(135deg, #10b981 0%, #065f46 100%)'
   },
   {
-    id: '12',
+    id: '11',
     title: 'Career Advancement',
-    description: 'Self-learning, library engagement, and public repositories.',
+    description: 'Self-learning, library engagement, LinkedIn, and public repositories.',
     badge: '📈 Professional',
     icon: '📈',
-    detailsLabel: '3 Components',
+    detailsLabel: 'Career Building',
     gradient: 'linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%)'
   },
   {
-    id: '13',
+    id: '12',
     title: 'Documentation',
     description: 'Verification proof compliance and file compliance quality.',
     badge: '📂 Auditing',

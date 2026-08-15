@@ -25,99 +25,112 @@ window.criteriaData = [
     id: "cat-online-courses",
     category: "Online Courses",
     items: [
-      { id: 201, title: "NPTEL Course Completed", marks: 10, type: "count" },
-      { id: 202, title: "MOOC Course Completed", marks: 5, type: "count" },
-      { id: 203, title: "Other Recognized Online Course", marks: 3, type: "count" }
-    ]
-  },
-  {
-    id: "cat-internships",
-    category: "Internships",
-    items: [
-      { id: 301, title: "Offline Internship", marks: 5, type: "count" },
-      { id: 302, title: "Online Internship", marks: 3, type: "count" }
+      { id: 201, title: "Swayam / NPTEL Course", marks: 10, type: "count" },
+      { id: 202, title: "MOOC Course", marks: 5, type: "count" }
     ]
   },
   {
     id: "cat-competitive-exams",
     category: "Competitive Exams",
     items: [
-      { id: 401, title: "JRF Qualified", marks: 20, type: "fixed" },
-      { id: 402, title: "NET Qualified", marks: 10, type: "fixed" },
-      { id: 403, title: "SET Qualified", marks: 5, type: "fixed" }
+      { id: 401, title: "JRF Passed", marks: 20, type: "fixed" },
+      { id: 402, title: "NET Passed", marks: 10, type: "fixed" },
+      { id: 403, title: "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", marks: 5, type: "fixed" },
+      { id: 404, title: "Participation in Relevant Exam (UPSC / PSC Exams)", marks: 3, type: "count" }
+    ]
+  },
+  {
+    id: "cat-internships",
+    category: "Internships",
+    items: [
+      { id: 301, title: "Offline Internship (Min. 1 month)", marks: 5, type: "count" },
+      { id: 302, title: "Online Internship (Min. 1 month)", marks: 3, type: "count" }
     ]
   },
   {
     id: "cat-scholarships",
     category: "Scholarships",
     items: [
-      { id: 501, title: "International Scholarship", marks: 20, type: "fixed" },
-      { id: 502, title: "National Scholarship", marks: 10, type: "fixed" },
-      { id: 503, title: "State Scholarship", marks: 5, type: "fixed" }
+      { id: 501, title: "International Level Scholarship", marks: 20, type: "fixed" },
+      { id: 502, title: "National Level Scholarship", marks: 10, type: "fixed" },
+      { id: 503, title: "State Level Scholarship", marks: 5, type: "fixed" },
+      { id: 504, title: "District Level Scholarship", marks: 3, type: "fixed" }
     ]
   },
   {
     id: "cat-research",
     category: "Research",
     items: [
-      { id: 601, title: "Research Publication", marks: 15, type: "count" },
-      { id: 602, title: "Patent Filed or Published", marks: 20, type: "count" },
-      { id: 603, title: "Funded or Approved Student Project", marks: 10, type: "count" }
+      { id: 601, title: "Publication - Scopus / Web of Science", marks: 15, type: "count" },
+      { id: 602, title: "Publication - Conference Proceedings / Peer-Reviewed Article", marks: 10, type: "count" },
+      { id: 603, title: "Paper Presentation - Outside Marian College", marks: 8, type: "count" },
+      { id: 604, title: "Paper Presentation - Inside Marian College", marks: 5, type: "count" },
+      { id: 605, title: "Patent - Utility", marks: 20, type: "count" },
+      { id: 606, title: "Patent - Design", marks: 15, type: "count" },
+      { id: 607, title: "Book Published", marks: 15, type: "count" },
+      { id: 608, title: "Book Chapter Published", marks: 8, type: "count" },
+      { id: 609, title: "Article Published", marks: 5, type: "count" },
+      { id: 610, title: "Funded Project - International Level", marks: 20, type: "count" },
+      { id: 611, title: "Funded Project - National Level", marks: 15, type: "count" },
+      { id: 612, title: "Funded Project - State Level", marks: 10, type: "count" },
+      { id: 613, title: "Funded Project - Other", marks: 5, type: "count" }
+    ]
+  },
+  {
+    id: "cat-startups",
+    category: "Startups",
+    items: [
+      { id: 651, title: "Government-Registered Start-up", marks: 20, type: "count" }
     ]
   },
   {
     id: "cat-prizes",
     category: "Prizes",
     items: [
-      { id: 701, title: "Outside College Individual First Prize", marks: 10, type: "count" },
-      { id: 702, title: "Outside College Individual Second Prize", marks: 8, type: "count" },
-      { id: 703, title: "Outside College Individual Third Prize", marks: 5, type: "count" },
-      { id: 704, title: "Outside College Group First Prize", marks: 6, type: "count" },
-      { id: 705, title: "Outside College Group Second Prize", marks: 4, type: "count" },
-      { id: 706, title: "Outside College Group Third Prize", marks: 3, type: "count" },
-      { id: 707, title: "Inside College Individual First Prize", marks: 5, type: "count" },
-      { id: 708, title: "Inside College Individual Second Prize", marks: 3, type: "count" },
-      { id: 709, title: "Inside College Individual Third Prize", marks: 2, type: "count" },
-      { id: 710, title: "Inside College Group First Prize", marks: 3, type: "count" },
-      { id: 711, title: "Inside College Group Second Prize", marks: 2, type: "count" },
-      { id: 712, title: "Inside College Group Third Prize", marks: 1, type: "count" }
+      { id: 701, title: "Marian College - 1st Prize (Individual)", marks: 5, type: "count" },
+      { id: 702, title: "Marian College - 1st Prize (Group)", marks: 3, type: "count" },
+      { id: 703, title: "Marian College - 2nd Prize (Individual)", marks: 3, type: "count" },
+      { id: 704, title: "Marian College - 2nd Prize (Group)", marks: 2, type: "count" },
+      { id: 705, title: "Marian College - 3rd Prize (Individual)", marks: 2, type: "count" },
+      { id: 706, title: "Marian College - 3rd Prize (Group)", marks: 1, type: "count" },
+      { id: 707, title: "Outside Marian - 1st Prize (Individual)", marks: 10, type: "count" },
+      { id: 708, title: "Outside Marian - 1st Prize (Group)", marks: 6, type: "count" },
+      { id: 709, title: "Outside Marian - 2nd Prize (Individual)", marks: 8, type: "count" },
+      { id: 710, title: "Outside Marian - 2nd Prize (Group)", marks: 4, type: "count" },
+      { id: 711, title: "Outside Marian - 3rd Prize (Individual)", marks: 5, type: "count" },
+      { id: 712, title: "Outside Marian - 3rd Prize (Group)", marks: 3, type: "count" },
+      { id: 713, title: "Outside Marian - Participation (Individual)", marks: 2, type: "count" },
+      { id: 714, title: "Outside Marian - Participation (Group)", marks: 1, type: "count" }
     ]
   },
   {
     id: "cat-leadership",
-    category: "Leadership",
+    category: "Leaderships",
     items: [
-      { id: 801, title: "Class Representative", marks: 10, type: "fixed" },
-      { id: 802, title: "Association or Club Office Bearer", marks: 8, type: "fixed" },
-      { id: 803, title: "Event Coordinator Role", marks: 5, type: "count" }
-    ]
-  },
-  {
-    id: "cat-programs-organized",
-    category: "Programs Organized",
-    items: [
-      { id: 901, title: "Department Level Program Organized", marks: 5, type: "count" },
-      { id: 902, title: "Interdepartment Program Organized", marks: 8, type: "count" },
-      { id: 903, title: "State or National Level Program Organized", marks: 15, type: "count" }
+      { id: 801, title: "MCSC Executive Body Position", marks: 10, type: "fixed" },
+      { id: 802, title: "SAHYA Executive Body Position", marks: 10, type: "fixed" },
+      { id: 803, title: "Clubs & Associations Leadership Position", marks: 8, type: "fixed" }
     ]
   },
   {
     id: "cat-social-responsibility",
-    category: "Social Responsibility",
+    category: "Social Responsibilities",
     items: [
-      { id: 1001, title: "NSS/NCC/Service Activity Participation", marks: 5, type: "count" },
-      { id: 1002, title: "Community Outreach Activity", marks: 3, type: "count" },
-      { id: 1003, title: "Blood Donation or Health Camp Participation", marks: 2, type: "count" }
+      { id: 1001, title: "Coordination of Event (Community Action / Outreach)", marks: 5, type: "count" },
+      { id: 1002, title: "Participation in Event", marks: 3, type: "count" },
+      { id: 1003, title: "News Media Coverage (Excluding Social Media)", marks: 5, type: "count" }
     ]
   },
   {
     id: "cat-career-advancement",
     category: "Career Advancement",
     items: [
-      { id: 1101, title: "Placement Offer Received", marks: 20, type: "fixed" },
-      { id: 1102, title: "Higher Studies Admission Secured", marks: 15, type: "fixed" },
-      { id: 1103, title: "Professional Certification Completed", marks: 8, type: "count" },
-      { id: 1104, title: "Career Workshop Participation", marks: 2, type: "count" }
+      { id: 1101, title: "Library - Regular Footfall (Biometric / Entry)", marks: 5, type: "count" },
+      { id: 1102, title: "Library - Academic & Career Books Issued/Read", marks: 5, type: "count" },
+      { id: 1103, title: "LinkedIn - Profile Completion (Active Profile)", marks: 5, type: "fixed" },
+      { id: 1104, title: "LinkedIn - Skill Badges Earned", marks: 5, type: "count" },
+      { id: 1105, title: "LinkedIn - Micro-credentials / Learning Certifications", marks: 5, type: "count" },
+      { id: 1106, title: "Repository Creation (Drive / GitHub / LMS / Website)", marks: 10, type: "fixed" }
     ]
   },
   {
@@ -132,5 +145,4 @@ window.criteriaData = [
 ];
 
 window.seedStudents = [];
-
 window.seedSubmissions = [];
