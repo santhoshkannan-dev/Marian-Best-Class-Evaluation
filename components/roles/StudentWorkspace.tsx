@@ -76,6 +76,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return availableCriteriaCatalog.find((c) => matchCategory(c, selectedCategory)) || availableCriteriaCatalog[0];
   }, [availableCriteriaCatalog, selectedCategory]);
 
+  const selectCategoryValue = React.useMemo(() => {
+    if (!currentCategory) return 'cat-online-courses';
+    return currentCategory.code || String(currentCategory.id) || currentCategory.category;
+  }, [currentCategory]);
+
   const currentItem: CriteriaItem | undefined = React.useMemo(() => {
     if (!currentCategory || !currentCategory.items) return undefined;
     return currentCategory.items.find((i) => matchItem(i, selectedCriteriaId)) || currentCategory.items[0];
@@ -744,7 +749,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     <label className="form-label">Category</label>
                     <select
                       className="select"
-                      value={selectedCategory}
+                      value={selectCategoryValue}
                       onChange={(e) => {
                         const catVal = e.target.value;
                         setSelectedCategory(catVal);
@@ -754,11 +759,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         }
                       }}
                     >
-                      {availableCriteriaCatalog.map((cat) => (
-                        <option key={cat.id || cat.code || cat.category} value={cat.id || cat.code || cat.category}>
-                          {cat.category}
-                        </option>
-                      ))}
+                      {availableCriteriaCatalog.map((cat) => {
+                        const optionVal = cat.code || String(cat.id) || cat.category;
+                        return (
+                          <option key={cat.id || cat.code || cat.category} value={optionVal}>
+                            {cat.category}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
