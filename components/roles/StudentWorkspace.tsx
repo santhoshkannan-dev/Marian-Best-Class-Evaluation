@@ -54,6 +54,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [selectedCategory, setSelectedCategory] = useState(availableCriteriaCatalog[0]?.id || 'cat-online-courses');
   const [selectedCriteriaId, setSelectedCriteriaId] = useState<number>(availableCriteriaCatalog[0]?.items[0]?.id || 201);
 
+  const currentCategory = React.useMemo(() => {
+    if (!availableCriteriaCatalog || availableCriteriaCatalog.length === 0) return null;
+    return (
+      availableCriteriaCatalog.find(
+        (c) =>
+          String(c.id) === String(selectedCategory) ||
+          (c.code && String(c.code) === String(selectedCategory)) ||
+          (c.category && c.category.toLowerCase().trim() === String(selectedCategory).toLowerCase().trim())
+      ) || availableCriteriaCatalog[0]
+    );
+  }, [availableCriteriaCatalog, selectedCategory]);
+
+  const currentItem: CriteriaItem | undefined = React.useMemo(() => {
+    if (!currentCategory || !currentCategory.items) return undefined;
+    return (
+      currentCategory.items.find((i) => String(i.id) === String(selectedCriteriaId)) ||
+      currentCategory.items[0]
+    );
+  }, [currentCategory, selectedCriteriaId]);
+
   // Academic Category State (Submission Types & Grade Breakdown)
   const [academicSubmissionType, setAcademicSubmissionType] = useState<'Sem Result' | 'SAVE Sem Result'>('Sem Result');
   const [sGradeCount, setSGradeCount] = useState<number>(0);
@@ -193,25 +213,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [checklistPage, setChecklistPage] = useState(1);
   const checklistPageSize = 5;
 
-  const currentCategory = React.useMemo(() => {
-    if (!availableCriteriaCatalog || availableCriteriaCatalog.length === 0) return null;
-    return (
-      availableCriteriaCatalog.find(
-        (c) =>
-          String(c.id) === String(selectedCategory) ||
-          (c.code && String(c.code) === String(selectedCategory)) ||
-          (c.category && c.category.toLowerCase().trim() === String(selectedCategory).toLowerCase().trim())
-      ) || availableCriteriaCatalog[0]
-    );
-  }, [availableCriteriaCatalog, selectedCategory]);
-
-  const currentItem: CriteriaItem | undefined = React.useMemo(() => {
-    if (!currentCategory || !currentCategory.items) return undefined;
-    return (
-      currentCategory.items.find((i) => String(i.id) === String(selectedCriteriaId)) ||
-      currentCategory.items[0]
-    );
-  }, [currentCategory, selectedCriteriaId]);
   const isProgramsOrganized = currentCategory?.id === 'cat-programs-organized' || currentCategory?.category.toLowerCase().trim() === 'programs organized';
 
   const currentEmail = (currentUserInfo?.email || '').toLowerCase().trim();
