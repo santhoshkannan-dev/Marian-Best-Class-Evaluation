@@ -9,6 +9,23 @@ interface StudentWorkspaceProps {
   view?: 'dashboard' | 'submit' | 'submissions' | 'verification' | 'profile';
 }
 
+const matchCategory = (c: any, val: any) => {
+  if (!c || val === undefined || val === null) return false;
+  const sVal = String(val).toLowerCase().trim();
+  const sId = String(c.id || '').toLowerCase().trim();
+  const sCode = String(c.code || '').toLowerCase().trim();
+  const sName = String(c.category || '').toLowerCase().trim();
+  return sVal === sId || sVal === sCode || sVal === sName;
+};
+
+const matchItem = (item: any, val: any) => {
+  if (!item || val === undefined || val === null) return false;
+  const sVal = String(val).toLowerCase().trim();
+  const sId = String(item.id || '').toLowerCase().trim();
+  const sTitle = String(item.title || '').toLowerCase().trim();
+  return sVal === sId || sVal === sTitle;
+};
+
 export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const router = useRouter();
   const {
