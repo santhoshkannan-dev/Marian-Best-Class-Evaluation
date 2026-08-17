@@ -1949,6 +1949,11 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                                   <span>📅</span> Exam Date: {sub.examDate || sub.evidence?.examDate}
                                 </div>
                               )}
+                              {(sub.awardedDate || sub.evidence?.awardedDate) && (
+                                <div style={{ fontWeight: 700, color: '#b45309', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span>📅</span> Awarded Date: {sub.awardedDate || sub.evidence?.awardedDate}
+                                </div>
+                              )}
                               {(sub.startDate || sub.evidence?.startDate) && (
                                 <div style={{ fontWeight: 700, color: '#1d4ed8', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <span>📅</span> {sub.startDate || sub.evidence?.startDate} to {sub.endDate || sub.evidence?.endDate}

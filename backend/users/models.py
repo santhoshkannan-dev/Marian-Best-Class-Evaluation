@@ -95,6 +95,7 @@ class Submission(models.Model):
     start_date = models.CharField(max_length=50, blank=True, null=True)
     end_date = models.CharField(max_length=50, blank=True, null=True)
     exam_date = models.CharField(max_length=50, blank=True, null=True)
+    awarded_date = models.CharField(max_length=50, blank=True, null=True)
     evaluator_verified = models.BooleanField(default=False)
     evidence = models.JSONField(blank=True, null=True)
     verified_by_name = models.CharField(max_length=255, blank=True, null=True)

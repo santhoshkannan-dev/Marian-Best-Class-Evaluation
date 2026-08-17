@@ -129,6 +129,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('internship') || catCode === 'cat-internships' || catId === 'cat-internships' || catId === '3';
   }, [currentCategory]);
 
+  const isScholarshipsCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('scholarship') || catCode === 'cat-scholarships' || catId === 'cat-scholarships' || catId === '5';
+  }, [currentCategory]);
+
   const isUpscPscExamItem = React.useMemo(() => {
     if (!currentItem) return false;
     const title = String(currentItem.title || '').toLowerCase();
@@ -162,6 +170,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [examDate, setExamDate] = useState<string>('');
+  const [awardedDate, setAwardedDate] = useState<string>('');
   const [proofFile, setProofFile] = useState<string>('');
   const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -183,6 +192,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         else if (sub.evidence?.endDate) setEndDate(sub.evidence.endDate);
         if (sub.examDate) setExamDate(sub.examDate);
         else if (sub.evidence?.examDate) setExamDate(sub.evidence.examDate);
+        if (sub.awardedDate) setAwardedDate(sub.awardedDate);
+        else if (sub.evidence?.awardedDate) setAwardedDate(sub.evidence.awardedDate);
         if (sub.evidence?.count) setCountValue(sub.evidence.count);
         if (sub.evidence?.submissionType) {
           setAcademicSubmissionType(sub.evidence.submissionType as 'Sem Result' | 'SAVE Sem Result');
@@ -497,6 +508,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
+    if (isScholarshipsCategory && !awardedDate) {
+      alert("Please select an Awarded Date for the scholarship.");
+      return;
+    }
+
     if (isUpscPscExamItem && upscPscSubmissionsCount >= 3 && !editingSubId) {
       alert("Maximum Limit Reached: A student can only submit a maximum of 3 examinations for Participation in Relevant Examination (UPSC/PSC exams).");
       return;
@@ -558,6 +574,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
           type: 'competitive_exam_date',
           examDate
         }
+      : isScholarshipsCategory
+      ? {
+          type: 'scholarship_date',
+          awardedDate
+        }
       : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
@@ -589,6 +610,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         startDate: (isOnlineCourses || isInternshipsCategory) ? startDate : undefined,
         endDate: (isOnlineCourses || isInternshipsCategory) ? endDate : undefined,
         examDate: isCompetitiveExamsCategory ? examDate : undefined,
+        awardedDate: isScholarshipsCategory ? awardedDate : undefined,
         status: initialStatus,
         evidence: computedEvidence
       });
@@ -605,6 +627,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         startDate: (isOnlineCourses || isInternshipsCategory) ? startDate : undefined,
         endDate: (isOnlineCourses || isInternshipsCategory) ? endDate : undefined,
         examDate: isCompetitiveExamsCategory ? examDate : undefined,
+        awardedDate: isScholarshipsCategory ? awardedDate : undefined,
         evaluatorVerified: false,
         evidence: computedEvidence
       });
@@ -1035,9 +1058,29 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             ? 'EXAM NAME'
                             : isInternshipsCategory
                             ? 'INTERNSHIP DETAIL'
+                            : isScholarshipsCategory
+                            ? 'SCHOLARSHIP DETAIL'
                             : `${currentItem.type.toUpperCase()} BASED`}
                         </span>
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
+                      </div>
+                    )}
+                    {isScholarshipsCategory && (
+                      <div style={{
+                        padding: '12px 16px',
+                        background: '#fef3c7',
+                        border: '1.5px solid #fde68a',
+                        borderRadius: '12px',
+                        marginTop: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        color: '#92400e',
+                        fontWeight: 700,
+                        fontSize: '0.86rem'
+                      }}>
+                        <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+                        <span><strong>Notice:</strong> Scholarships availed from Marian will not be considered.</span>
                       </div>
                     )}
                     {isUpscPscExamItem && (
@@ -1107,6 +1150,19 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         className="input"
                         value={examDate}
                         onChange={(e) => setExamDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  ) : isScholarshipsCategory ? (
+                    <div className="form-group" style={{ gridColumn: '1 / -1', padding: '16px', background: 'rgba(217, 119, 6, 0.04)', border: '1.5px solid rgba(217, 119, 6, 0.2)', borderRadius: '14px' }}>
+                      <label className="form-label" style={{ fontWeight: 800, color: '#b45309', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        📅 Awarded Date
+                      </label>
+                      <input
+                        type="date"
+                        className="input"
+                        value={awardedDate}
+                        onChange={(e) => setAwardedDate(e.target.value)}
                         required
                       />
                     </div>
@@ -1328,6 +1384,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                               ) : (sub.examDate || sub.evidence?.examDate) ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#c2410c', background: '#fff7ed', border: '1px solid #ffedd5', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
                                   📅 Exam Date: {sub.examDate || sub.evidence?.examDate}
+                                </span>
+                              ) : (sub.awardedDate || sub.evidence?.awardedDate) ? (
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#b45309', background: '#fef3c7', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
+                                  📅 Awarded Date: {sub.awardedDate || sub.evidence?.awardedDate}
                                 </span>
                               ) : (sub.startDate || sub.evidence?.startDate) ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
@@ -1721,6 +1781,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             {(sub.examDate || sub.evidence?.examDate) && (
                               <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#c2410c', marginBottom: '4px' }}>
                                 📅 Exam Date: {sub.examDate || sub.evidence?.examDate}
+                              </div>
+                            )}
+                            {(sub.awardedDate || sub.evidence?.awardedDate) && (
+                              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#b45309', marginBottom: '4px' }}>
+                                📅 Awarded Date: {sub.awardedDate || sub.evidence?.awardedDate}
                               </div>
                             )}
                             {(sub.startDate || sub.evidence?.startDate) && (

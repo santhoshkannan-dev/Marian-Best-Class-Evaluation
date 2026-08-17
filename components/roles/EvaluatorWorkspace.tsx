@@ -643,6 +643,11 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                                       📅 Exam Date: {sub.examDate || sub.evidence?.examDate}
                                     </div>
                                   )}
+                                  {(sub.awardedDate || sub.evidence?.awardedDate) && (
+                                    <div style={{ fontSize: '0.78rem', color: '#b45309', fontWeight: 700, marginTop: '2px' }}>
+                                      📅 Awarded Date: {sub.awardedDate || sub.evidence?.awardedDate}
+                                    </div>
+                                  )}
                                   {(sub.startDate || sub.evidence?.startDate) && (
                                     <div style={{ fontSize: '0.78rem', color: '#1d4ed8', fontWeight: 700, marginTop: '2px' }}>
                                       📅 Duration: {sub.startDate || sub.evidence?.startDate} to {sub.endDate || sub.evidence?.endDate}

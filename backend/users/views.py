@@ -874,6 +874,8 @@ class SubmissionListView(APIView):
                 "end_date": s.end_date,
                 "examDate": s.exam_date or (s.evidence and s.evidence.get('examDate')) or None,
                 "exam_date": s.exam_date,
+                "awardedDate": s.awarded_date or (s.evidence and s.evidence.get('awardedDate')) or None,
+                "awarded_date": s.awarded_date,
                 "evaluatorVerified": s.evaluator_verified,
                 "evidence": s.evidence,
                 "verifiedByName": s.verified_by_name,
@@ -908,6 +910,7 @@ class SubmissionListView(APIView):
         start_date = request.data.get('start_date') or request.data.get('startDate') or (evidence and evidence.get('startDate')) or None
         end_date = request.data.get('end_date') or request.data.get('endDate') or (evidence and evidence.get('endDate')) or None
         exam_date = request.data.get('exam_date') or request.data.get('examDate') or (evidence and evidence.get('examDate')) or None
+        awarded_date = request.data.get('awarded_date') or request.data.get('awardedDate') or (evidence and evidence.get('awardedDate')) or None
         
         if not criteria_id:
             return Response({"error": "criteriaId is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -935,6 +938,7 @@ class SubmissionListView(APIView):
             start_date=start_date,
             end_date=end_date,
             exam_date=exam_date,
+            awarded_date=awarded_date,
             evidence=evidence
         )
         
@@ -993,6 +997,8 @@ class SubmissionListView(APIView):
             "end_date": submission.end_date,
             "examDate": submission.exam_date,
             "exam_date": submission.exam_date,
+            "awardedDate": submission.awarded_date,
+            "awarded_date": submission.awarded_date,
             "evaluatorVerified": submission.evaluator_verified,
             "evidence": submission.evidence,
             "verifiedByName": submission.verified_by_name,
@@ -1055,11 +1061,15 @@ class SubmissionDetailView(APIView):
             submission.end_date = request.data.get('end_date') or request.data.get('endDate')
         if 'exam_date' in request.data or 'examDate' in request.data:
             submission.exam_date = request.data.get('exam_date') or request.data.get('examDate')
+        if 'awarded_date' in request.data or 'awardedDate' in request.data:
+            submission.awarded_date = request.data.get('awarded_date') or request.data.get('awardedDate')
         if 'evidence' in request.data:
             submission.evidence = request.data.get('evidence')
             if isinstance(submission.evidence, dict):
                 if submission.evidence.get('examDate'):
                     submission.exam_date = submission.evidence.get('examDate')
+                if submission.evidence.get('awardedDate'):
+                    submission.awarded_date = submission.evidence.get('awardedDate')
                 if submission.evidence.get('startDate'):
                     submission.start_date = submission.evidence.get('startDate')
                 if submission.evidence.get('endDate'):
@@ -1096,6 +1106,8 @@ class SubmissionDetailView(APIView):
             "end_date": submission.end_date,
             "examDate": submission.exam_date,
             "exam_date": submission.exam_date,
+            "awardedDate": submission.awarded_date,
+            "awarded_date": submission.awarded_date,
             "evaluatorVerified": submission.evaluator_verified,
             "evidence": submission.evidence,
             "verifiedByName": submission.verified_by_name,

@@ -37,6 +37,7 @@ export interface SubmissionEvidence {
   startDate?: string;
   endDate?: string;
   examDate?: string;
+  awardedDate?: string;
   value?: number;
   checked?: boolean;
   submissionType?: string;
@@ -73,6 +74,8 @@ export interface Submission {
   endDate?: string;
   examDate?: string;
   exam_date?: string;
+  awardedDate?: string;
+  awarded_date?: string;
   description: string;
   status: 'Approved' | 'Pending' | 'Pending Verification' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Verified by Student Rep' | 'Teacher Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
   remarks?: string;
@@ -179,10 +182,10 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
     id: "cat-scholarships",
     category: "Scholarships",
     items: [
-      { id: 501, title: "International Level Scholarship", marks: 20, type: "fixed" },
-      { id: 502, title: "National Level Scholarship", marks: 10, type: "fixed" },
-      { id: 503, title: "State Level Scholarship", marks: 5, type: "fixed" },
-      { id: 504, title: "District Level Scholarship", marks: 3, type: "fixed" }
+      { id: 501, title: "International Level Scholarship", marks: 20, type: "date" },
+      { id: 502, title: "National Level Scholarship", marks: 10, type: "date" },
+      { id: 503, title: "State Level Scholarship", marks: 5, type: "date" },
+      { id: 504, title: "District Level Scholarship", marks: 3, type: "date" }
     ]
   },
   {
