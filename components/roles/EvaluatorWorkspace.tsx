@@ -328,7 +328,9 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                       onChange={(e) => {
                         const val = e.target.value as 'department' | 'class';
                         setLookupType(val);
-                        setSelectedLookupGroup(val === 'department' ? 'Computer Applications' : 'BCA A');
+                        const firstDept = classes.length > 0 ? classes[0].department : 'Computer Applications';
+                        const firstClass = classes.length > 0 ? classes[0].name : 'BCA A';
+                        setSelectedLookupGroup(val === 'department' ? firstDept : firstClass);
                       }}
                     >
                       <option value="department">Department-wise</option>
@@ -343,19 +345,15 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                     >
                       {lookupType === 'department' ? (
                         <>
-                          <option value="Computer Applications">Computer Applications</option>
-                          <option value="Commerce">Commerce</option>
-                          <option value="Computer Science">Computer Science</option>
-                          <option value="English">English</option>
-                          <option value="Business Administration">Business Administration</option>
+                          {Array.from(new Set(classes.map((c: any) => c.department))).sort().map(dept => (
+                            <option key={String(dept)} value={String(dept)}>{String(dept)}</option>
+                          ))}
                         </>
                       ) : (
                         <>
-                          <option value="BCA A">BCA A</option>
-                          <option value="BCom A">BCom A</option>
-                          <option value="BSc CS B">BSc CS B</option>
-                          <option value="BBA A">BBA A</option>
-                          <option value="BA English A">BA English A</option>
+                          {classes.map((c: any) => c.name).sort().map(cls => (
+                            <option key={String(cls)} value={String(cls)}>{String(cls)}</option>
+                          ))}
                         </>
                       )}
                     </select>
