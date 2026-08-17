@@ -148,19 +148,19 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const getResearchSubOptions = React.useCallback((title: string): string[] => {
     const t = (title || '').toLowerCase().trim();
     if (t.includes('publication')) {
-      return ['Scopus / Web of Science', 'Conference Proceedings / Peer-reviewed article'];
+      return ['Scopus / Web of Science', 'Conference Proceedings / Peer-Reviewed Article'];
     }
     if (t.includes('paper presentation')) {
-      return ['Outside institution', 'Inside institution'];
+      return ['Outside Institution', 'Inside Institution'];
     }
     if (t.includes('patent')) {
-      return ['utility', 'design'];
+      return ['Utility', 'Design'];
     }
     if (t.includes('book') || t.includes('article')) {
-      return ['book', 'book chapter', 'article'];
+      return ['Book', 'Book Chapter', 'Article'];
     }
     if (t.includes('funded')) {
-      return ['International', 'National', 'state and any other'];
+      return ['International', 'National', 'State and Any Other'];
     }
     return ['General'];
   }, []);
