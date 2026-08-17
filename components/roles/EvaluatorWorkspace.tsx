@@ -41,6 +41,16 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
     return userEmail && assignedEvaluators.some(e => e.toLowerCase() === userEmail);
   };
 
+  const getStudentDept = (student: any, sub?: any) => {
+    if (student?.department) return student.department;
+    const className = student?.className || sub?.class_name || sub?.className;
+    if (className && classes?.length) {
+      const classObj = classes.find((c: any) => c.name === className);
+      if (classObj?.department) return classObj.department;
+    }
+    return 'Unknown';
+  };
+
   // Submissions forwarded from Class Teacher (Round 2) awaiting Evaluator Verification (Round 3)
   const teacherApprovedSubmissions = submissions.filter((s) => {
     const isValidStatus = ['Teacher Verified', 'Approved', 'Verified'].includes(s.status) && !s.evaluatorVerified && s.status !== 'Locked' && s.status !== 'Evaluated';
@@ -90,7 +100,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
       item: item?.title || 'Unknown',
       status: s.status,
       marks: s.marks || item?.marks || 0,
-      dept: student?.department || 'Unknown'
+      dept: getStudentDept(student, s)
     };
   });
 
@@ -106,7 +116,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
       studentsMap.set(student.id, {
         name: student.name || student.email,
         class: student.className || 'Unknown',
-        dept: student.department || 'Unknown',
+        dept: getStudentDept(student, s),
         score: 0,
         email: student.email
       });
@@ -162,15 +172,15 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
     return filtered.reduce((prev, current) => (prev.score > current.score) ? prev : current);
   };
 
-  const allDepts = Array.from(new Set(students.map(s => s.department).filter(Boolean)));
+  const allDepts = Array.from(new Set(students.map(s => getStudentDept(s)).filter(d => d && d !== 'Unknown')));
   const deptStats = allDepts.map(deptName => {
      const deptPending = teacherApprovedSubmissions.filter(s => {
          const student = students.find(st => st.id === s.studentId);
-         return student?.department === deptName;
+         return getStudentDept(student, s) === deptName;
      }).length;
      const deptVerified = verifiedSubmissions.filter(s => {
          const student = students.find(st => st.id === s.studentId);
-         return student?.department === deptName;
+         return getStudentDept(student, s) === deptName;
      }).length;
      
      return {
@@ -191,7 +201,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
       item: item?.title || 'Unknown',
       status: s.status,
       marks: item?.marks || 0,
-      dept: student?.department || 'Unknown'
+      dept: getStudentDept(student, s)
     };
   });
 
@@ -600,7 +610,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                           {(activeTab === 'pending' ? teacherApprovedSubmissions : verifiedSubmissions)
                             .filter(sub => {
                                const studentObj = students.find((s) => s.id === sub.studentId);
-                               return studentObj?.department === dept.name;
+                               return getStudentDept(studentObj, sub) === dept.name;
                             })
                             .map((sub) => {
                             const studentObj = students.find((s) => s.id === sub.studentId);
@@ -653,7 +663,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
 
                           {(activeTab === 'pending' ? teacherApprovedSubmissions : verifiedSubmissions).filter(sub => {
                                const studentObj = students.find((s) => s.id === sub.studentId);
-                               return studentObj?.department === dept.name;
+                               return getStudentDept(studentObj, sub) === dept.name;
                           }).length === 0 && (
                             <p className="muted" style={{ fontSize: '0.84rem', margin: 0, textAlign: 'center' }}>No {activeTab} verification files for this department.</p>
                           )}
