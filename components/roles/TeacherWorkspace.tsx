@@ -500,6 +500,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
 
     addStudent({
       name: newStudentName,
+      email: newStudentEmail,
       className: teacherClass || 'BSc CS A'
     });
 

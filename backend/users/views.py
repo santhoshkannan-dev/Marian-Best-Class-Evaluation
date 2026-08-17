@@ -824,6 +824,18 @@ class UserManagementView(APIView):
             "className": user.class_name.name if user.class_name else None,
         })
 
+    def delete(self, request):
+        user_id = request.data.get('id')
+        if not user_id:
+            return Response({"error": "User id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(id=user_id)
+            user.delete()
+            return Response({"success": True})
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
 class SubmissionListView(APIView):
     permission_classes = [AllowAny]
 

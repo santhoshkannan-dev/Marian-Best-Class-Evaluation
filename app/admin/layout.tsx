@@ -8,15 +8,23 @@ import { useApp } from '@/context/AppContext';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { loggedIn, logout, selectedAcademicYear } = useApp();
+  const { loggedIn, logout, selectedAcademicYear, isInitialized } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
-    if (!loggedIn) {
+    if (isInitialized && !loggedIn) {
       router.push('/login');
     }
-  }, [loggedIn, router]);
+  }, [loggedIn, isInitialized, router]);
+
+  if (!isInitialized) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!loggedIn) {
     return null;

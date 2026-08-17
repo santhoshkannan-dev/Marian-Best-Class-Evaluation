@@ -92,6 +92,7 @@ interface AppContextType {
   assignEvaluatorsToCategory: (categoryId: string, evaluators: string[]) => Promise<void>;
   championsData: Record<string, Champion[]>;
   fetchChampions: () => Promise<void>;
+  isInitialized: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -1098,14 +1099,50 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
-  const addStudent = (newStud: Omit<Student, 'id'>) => {
-    const nextId = students.reduce((max, s) => Math.max(max, s.id), 0) + 1;
-    const student: Student = { ...newStud, id: nextId };
-    setStudents((prev) => [...prev, student]);
+  const addStudent = async (newStud: Omit<Student, 'id'>) => {
+    try {
+      const email = newStud.email || `${newStud.name.replace(/\s+/g, '.').toLowerCase()}@mariancollege.org`;
+      const res = await fetch('http://localhost:8000/api/users/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newStud.name,
+          email: email,
+          role: 'student',
+          class_name: newStud.className
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const student: Student = { ...newStud, id: data.id, email: data.email };
+        setStudents((prev) => [...prev, student]);
+      } else {
+        const nextId = students.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+        const student: Student = { ...newStud, id: nextId, email };
+        setStudents((prev) => [...prev, student]);
+      }
+    } catch (e) {
+      console.error('Failed to add student to backend API:', e);
+      const nextId = students.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+      const student: Student = { ...newStud, id: nextId, email: newStud.email };
+      setStudents((prev) => [...prev, student]);
+    }
   };
 
-  const deleteStudent = (id: number) => {
-    setStudents((prev) => prev.filter((s) => s.id !== id));
+  const deleteStudent = async (id: number) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/users/', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok || res.status === 404) {
+        setStudents((prev) => prev.filter((s) => s.id !== id));
+      }
+    } catch (e) {
+      console.error('Failed to delete student from backend API:', e);
+      setStudents((prev) => prev.filter((s) => s.id !== id));
+    }
   };
 
   const addUserGroup = async (newGrp: Omit<UserGroup, 'id'>) => {
@@ -1592,7 +1629,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         addUserGlobal,
         assignEvaluatorsToCategory,
         championsData,
-        fetchChampions
+        fetchChampions,
+        isInitialized,
       }}
     >
       {children}
