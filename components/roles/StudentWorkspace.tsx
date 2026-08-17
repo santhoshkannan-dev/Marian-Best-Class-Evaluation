@@ -97,9 +97,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [failCount, setFailCount] = useState<number>(0);
   const [passPercentage, setPassPercentage] = useState<number>(0);
 
-  const isAcademicCategory =
-    String(selectedCategory) === 'cat-academics' ||
-    currentCategory?.category.toLowerCase().trim() === 'academics';
+  const isAcademicCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName === 'academics' || catCode === 'cat-academics' || catId === 'cat-academics' || catId === '1';
+  }, [currentCategory]);
 
   const existingAcademicSubmission = React.useMemo(() => {
     if (!isAcademicCategory) return null;
@@ -111,13 +115,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     );
   }, [isAcademicCategory, submissions, activeAcademicYear, academicSubmissionType, editingSubId]);
 
-  // Sync selected category if current selection is not available for regular student
+  // Sync selected category if current selection is not available in catalog
   React.useEffect(() => {
-    if (!availableCriteriaCatalog.some((c) => c.id === selectedCategory)) {
-      if (availableCriteriaCatalog[0]) {
-        setSelectedCategory(availableCriteriaCatalog[0].id);
-        if (availableCriteriaCatalog[0].items[0]) {
-          setSelectedCriteriaId(availableCriteriaCatalog[0].items[0].id);
+    if (availableCriteriaCatalog && availableCriteriaCatalog.length > 0) {
+      if (!availableCriteriaCatalog.some((c) => matchCategory(c, selectedCategory))) {
+        const defaultCat = availableCriteriaCatalog[0];
+        setSelectedCategory(defaultCat.id || defaultCat.code || 'cat-academics');
+        if (defaultCat.items && defaultCat.items[0]) {
+          setSelectedCriteriaId(defaultCat.items[0].id);
         }
       }
     }
@@ -772,7 +777,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     <label className="form-label">Category</label>
                     <select
                       className="select"
-                      value={selectedCategory}
+                      value={String(selectedCategory)}
                       onChange={(e) => {
                         const catVal = e.target.value;
                         setSelectedCategory(catVal);
@@ -783,7 +788,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       }}
                     >
                       {availableCriteriaCatalog.map((cat) => {
-                        const optionVal = cat.id || cat.code || cat.category;
+                        const optionVal = String(cat.id || cat.code || cat.category);
                         return (
                           <option key={cat.id || cat.code || cat.category} value={optionVal}>
                             {cat.category}
