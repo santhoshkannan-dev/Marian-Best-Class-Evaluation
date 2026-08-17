@@ -648,6 +648,11 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                                       📅 Awarded Date: {sub.awardedDate || sub.evidence?.awardedDate}
                                     </div>
                                   )}
+                                  {(sub.researchSubOption || sub.evidence?.researchSubOption) && (
+                                    <div style={{ fontSize: '0.78rem', color: '#0369a1', fontWeight: 700, marginTop: '2px' }}>
+                                      🔬 Sub-Option: {sub.researchSubOption || sub.evidence?.researchSubOption}
+                                    </div>
+                                  )}
                                   {(sub.startDate || sub.evidence?.startDate) && (
                                     <div style={{ fontSize: '0.78rem', color: '#1d4ed8', fontWeight: 700, marginTop: '2px' }}>
                                       📅 Duration: {sub.startDate || sub.evidence?.startDate} to {sub.endDate || sub.evidence?.endDate}

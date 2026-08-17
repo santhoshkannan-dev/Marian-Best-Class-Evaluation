@@ -137,6 +137,34 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('scholarship') || catCode === 'cat-scholarships' || catId === 'cat-scholarships' || catId === '5';
   }, [currentCategory]);
 
+  const isResearchCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('research') || catCode === 'cat-research' || catId === 'cat-research' || catId === '6';
+  }, [currentCategory]);
+
+  const getResearchSubOptions = React.useCallback((title: string): string[] => {
+    const t = (title || '').toLowerCase();
+    if (t.includes('publication')) {
+      return ['Scopus / Web of Science', 'Conference Proceedings / Peer-reviewed article'];
+    }
+    if (t.includes('paper presentation')) {
+      return ['Outside institution', 'Inside institution'];
+    }
+    if (t.includes('patent')) {
+      return ['Utility', 'Design'];
+    }
+    if (t.includes('book') || t.includes('article')) {
+      return ['Book', 'Book Chapter', 'Article'];
+    }
+    if (t.includes('funded')) {
+      return ['International', 'National', 'State and any other'];
+    }
+    return ['General'];
+  }, []);
+
   const isUpscPscExamItem = React.useMemo(() => {
     if (!currentItem) return false;
     const title = String(currentItem.title || '').toLowerCase();
@@ -171,9 +199,19 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [endDate, setEndDate] = useState<string>('');
   const [examDate, setExamDate] = useState<string>('');
   const [awardedDate, setAwardedDate] = useState<string>('');
+  const [researchSubOption, setResearchSubOption] = useState<string>('');
   const [proofFile, setProofFile] = useState<string>('');
   const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+
+  React.useEffect(() => {
+    if (isResearchCategory && currentItem) {
+      const options = getResearchSubOptions(currentItem.title);
+      if (!researchSubOption || !options.includes(researchSubOption)) {
+        setResearchSubOption(options[0] || '');
+      }
+    }
+  }, [isResearchCategory, currentItem, getResearchSubOptions]);
 
   const [submissionRemarksMap, setSubmissionRemarksMap] = useState<Record<number, string>>({});
 
@@ -194,6 +232,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         else if (sub.evidence?.examDate) setExamDate(sub.evidence.examDate);
         if (sub.awardedDate) setAwardedDate(sub.awardedDate);
         else if (sub.evidence?.awardedDate) setAwardedDate(sub.evidence.awardedDate);
+        if (sub.researchSubOption) setResearchSubOption(sub.researchSubOption);
+        else if (sub.evidence?.researchSubOption) setResearchSubOption(sub.evidence.researchSubOption);
         if (sub.evidence?.count) setCountValue(sub.evidence.count);
         if (sub.evidence?.submissionType) {
           setAcademicSubmissionType(sub.evidence.submissionType as 'Sem Result' | 'SAVE Sem Result');
@@ -520,6 +560,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
+    if (isResearchCategory && !researchSubOption) {
+      alert("Please select a Research Sub-Option.");
+      return;
+    }
+
     if (isOnlineCoursesCategory && onlineCoursesSubmissionsCount >= 3 && !editingSubId) {
       alert("Maximum Limit Reached: A student can only submit a maximum of 3 courses for Online Courses.");
       return;
@@ -591,6 +636,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
           type: 'scholarship_date',
           awardedDate
         }
+      : isResearchCategory
+      ? {
+          type: 'research',
+          researchSubOption
+        }
       : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
@@ -623,6 +673,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         endDate: (isOnlineCourses || isInternshipsCategory) ? endDate : undefined,
         examDate: isCompetitiveExamsCategory ? examDate : undefined,
         awardedDate: isScholarshipsCategory ? awardedDate : undefined,
+        researchSubOption: isResearchCategory ? researchSubOption : undefined,
         status: initialStatus,
         evidence: computedEvidence
       });
@@ -640,6 +691,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         endDate: (isOnlineCourses || isInternshipsCategory) ? endDate : undefined,
         examDate: isCompetitiveExamsCategory ? examDate : undefined,
         awardedDate: isScholarshipsCategory ? awardedDate : undefined,
+        researchSubOption: isResearchCategory ? researchSubOption : undefined,
         evaluatorVerified: false,
         evidence: computedEvidence
       });
@@ -945,6 +997,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   )}
                 </div>
 
+                {isResearchCategory && (
+                  <div className="form-group" style={{ marginTop: '14px' }}>
+                    <label className="form-label" style={{ fontWeight: 800, color: '#0369a1', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      🔬 Research Type / Category ({currentItem?.title || 'Selected Item'})
+                    </label>
+                    <select
+                      className="select"
+                      value={researchSubOption}
+                      onChange={(e) => setResearchSubOption(e.target.value)}
+                      style={{ border: '2px solid #0284c7', background: '#f0f9ff', fontWeight: 700, color: '#0369a1' }}
+                    >
+                      {getResearchSubOptions(currentItem?.title || '').map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 {existingAcademicSubmission && !editingSubId && (
                   <div
                     style={{
@@ -1072,6 +1144,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             ? 'INTERNSHIP DETAIL'
                             : isScholarshipsCategory
                             ? 'SCHOLARSHIP DETAIL'
+                            : isResearchCategory
+                            ? 'RESEARCH DETAIL'
                             : `${currentItem.type.toUpperCase()} BASED`}
                         </span>
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
@@ -1446,6 +1520,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                               ) : (sub.awardedDate || sub.evidence?.awardedDate) ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#b45309', background: '#fef3c7', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
                                   📅 Awarded Date: {sub.awardedDate || sub.evidence?.awardedDate}
+                                </span>
+                              ) : (sub.researchSubOption || sub.evidence?.researchSubOption) ? (
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
+                                  🔬 {sub.researchSubOption || sub.evidence?.researchSubOption}
                                 </span>
                               ) : (sub.startDate || sub.evidence?.startDate) ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
@@ -1844,6 +1922,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             {(sub.awardedDate || sub.evidence?.awardedDate) && (
                               <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#b45309', marginBottom: '4px' }}>
                                 📅 Awarded Date: {sub.awardedDate || sub.evidence?.awardedDate}
+                              </div>
+                            )}
+                            {(sub.researchSubOption || sub.evidence?.researchSubOption) && (
+                              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0369a1', marginBottom: '4px' }}>
+                                🔬 Sub-Option: {sub.researchSubOption || sub.evidence?.researchSubOption}
                               </div>
                             )}
                             {(sub.startDate || sub.evidence?.startDate) && (
