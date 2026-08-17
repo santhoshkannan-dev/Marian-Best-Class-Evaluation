@@ -30,10 +30,21 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
     currentUserInfo
   } = useApp();
 
+  // Helper to check if submission belongs to a category assigned to the current evaluator
+  const isAssignedToEvaluator = (s: any) => {
+    const category = criteriaCatalog.find((cat) => cat.items.some(item => String(item.id) === String(s.criteriaId)));
+    if (!category) return false;
+    const assignedEvaluators = category.evaluators || [];
+    const userEmail = currentUserInfo?.email?.toLowerCase().trim();
+    if (assignedEvaluators.length === 0) return false; // If no evaluators assigned, no one evaluates it here
+    return userEmail && assignedEvaluators.some(e => e.toLowerCase() === userEmail);
+  };
+
   // Submissions forwarded from Class Teacher (Round 2) awaiting Evaluator Verification (Round 3)
-  const teacherApprovedSubmissions = submissions.filter((s) =>
-    ['Teacher Verified', 'Approved', 'Verified'].includes(s.status) && !s.evaluatorVerified && s.status !== 'Locked' && s.status !== 'Evaluated'
-  );
+  const teacherApprovedSubmissions = submissions.filter((s) => {
+    const isValidStatus = ['Teacher Verified', 'Approved', 'Verified'].includes(s.status) && !s.evaluatorVerified && s.status !== 'Locked' && s.status !== 'Evaluated';
+    return isValidStatus && isAssignedToEvaluator(s);
+  });
 
   const handleVerifySubmissionEvaluator = (subId: number) => {
     if (!evaluationOpen) {
@@ -56,49 +67,69 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
     alert('Submission successfully verified, evaluated, and locked by Evaluation Team!');
   };
 
-  // Local interactive state for pending list to simulate live evaluation approvals
-  const [pendingItems, setPendingItems] = useState<LockedSubmission[]>([
-    {
-      id: 'p-1',
-      student: 'Anjali Nair',
-      category: 'Social Responsibility',
-      item: 'Community Outreach Activity',
-      status: 'Pending',
-      marks: 3.0,
-      dept: 'Commerce'
-    },
-    {
-      id: 'p-2',
-      student: 'Thomas Kurian',
-      category: 'Research',
-      item: 'Research Publication',
-      status: 'Pending',
-      marks: 15.0,
-      dept: 'Computer Science'
-    },
-    {
-      id: 'p-3',
-      student: 'Mary Joseph',
-      category: 'Leadership',
-      item: 'Class Representative',
-      status: 'Pending',
-      marks: 10.0,
-      dept: 'English'
+  // --- REAL DATA BINDINGS ---
+  const totalSubmissionsCount = submissions.length;
+  const verifiedSubmissions = submissions.filter(s => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status) && isAssignedToEvaluator(s));
+  const verifiedCount = verifiedSubmissions.length;
+  const pendingCount = teacherApprovedSubmissions.length;
+  
+  const totalScore = verifiedSubmissions.reduce((sum, s) => {
+    const item = criteriaCatalog.flatMap(c => c.items).find(it => String(it.id) === String(s.criteriaId));
+    return sum + (s.marks || item?.marks || 0);
+  }, 0);
+
+  const lockedList = submissions.filter(s => (s.status === 'Locked' || s.evaluatorVerified) && isAssignedToEvaluator(s)).map(s => {
+    const item = criteriaCatalog.flatMap(c => c.items).find(it => String(it.id) === String(s.criteriaId));
+    const cat = criteriaCatalog.find(c => c.items.some(it => String(it.id) === String(s.criteriaId)));
+    const student = students.find(st => st.id === s.studentId);
+    return {
+      id: s.id.toString(),
+      student: student?.name || s.userEmail || 'Unknown',
+      category: cat?.category || 'Unknown',
+      item: item?.title || 'Unknown',
+      status: s.status,
+      marks: s.marks || item?.marks || 0,
+      dept: student?.department || 'Unknown'
+    };
+  });
+
+  // Calculate live scores for leaderboard
+  const studentsMap = new Map();
+  verifiedSubmissions.forEach(s => {
+    const student = students.find(st => st.id === s.studentId);
+    if (!student) return;
+    const item = criteriaCatalog.flatMap(c => c.items).find(it => String(it.id) === String(s.criteriaId));
+    const marks = s.marks || item?.marks || 0;
+    
+    if (!studentsMap.has(student.id)) {
+      studentsMap.set(student.id, {
+        name: student.name || student.email,
+        class: student.className || 'Unknown',
+        dept: student.department || 'Unknown',
+        score: 0,
+        email: student.email
+      });
     }
-  ]);
+    studentsMap.get(student.id).score += marks;
+  });
+  const studentsList = Array.from(studentsMap.values());
 
-  const [verifiedCount, setVerifiedCount] = useState(694);
-  const [pendingCount, setPendingCount] = useState(3);
-  const [totalScore, setTotalScore] = useState(10872.0);
-
-  // List of initial verified submissions for display in Dashboard table
-  const [lockedList, setLockedList] = useState<LockedSubmission[]>([
-    { id: '1', student: 'Kiran Menon', category: 'Social Responsibility', item: 'NSS/NCC/Service Activity Participation', status: 'Locked', marks: 5.0, dept: 'Commerce' },
-    { id: '2', student: 'Kiran Menon', category: 'Leadership', item: 'Event Coordinator Role', status: 'Locked', marks: 10.0, dept: 'Commerce' },
-    { id: '3', student: 'Isha Menon', category: 'Social Responsibility', item: 'NSS/NCC/Service Activity Participation', status: 'Locked', marks: 5.0, dept: 'Computer Science' },
-    { id: '4', student: 'Isha Menon', category: 'Leadership', item: 'Event Coordinator Role', status: 'Locked', marks: 10.0, dept: 'Computer Science' },
-    { id: '5', student: 'Gaurav Menon', category: 'Leadership', item: 'Event Coordinator Role', status: 'Locked', marks: 10.0, dept: 'English' }
-  ]);
+  const classesMap = new Map();
+  studentsList.forEach(st => {
+     if (!classesMap.has(st.class)) {
+        classesMap.set(st.class, {
+           name: st.class,
+           dept: st.dept,
+           score: 0,
+           mentor: 'Unknown'
+        });
+     }
+     classesMap.get(st.class).score += st.score;
+  });
+  const classesList = Array.from(classesMap.values());
+  if (classesList.length === 0) {
+      classesList.push({ name: 'N/A', dept: 'N/A', score: 0, mentor: 'N/A' });
+  }
 
   // Evaluation tab active filters
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
@@ -106,28 +137,6 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
   const [selectedDept, setSelectedDept] = useState('All Departments');
   const [selectedClass, setSelectedClass] = useState('All Classes');
   const [expandedDept, setExpandedDept] = useState<string | null>(null);
-
-  // Rich mock student scores database for leaderboard queries
-  const [studentsList, setStudentsList] = useState([
-    { name: 'Santhosh Kannan', class: 'BCA A', dept: 'Computer Applications', score: 45.0, email: 'santhosh.25pmc152@mariancollege.org' },
-    { name: 'Kiran Menon', class: 'BCom A', dept: 'Commerce', score: 38.0, email: 'kiran.menon@mariancollege.org' },
-    { name: 'Anjali Nair', class: 'BCom A', dept: 'Commerce', score: 35.5, email: 'anjali.nair@mariancollege.org' },
-    { name: 'Thomas Kurian', class: 'BSc CS B', dept: 'Computer Science', score: 42.0, email: 'thomas.kurian@mariancollege.org' },
-    { name: 'Isha Menon', class: 'BSc CS B', dept: 'Computer Science', score: 39.0, email: 'isha.menon@mariancollege.org' },
-    { name: 'Mary Joseph', class: 'BA English A', dept: 'English', score: 36.0, email: 'mary.joseph@mariancollege.org' },
-    { name: 'Gaurav Menon', class: 'BA English A', dept: 'English', score: 33.0, email: 'gaurav.menon@mariancollege.org' },
-    { name: 'Albin Sunny', class: 'BBA A', dept: 'Business Administration', score: 41.5, email: 'albin.sunny@mariancollege.org' },
-    { name: 'Merlin Joy', class: 'BBA A', dept: 'Business Administration', score: 37.0, email: 'merlin.joy@mariancollege.org' }
-  ]);
-
-  // Rich mock class scores database for best class rank
-  const [classesList, setClassesList] = useState([
-    { name: 'BCA A', dept: 'Computer Applications', score: 1245.0, mentor: 'Dr. Allen George' },
-    { name: 'BCom A', dept: 'Commerce', score: 1120.0, mentor: 'Prof. Kochumol Abraham' },
-    { name: 'BSc CS B', dept: 'Computer Science', score: 980.5, mentor: 'Dr. Sijomon P.' },
-    { name: 'BBA A', dept: 'Business Administration', score: 850.0, mentor: 'Prof. Joy Mathew' },
-    { name: 'BA English A', dept: 'English', score: 790.0, mentor: 'Dr. Mary George' }
-  ]);
 
   const [lookupType, setLookupType] = useState<'department' | 'class'>('department');
   const [selectedLookupGroup, setSelectedLookupGroup] = useState<string>('Computer Applications');
@@ -140,69 +149,47 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
     return filtered.reduce((prev, current) => (prev.score > current.score) ? prev : current);
   };
 
-  // Simulated Department verified database
-  const [deptStats, setDeptStats] = useState([
-    { name: 'Business Administration', total: 92, verified: 92 },
-    { name: 'Commerce', total: 156, verified: 155 },
-    { name: 'Computer Applications', total: 48, verified: 48 },
-    { name: 'Computer Science', total: 114, verified: 113 },
-    { name: 'Economics', total: 46, verified: 46 },
-    { name: 'English', total: 103, verified: 102 },
-    { name: 'Mathematics', total: 92, verified: 92 },
-    { name: 'Physics', total: 46, verified: 46 }
-  ]);
+  const allDepts = Array.from(new Set(students.map(s => s.department).filter(Boolean)));
+  const deptStats = allDepts.map(deptName => {
+     const deptPending = teacherApprovedSubmissions.filter(s => {
+         const student = students.find(st => st.id === s.studentId);
+         return student?.department === deptName;
+     }).length;
+     const deptVerified = verifiedSubmissions.filter(s => {
+         const student = students.find(st => st.id === s.studentId);
+         return student?.department === deptName;
+     }).length;
+     
+     return {
+        name: deptName as string,
+        total: deptPending + deptVerified,
+        verified: deptVerified
+     };
+  }).filter(d => d.total > 0);
+
+  const pendingItems = teacherApprovedSubmissions.map(s => {
+    const item = criteriaCatalog.flatMap(c => c.items).find(it => String(it.id) === String(s.criteriaId));
+    const cat = criteriaCatalog.find(c => c.items.some(it => String(it.id) === String(s.criteriaId)));
+    const student = students.find(st => st.id === s.studentId);
+    return {
+      id: s.id.toString(),
+      student: student?.name || s.userEmail || 'Unknown',
+      category: cat?.category || 'Unknown',
+      item: item?.title || 'Unknown',
+      status: s.status,
+      marks: item?.marks || 0,
+      dept: student?.department || 'Unknown'
+    };
+  });
 
   const handleVerifyAndLock = (itemId: string, deptName: string, marks: number, studentName: string) => {
-    if (!evaluationOpen) {
-      alert('Evaluation access is currently CLOSED by system administrator.');
-      return;
-    }
-
-    // 1. Move to locked list
-    const foundItem = pendingItems.find((i) => i.id === itemId);
-    if (!foundItem) return;
-
-    setLockedList((prev) => [
-      { ...foundItem, status: 'Locked' },
-      ...prev
-    ]);
-
-    // 2. Remove from pending list
-    setPendingItems((prev) => prev.filter((i) => i.id !== itemId));
-
-    // 3. Update stats
-    setVerifiedCount((prev) => prev + 1);
-    setPendingCount((prev) => prev - 1);
-    setTotalScore((prev) => prev + marks);
-
-    // 4. Update department progress
-    setDeptStats((prev) =>
-      prev.map((d) => {
-        if (d.name === deptName) {
-          return { ...d, verified: d.total };
-        }
-        return d;
-      })
-    );
-
-    // 5. Update student and class live scores
-    setStudentsList((prev) =>
-      prev.map((s) => (s.name === studentName ? { ...s, score: s.score + marks } : s))
-    );
-    const matchedStudent = studentsList.find((s) => s.name === studentName);
-    if (matchedStudent) {
-      setClassesList((prev) =>
-        prev.map((c) => (c.name === matchedStudent.class ? { ...c, score: c.score + marks } : c))
-      );
-    }
-
-    alert(`Successfully verified and locked submissions for ${studentName}!`);
+    handleVerifySubmissionEvaluator(parseInt(itemId, 10));
     setExpandedDept(null);
   };
 
   // Filtering Departments
-  const pendingDepts = deptStats.filter((d) => d.verified < d.total);
-  const completedDepts = deptStats.filter((d) => d.verified === d.total);
+  const pendingDepts = deptStats.filter((d) => (d.total - d.verified) > 0);
+  const completedDepts = deptStats.filter((d) => d.verified > 0);
 
   const activeDepts = activeTab === 'pending' ? pendingDepts : completedDepts;
 
@@ -220,7 +207,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
             <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid var(--glass-border)', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <span className="stat-label" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Total Submissions</span>
-                <span className="stat-value" style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>{verifiedCount + pendingCount}</span>
+                <span className="stat-value" style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>{totalSubmissionsCount}</span>
               </div>
               <span style={{ fontSize: '1.6rem' }}>📊</span>
             </div>
@@ -264,18 +251,18 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
             <div className="card" style={{ background: '#ffffff', border: '1.5px solid var(--glass-border)', borderRadius: '16px', padding: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '18px' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '1.3rem', fontWeight: 'bold' }}>
-                  AG
+                  {(currentUserInfo?.name || 'Evaluator').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>Allen George</h3>
-                  <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>Senior Evaluator | System Auditor</p>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>{currentUserInfo?.name || currentUserInfo?.username || 'Evaluator'}</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>{currentUserInfo?.role === 'evaluator' ? 'Senior Evaluator' : (currentUserInfo?.role || 'Evaluator')} | System Auditor</p>
                 </div>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.86rem', borderTop: '1px solid #f1f5f9', paddingTop: '14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Employee ID:</span>
-                  <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>MCE-4910</span>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Email Address:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{currentUserInfo?.email || 'N/A'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Scope Access:</span>
@@ -283,7 +270,12 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Assigned Domain:</span>
-                  <span style={{ fontWeight: 700, color: '#3b82f6' }}>Co- & Extracurricular Evaluation</span>
+                  <span style={{ fontWeight: 700, color: '#3b82f6' }}>
+                    {(() => {
+                      const evaluatorEmail = currentUserInfo?.email?.toLowerCase().trim() || '';
+                      return criteriaCatalog.filter(cat => cat.evaluators?.some(e => e.toLowerCase() === evaluatorEmail)).map(c => c.category).join(', ') || 'All Categories';
+                    })()}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Last Database Audit:</span>
@@ -589,28 +581,41 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                     {/* EXPANDED INNER LIST OF SUBMISSIONS */}
                     {isExpanded && (
                       <div style={{ padding: '20px', background: '#fafaf9', borderTop: '1px solid var(--glass-border)' }}>
-                        <h4 style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--color-primary)', marginBottom: '12px' }}>Pending Submissions in {dept.name}</h4>
+                        <h4 style={{ fontSize: '0.94rem', fontWeight: 800, color: 'var(--color-primary)', marginBottom: '12px' }}>
+                          {activeTab === 'pending' ? `Pending Submissions in ${dept.name}` : `Completed Submissions in ${dept.name}`}
+                        </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {/* Live Submissions Forwarded from Class Teacher (Round 2) */}
-                          {teacherApprovedSubmissions.map((sub) => {
+                          {(activeTab === 'pending' ? teacherApprovedSubmissions : verifiedSubmissions)
+                            .filter(sub => {
+                               const studentObj = students.find((s) => s.id === sub.studentId);
+                               return studentObj?.department === dept.name;
+                            })
+                            .map((sub) => {
                             const studentObj = students.find((s) => s.id === sub.studentId);
-                            const itemObj = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
-                            const catObj = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
+                            const itemObj = criteriaCatalog.flatMap((c) => c.items).find((i) => String(i.id) === String(sub.criteriaId));
+                            const catObj = criteriaCatalog.find((c) => c.items.some((i) => String(i.id) === String(sub.criteriaId)));
                             const isDriveUrl = sub.proof?.startsWith('http://') || sub.proof?.startsWith('https://');
 
                             return (
-                              <div key={`live-sub-${sub.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '14px 18px', border: '1.5px solid #6366f1', borderRadius: '10px', boxShadow: '0 2px 8px rgba(99, 102, 241, 0.08)' }}>
+                              <div key={`live-sub-${sub.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '14px 18px', border: activeTab === 'pending' ? '1.5px solid #6366f1' : '1px solid #e2e8f0', borderRadius: '10px', boxShadow: activeTab === 'pending' ? '0 2px 8px rgba(99, 102, 241, 0.08)' : 'none' }}>
                                 <div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                     <h5 style={{ fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
                                       {studentObj ? studentObj.name : `Student #${sub.studentId}`}
                                     </h5>
-                                    <span className="badge badge-verified" style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontSize: '0.72rem', fontWeight: 800 }}>
-                                      ✓ Approved by Class Advisor ({sub.teacherVerifiedByName || 'Teacher'})
-                                    </span>
+                                    {activeTab === 'pending' ? (
+                                      <span className="badge badge-verified" style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontSize: '0.72rem', fontWeight: 800 }}>
+                                        ✓ Approved by Class Advisor ({sub.teacherVerifiedByName || 'Teacher'})
+                                      </span>
+                                    ) : (
+                                      <span className="badge" style={{ background: '#dcfce7', color: '#16a34a', fontWeight: 700, fontSize: '0.72rem' }}>
+                                        {sub.status}
+                                      </span>
+                                    )}
                                   </div>
                                   <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
-                                    Category: {catObj?.category || 'General'} | Item: {itemObj?.title || sub.description}
+                                    Category: {catObj?.category || 'General'} | Item: {itemObj?.title || sub.description} | Class: {studentObj?.className || 'Unknown'}
                                   </p>
                                   {sub.proof && (
                                     <div style={{ fontSize: '0.76rem', marginTop: '4px' }}>
@@ -620,41 +625,26 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                                 </div>
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                  <button
-                                    className="btn btn-sm btn-primary"
-                                    style={{ background: '#4f46e5', color: '#ffffff', fontWeight: 800 }}
-                                    onClick={() => handleVerifySubmissionEvaluator(sub.id)}
-                                  >
-                                    Verify & Lock (Round 3)
-                                  </button>
+                                  <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-primary)' }}>{(sub.marks || itemObj?.marks || 0).toFixed(1)} pts</span>
+                                  {activeTab === 'pending' && (
+                                    <button
+                                      className="btn btn-sm btn-primary"
+                                      style={{ background: '#4f46e5', color: '#ffffff', fontWeight: 800 }}
+                                      onClick={() => handleVerifySubmissionEvaluator(sub.id)}
+                                    >
+                                      Verify & Lock (Round 3)
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             );
                           })}
 
-                          {pendingItems.filter((i) => i.dept === dept.name).map((item) => (
-                            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '14px 18px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                              <div>
-                                <h5 style={{ fontWeight: 800, color: 'var(--text-main)', margin: '0 0 4px 0' }}>{item.student}</h5>
-                                <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
-                                  Category: {item.category} | Item: {item.item}
-                                </p>
-                              </div>
-
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-primary)' }}>{item.marks.toFixed(1)} pts</span>
-                                <button
-                                  className="btn btn-sm btn-primary"
-                                  onClick={() => handleVerifyAndLock(item.id, dept.name, item.marks, item.student)}
-                                >
-                                  Verify & Lock
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-
-                          {teacherApprovedSubmissions.length === 0 && pendingItems.filter((i) => i.dept === dept.name).length === 0 && (
-                            <p className="muted" style={{ fontSize: '0.84rem', margin: 0, textAlign: 'center' }}>No pending verification files for this department.</p>
+                          {(activeTab === 'pending' ? teacherApprovedSubmissions : verifiedSubmissions).filter(sub => {
+                               const studentObj = students.find((s) => s.id === sub.studentId);
+                               return studentObj?.department === dept.name;
+                          }).length === 0 && (
+                            <p className="muted" style={{ fontSize: '0.84rem', margin: 0, textAlign: 'center' }}>No {activeTab} verification files for this department.</p>
                           )}
                         </div>
                       </div>

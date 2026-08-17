@@ -15,35 +15,47 @@ export default function LoginPage() {
 
   // Load Google Identity Services SDK
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-
-    script.onload = () => {
+    const initGoogleSignIn = () => {
       const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '844955988511-9f9oh4sjrp3eqoimenpkdg0ho3ljr1bo.apps.googleusercontent.com';
-      if ((window as any).google) {
+      if ((window as any).google && (window as any).google.accounts) {
         (window as any).google.accounts.id.initialize({
           client_id: clientId,
           callback: handleGoogleCredentialResponse,
         });
-        (window as any).google.accounts.id.renderButton(
-          document.getElementById('google-signin-btn'),
-          {
-            theme: 'filled_blue',
-            size: 'large',
-            width: '320',
-            text: 'signin_with',
-            shape: 'pill'
-          }
-        );
+        const btnContainer = document.getElementById('google-signin-btn');
+        if (btnContainer) {
+          (window as any).google.accounts.id.renderButton(
+            btnContainer,
+            {
+              theme: 'filled_blue',
+              size: 'large',
+              width: 320,
+              text: 'signin_with',
+              shape: 'pill'
+            }
+          );
+        }
       }
     };
 
-    return () => {
-      document.body.removeChild(script);
-    };
+    if (typeof window !== 'undefined') {
+      if ((window as any).google) {
+        initGoogleSignIn();
+      } else {
+        const existingScript = document.getElementById('google-gsi-script');
+        if (!existingScript) {
+          const script = document.createElement('script');
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.id = 'google-gsi-script';
+          script.async = true;
+          script.defer = true;
+          script.onload = initGoogleSignIn;
+          document.body.appendChild(script);
+        } else {
+          existingScript.addEventListener('load', initGoogleSignIn);
+        }
+      }
+    }
   }, []);
 
   const handleGoogleCredentialResponse = async (response: any) => {

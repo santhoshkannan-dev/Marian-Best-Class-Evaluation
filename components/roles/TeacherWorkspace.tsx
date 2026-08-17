@@ -141,7 +141,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   // Calculate total points earned by class vs target
   const classTotalScore = classSubmissions.reduce((sum, s) => {
     if (['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)) {
-      const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === s.criteriaId);
+      const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => String(it.id) === String(s.criteriaId));
       return sum + (criteriaItem?.marks || 0);
     }
     return sum;
@@ -177,23 +177,55 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     }
   };
 
+  // Category-wise colour palette for the breakdown chips
+  const categoryChipColors: Record<string, { bg: string; color: string }> = {
+    'Academics':           { bg: '#eff6ff', color: '#1d4ed8' },
+    'Online Courses':      { bg: '#f0fdf4', color: '#15803d' },
+    'Internships':         { bg: '#fdf4ff', color: '#7e22ce' },
+    'Competitive Exams':   { bg: '#fff7ed', color: '#c2410c' },
+    'Scholarships':        { bg: '#fefce8', color: '#854d0e' },
+    'Research':            { bg: '#f0f9ff', color: '#0369a1' },
+    'Prizes':              { bg: '#fff1f2', color: '#be123c' },
+    'Leadership':          { bg: '#faf5ff', color: '#6d28d9' },
+    'Programs Organized':  { bg: '#f0fdfa', color: '#0f766e' },
+    'Social Responsibility':{ bg: '#ecfdf5', color: '#047857' },
+    'Career Advancement':  { bg: '#fff8f1', color: '#9a3412' },
+    'Documentation':       { bg: '#f8fafc', color: '#475569' },
+  };
+
   // Recent Student Progress list with Recently Submitted Document
   let displayProgressStudents = classStudents.map(student => {
     const studentSubs = classSubmissions.filter(s => s.studentId === student.id);
     const verifiedPoints = studentSubs.filter(s => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status)).reduce((sum, s) => {
-       const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === s.criteriaId);
+       const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => String(it.id) === String(s.criteriaId));
        return sum + (criteriaItem?.marks || 0);
     }, 0);
     const percent = Math.min(100, Math.round((verifiedPoints / 20) * 100)); // Target 20 per student
     const recentSub = studentSubs.length > 0 ? studentSubs[studentSubs.length - 1] : null;
-    
+
     let recentDoc = '';
     let recentActivity = '';
     if (recentSub) {
        recentDoc = recentSub.proof && isNaN(Number(recentSub.proof)) && recentSub.proof.length > 2 ? recentSub.proof : `Proof_${recentSub.id}.pdf`;
-       const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === recentSub.criteriaId);
+       const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => String(it.id) === String(recentSub.criteriaId));
        recentActivity = criteriaItem?.title || recentSub.description || 'Activity';
     }
+
+    // Build category-wise submission counts
+    const categoryCountMap: Record<string, { submitted: number; approved: number }> = {};
+    studentSubs.forEach(sub => {
+      const catEntry = criteriaCatalog.find(c => c.items.some(it => String(it.id) === String(sub.criteriaId)));
+      if (!catEntry) return;
+      const cat = catEntry.category;
+      if (!categoryCountMap[cat]) categoryCountMap[cat] = { submitted: 0, approved: 0 };
+      categoryCountMap[cat].submitted += 1;
+      if (['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status)) {
+        categoryCountMap[cat].approved += 1;
+      }
+    });
+    const categoryBreakdown = Object.entries(categoryCountMap)
+      .filter(([, v]) => v.submitted > 0)
+      .map(([cat, v]) => ({ category: cat, submitted: v.submitted, approved: v.approved }));
 
     return {
       id: student.id,
@@ -202,6 +234,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
       recentActivity: recentActivity || '-',
       percent,
       lastActivityId: recentSub ? recentSub.id : 0,
+      categoryBreakdown,
+      totalSubs: studentSubs.length,
       ...getProgressDetails(percent)
     };
   }).filter(s => s.recentDoc !== 'No submissions yet');
@@ -228,8 +262,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     ? pendingSubs.map((s, idx) => {
         const student = classStudents.find((st) => st.id === s.studentId) || realStudents.find((st) => st.id === s.studentId);
         let nameToDisplay = s.proof && s.proof.includes('.') ? s.proof : `Assignment_Final_v${idx + 2}.pdf`;
-        const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => it.id === s.criteriaId);
-        const categoryItem = criteriaCatalog.find((c) => c.items.some((it) => it.id === s.criteriaId));
+        const criteriaItem = criteriaCatalog.flatMap((c) => c.items).find((it) => String(it.id) === String(s.criteriaId));
+        const categoryItem = criteriaCatalog.find((c) => c.items.some((it) => String(it.id) === String(s.criteriaId)));
         return {
           id: s.id,
           fileName: nameToDisplay,
@@ -1142,7 +1176,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                 </div>
 
                 {/* Student Progress List */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   {displayProgressStudents.map((s) => (
                     <div
                       key={s.id}
@@ -1155,107 +1189,102 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                       title="Click to view all submissions by this student"
                       style={{
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '16px',
-                        padding: '8px',
-                        borderRadius: '8px',
+                        flexDirection: 'column',
+                        gap: '10px',
+                        padding: '14px 16px',
+                        borderRadius: '14px',
+                        border: '1px solid #f1f5f9',
+                        background: '#fafafa',
                         cursor: 'pointer',
-                        transition: 'background 0.2s'
+                        transition: 'all 0.2s ease'
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f0f4ff';
+                        e.currentTarget.style.borderColor = '#c7d2fe';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#fafafa';
+                        e.currentTarget.style.borderColor = '#f1f5f9';
+                      }}
                     >
-                      {/* Name + Recently Submitted Document */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '150px' }}>
-                        <span style={{ fontSize: '0.94rem', fontWeight: 700, color: '#0f172a' }}>
-                          {s.name}
-                        </span>
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenPreview({
-                              id: s.id,
-                              fileName: s.recentDoc,
-                              studentName: s.name,
-                              activityTitle: s.recentActivity,
-                              category: s.id === 901 ? 'Research' : s.id === 902 ? 'Prizes' : 'Social Responsibility',
-                              description: `Recent submission of ${s.recentActivity} by ${s.name}`,
-                              marks: s.id === 901 ? 15 : s.id === 902 ? 10 : 5,
-                              date: s.id === 901 ? '11 Aug 2026, 01:15 PM' : s.id === 902 ? '10 Aug 2026, 04:30 PM' : '13 Oct 2026, 10:00 AM'
-                            });
-                          }}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '0.76rem',
-                            color: '#4f46e5',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                          }}
-                          title="Click to view submission details"
-                        >
-                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                          </svg>
-                          <span style={{ textDecoration: 'underline', textUnderlineOffset: '2px', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {s.recentDoc}
-                          </span>
+                      {/* Row 1: Name + overall progress + status badge */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {/* Avatar circle */}
+                        <div style={{
+                          width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                          background: s.badgeBg, color: s.badgeColor,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontWeight: 800, fontSize: '0.9rem'
+                        }}>
+                          {s.name.charAt(0).toUpperCase()}
                         </div>
+
+                        {/* Name only */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#0f172a' }}>{s.name}</div>
+                        </div>
+
+                        {/* Percent label */}
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: s.color, flexShrink: 0 }}>
+                          {s.percent}%
+                        </span>
+
+                        {/* Status badge */}
+                        <span style={{
+                          background: s.badgeBg, color: s.badgeColor,
+                          padding: '3px 12px', borderRadius: '9999px',
+                          fontSize: '0.74rem', fontWeight: 700, flexShrink: 0
+                        }}>
+                          {s.status}
+                        </span>
                       </div>
 
-                      {/* Progress Track */}
-                      <div
-                        style={{
-                          flex: 1,
-                          height: '10px',
-                          background: '#e2e8f0',
+                      {/* Row 2: overall progress bar */}
+                      <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${s.percent}%`,
+                          background: `linear-gradient(90deg, ${s.color}cc, ${s.color})`,
                           borderRadius: '9999px',
-                          overflow: 'hidden',
-                          position: 'relative'
-                        }}
-                      >
-                        <div
-                          style={{
-                            height: '100%',
-                            width: `${s.percent}%`,
-                            background: s.color,
-                            borderRadius: '9999px',
-                            transition: 'width 0.6s ease'
-                          }}
-                        />
+                          transition: 'width 0.6s ease'
+                        }} />
                       </div>
 
-                      {/* Percentage */}
-                      <span
-                        style={{
-                          fontSize: '0.88rem',
-                          fontWeight: 600,
-                          color: '#334155',
-                          minWidth: '42px',
-                          textAlign: 'right'
-                        }}
-                      >
-                        {s.percent}%
-                      </span>
-
-                      {/* Status Badge */}
-                      <span
-                        style={{
-                          background: s.badgeBg,
-                          color: s.badgeColor,
-                          padding: '4px 14px',
-                          borderRadius: '9999px',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          minWidth: '94px',
-                          textAlign: 'center'
-                        }}
-                      >
-                        {s.status}
-                      </span>
+                      {/* Row 3: category-wise submission chips */}
+                      {s.categoryBreakdown.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '2px' }}>
+                          {s.categoryBreakdown.map(({ category, submitted, approved }) => {
+                            const chip = categoryChipColors[category] || { bg: '#f1f5f9', color: '#475569' };
+                            return (
+                              <span
+                                key={category}
+                                title={`${approved} approved / ${submitted} submitted`}
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                  background: chip.bg, color: chip.color,
+                                  padding: '3px 10px', borderRadius: '9999px',
+                                  fontSize: '0.72rem', fontWeight: 700,
+                                  border: `1px solid ${chip.color}22`,
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                <span>{category}</span>
+                                <span style={{
+                                  background: chip.color, color: '#fff',
+                                  borderRadius: '9999px', padding: '1px 6px',
+                                  fontSize: '0.68rem', fontWeight: 800
+                                }}>
+                                  {approved}/{submitted}
+                                </span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '0.76rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                          No category submissions yet
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1381,48 +1410,130 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   </p>
                 </div>
 
-                {/* Document Preview Box (Clickable to open full preview modal) */}
-                <div
-                  onClick={() => handleOpenPreview(currentQueueDoc)}
-                  style={{
-                    background: '#f1f5f9',
-                    borderRadius: '16px',
-                    padding: '36px 20px',
+                {/* Pending submissions list */}
+                {queueList.length === 0 ? (
+                  <div style={{
+                    background: '#f8fafc',
+                    borderRadius: '14px',
+                    padding: '32px 20px',
+                    textAlign: 'center',
+                    border: '1.5px dashed #e2e8f0'
+                  }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>✅</div>
+                    <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.94rem' }}>All clear!</div>
+                    <div style={{ color: '#64748b', fontSize: '0.82rem', marginTop: '3px' }}>No pending submissions to review.</div>
+                  </div>
+                ) : (
+                  <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    border: '1.5px dashed #cbd5e1',
-                    minHeight: '210px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  title="Click to view full preview and submission details"
-                >
-                  <div style={{ color: '#94a3b8', marginBottom: '14px' }}>
-                    <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                      <polyline points="10 9 9 9 8 9" />
-                    </svg>
-                  </div>
-                  <div style={{ fontWeight: 700, fontSize: '0.96rem', color: '#0f172a' }}>
-                    {currentQueueDoc.fileName}
-                  </div>
-                  <div style={{ fontSize: '0.84rem', color: '#64748b', marginTop: '3px' }}>
-                    by {currentQueueDoc.studentName}
-                  </div>
-                </div>
+                    gap: '0px',
+                    maxHeight: '320px',
+                    overflowY: 'auto',
+                    borderRadius: '14px',
+                    border: '1px solid #f1f5f9'
+                  }}>
+                    {queueList.map((doc, idx) => {
+                      const chip = categoryChipColors[doc.category] || { bg: '#f1f5f9', color: '#475569' };
+                      return (
+                        <div
+                          key={doc.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px 14px',
+                            borderBottom: idx < queueList.length - 1 ? '1px solid #f1f5f9' : 'none',
+                            background: '#ffffff',
+                            transition: 'background 0.15s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                        >
+                          {/* Index number */}
+                          <span style={{
+                            width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0,
+                            background: '#f1f5f9', color: '#64748b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.72rem', fontWeight: 700
+                          }}>
+                            {idx + 1}
+                          </span>
 
-                {/* Action Buttons: ✓ Approve + View Preview */}
-                <div style={{ display: 'flex', gap: '12px' }}>
+                          {/* Student name + category */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a',
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {doc.studentName}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                              <span style={{
+                                background: chip.bg, color: chip.color,
+                                padding: '1px 8px', borderRadius: '9999px',
+                                fontSize: '0.7rem', fontWeight: 700
+                              }}>
+                                {doc.category}
+                              </span>
+                              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                                {doc.activityTitle.length > 28 ? doc.activityTitle.substring(0, 28) + '…' : doc.activityTitle}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Points */}
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#047857', flexShrink: 0 }}>
+                            +{doc.marks ?? 5} pts
+                          </span>
+
+                          {/* Actions */}
+                          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleOpenPreview(doc); }}
+                              title="Preview & decide"
+                              style={{
+                                background: '#e0e7ff', color: '#4338ca',
+                                border: 'none', borderRadius: '8px',
+                                padding: '5px 10px', fontSize: '0.76rem', fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Review
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (doc.subId) {
+                                  updateSubmission(doc.subId, {
+                                    status: 'Approved',
+                                    verifiedByName: teacherName,
+                                    remarks: 'Approved via Quick Queue'
+                                  });
+                                  showToast(`✓ Approved submission for ${doc.studentName}`);
+                                }
+                              }}
+                              title="Quick approve"
+                              style={{
+                                background: '#dcfce7', color: '#15803d',
+                                border: 'none', borderRadius: '8px',
+                                padding: '5px 10px', fontSize: '0.76rem', fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ✓
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Bulk approve all button */}
+                {queueList.length > 0 && (
                   <button
-                    onClick={handleQuickApprove}
+                    onClick={handleApproveAllPending}
                     style={{
-                      flex: 1,
+                      width: '100%',
                       background: '#047857',
                       color: '#ffffff',
                       border: 'none',
@@ -1435,51 +1546,13 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '8px',
-                      boxShadow: '0 2px 8px rgba(4, 120, 87, 0.25)',
+                      boxShadow: '0 2px 8px rgba(4, 120, 87, 0.2)',
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    <span>✓</span> Approve
+                    <span>✓</span> Approve All ({queueList.length})
                   </button>
-
-                  <button
-                    onClick={() => {
-                      const pendingIds = queueList.map(q => q.subId).filter(Boolean) as number[];
-                      handleOpenPreview({
-                        id: -1,
-                        fileName: queueList.length > 0 ? `${queueList.length} Pending Documents` : 'No Pending Documents',
-                        studentName: queueList.length > 0 ? `${queueList.length} Students in Queue` : '0 Students',
-                        activityTitle: 'Bulk Verification Queue',
-                        category: 'Multiple Categories',
-                        description: queueList.length > 0 ? 'Review and verify all pending documents currently in the verification queue at once.' : 'There are currently no pending documents to verify.',
-                        isBulk: true,
-                        pendingIds
-                      });
-                    }}
-                    style={{
-                      flex: 1,
-                      background: '#e0e7ff',
-                      color: '#4338ca',
-                      border: '1px solid #c7d2fe',
-                      borderRadius: '12px',
-                      padding: '12px 18px',
-                      fontSize: '0.9rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    View Preview
-                  </button>
-                </div>
+                )}
               </div>
             </div>
           </div>

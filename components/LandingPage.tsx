@@ -13,114 +13,7 @@ interface StandingItem {
   color: string;
 }
 
-interface Champion {
-  rank: number;
-  rankLabel: string;
-  teamName: string;
-  eventName: string;
-  score: string;
-  institution: string;
-  image: string;
-}
 
-const championsData: Record<string, Champion[]> = {
-  "2025": [
-    {
-      rank: 2,
-      rankLabel: "RUNNER-UP",
-      teamName: "BCom C",
-      eventName: "Dept. of Commerce — Marian Excellence Grid",
-      score: "95.7",
-      institution: "Dept. of Commerce",
-      image: "/Assets/Images/team_vision.png"
-    },
-    {
-      rank: 1,
-      rankLabel: "👑 CHAMPION",
-      teamName: "BSc CS B",
-      eventName: "Dept. of Computer Science — Marian Excellence Grid",
-      score: "98.4",
-      institution: "Dept. of Comp Science",
-      image: "/Assets/Images/team_alpha.png"
-    },
-    {
-      rank: 3,
-      rankLabel: "2ND RUNNER-UP",
-      teamName: "BCA A",
-      eventName: "Dept. of Computer Applications — Marian Excellence Grid",
-      score: "94.2",
-      institution: "Dept. of BCA",
-      image: "/Assets/Images/team_nexus.png"
-    },
-    {
-      rank: 4,
-      rankLabel: "4TH PLACE",
-      teamName: "BA English B",
-      eventName: "Dept. of English — Marian Excellence Grid",
-      score: "91.5",
-      institution: "Dept. of English",
-      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80"
-    },
-    {
-      rank: 5,
-      rankLabel: "5TH PLACE",
-      teamName: "BBA B",
-      eventName: "Dept. of Business Admin — Marian Excellence Grid",
-      score: "89.0",
-      institution: "Dept. of BBA",
-      image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=400&q=80"
-    }
-  ],
-  "2024": [
-    {
-      rank: 2,
-      rankLabel: "RUNNER-UP",
-      teamName: "BSc CS A",
-      eventName: "Dept. of Computer Science — Marian Excellence Grid",
-      score: "96.3",
-      institution: "Dept. of Comp Science",
-      image: "/Assets/Images/team_vision.png"
-    },
-    {
-      rank: 1,
-      rankLabel: "👑 CHAMPION",
-      teamName: "BCA A",
-      eventName: "Dept. of Computer Applications — Marian Excellence Grid",
-      score: "99.1",
-      institution: "Dept. of BCA",
-      image: "/Assets/Images/team_nexus.png"
-    },
-    {
-      rank: 3,
-      rankLabel: "2ND RUNNER-UP",
-      teamName: "BCom B",
-      eventName: "Dept. of Commerce — Marian Excellence Grid",
-      score: "93.8",
-      institution: "Dept. of Commerce",
-      image: "/Assets/Images/team_alpha.png"
-    }
-  ],
-  "2023": [
-    {
-      rank: 1,
-      rankLabel: "👑 CHAMPION",
-      teamName: "BA English A",
-      eventName: "Dept. of English — Marian Excellence Grid",
-      score: "97.5",
-      institution: "Dept. of English",
-      image: "/Assets/Images/team_alpha.png"
-    },
-    {
-      rank: 2,
-      rankLabel: "RUNNER-UP",
-      teamName: "BBA A",
-      eventName: "Dept. of Business Admin — Marian Excellence Grid",
-      score: "94.9",
-      institution: "Dept. of BBA",
-      image: "/Assets/Images/team_vision.png"
-    }
-  ]
-};
 
 const top9Data: StandingItem[] = [
   { className: 'BSc CS B', department: 'Computer Science', totalScore: 1272, percentage: 15.7, color: '#4f46e5' },
@@ -198,11 +91,22 @@ const CountUp: React.FC<{ end: number; duration?: number; suffix?: string }> = (
 };
 
 export const LandingPage: React.FC = () => {
-  const { submissionOpen, submissionWindowStart, submissionWindowEnd, activeAcademicYear } = useApp();
-  const [activeYear, setActiveYear] = useState('2025');
+  const { submissionOpen, submissionWindowStart, submissionWindowEnd, activeAcademicYear, championsData } = useApp();
+  
+  // Use the latest year available in championsData or fallback to '2025'
+  const availableYears = Object.keys(championsData).sort((a, b) => parseInt(b) - parseInt(a));
+  const initialYear = availableYears.length > 0 ? availableYears[0] : '2025';
+  
+  const [activeYear, setActiveYear] = useState(initialYear);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedClass, setSelectedClass] = useState<StandingItem | null>(null);
   const scrollTrackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (availableYears.length > 0 && !availableYears.includes(activeYear)) {
+      setActiveYear(availableYears[0]);
+    }
+  }, [availableYears, activeYear]);
 
   const formatDateTime = (isoString?: string) => {
     if (!isoString) return null;
@@ -237,10 +141,24 @@ export const LandingPage: React.FC = () => {
   // Achievements Auto Slide
   const [activeAchIndex, setActiveAchIndex] = useState(0);
 
-  // Champions 3D Slide
-  const [activeChampIdx, setActiveChampIdx] = useState(1); // Default to middle card
+  const currentChampions = championsData[activeYear] || [];
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
 
-  const currentChampions = championsData[activeYear] || championsData["2025"];
+  useEffect(() => {
+    if (isCarouselHovered || currentChampions.length <= 1) return;
+    const interval = setInterval(() => {
+      if (carouselRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          carouselRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          carouselRef.current.scrollBy({ left: 304, behavior: 'smooth' });
+        }
+      }
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isCarouselHovered, currentChampions.length]);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -264,26 +182,12 @@ export const LandingPage: React.FC = () => {
       setActiveAchIndex((prev) => (prev + 1) % achievements.length);
     }, 5000);
 
-    // Champions Auto Slide
-    const champTimer = setInterval(() => {
-      setActiveChampIdx((prev) => (prev + 1) % currentChampions.length);
-    }, 6000);
-
     return () => {
       clearInterval(activityTimer);
       clearInterval(catTimer);
       clearInterval(achTimer);
-      clearInterval(champTimer);
     };
-  }, [currentChampions.length]);
-
-  const handleScrollLeft = () => {
-    setActiveChampIdx((prev) => (prev - 1 + currentChampions.length) % currentChampions.length);
-  };
-
-  const handleScrollRight = () => {
-    setActiveChampIdx((prev) => (prev + 1) % currentChampions.length);
-  };
+  }, []);
 
   // Search Logic
   const handleSearch = (query: string) => {
@@ -381,43 +285,7 @@ export const LandingPage: React.FC = () => {
     };
   };
 
-  // Champions fanning/blur styles
-  const getChampCardStyle = (index: number) => {
-    let offset = index - activeChampIdx;
-    const len = currentChampions.length;
-    if (offset < -len / 2) offset += len;
-    if (offset > len / 2) offset -= len;
 
-    const absOffset = Math.abs(offset);
-    const isActive = absOffset === 0;
-
-    // Show 3 cards side-by-side: active/center, left, right. Hide others to prevent overflow stacks.
-    if (absOffset > 1 && len > 2) {
-      return {
-        transform: `translateX(${offset * 320}px) scale(0.7) rotateY(${offset * -15}deg)`,
-        opacity: 0,
-        zIndex: 0,
-        pointerEvents: 'none' as const,
-        visibility: 'hidden' as const,
-        transition: 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)'
-      };
-    }
-
-    const scale = isActive ? 1.05 : 0.88;
-    const rotateY = offset * -18;
-    const zIndex = 15 - absOffset;
-    const opacity = isActive ? 1 : 0.65;
-    const blurVal = isActive ? 'none' : 'blur(2px)';
-    const translateX = offset * 320; // 320px spacing fanned layout
-
-    return {
-      transform: `translateX(${translateX}px) scale(${scale}) rotateY(${rotateY}deg) translateZ(${isActive ? 30 : -45}px)`,
-      filter: blurVal,
-      opacity,
-      zIndex,
-      transition: 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)'
-    };
-  };
 
   return (
     <div className="landing-shell">
@@ -719,101 +587,73 @@ export const LandingPage: React.FC = () => {
                 value={activeYear}
                 onChange={(e) => setActiveYear(e.target.value)}
               >
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+                {availableYears.length === 0 && <option value="2025">2025</option>}
               </select>
-              <button className="nav-arrow-btn" onClick={handleScrollLeft} aria-label="Previous">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-              <button className="nav-arrow-btn" onClick={handleScrollRight} aria-label="Next">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
             </div>
           </div>
 
           <div
             className="champions-carousel-wrapper"
+            ref={carouselRef}
+            onMouseEnter={() => setIsCarouselHovered(true)}
+            onMouseLeave={() => setIsCarouselHovered(false)}
             style={{
-              perspective: '1200px',
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '420px',
-              position: 'relative'
+              gap: '24px',
+              padding: '24px 12px',
+              overflowX: 'auto',
+              scrollSnapType: 'x mandatory',
+              scrollBehavior: 'smooth',
+              alignItems: 'stretch'
             }}
           >
-            <div
-              className="champions-scroll-track"
-              style={{
-                transformStyle: 'preserve-3d',
-                width: '100%',
-                maxWidth: '960px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                position: 'relative',
-                height: '100%'
-              }}
-            >
-              {currentChampions.map((champ, idx) => {
-                const cardStyle = getChampCardStyle(idx);
-                return (
-                  <div
-                    key={idx}
-                    className={`champion-card rank-${champ.rank}`}
-                    style={{
-                      position: 'absolute',
-                      width: '280px',
-                      ...cardStyle
-                    }}
-                  >
-                    <div className="card-top-row">
-                      <div className={`medal-badge rank-${champ.rank}`}>
-                        <div className="medal-circle">{champ.rank}</div>
-                      </div>
-                      <div className={`rank-pill rank-${champ.rank}`}>
-                        {champ.rankLabel}
-                      </div>
-                    </div>
-
-                    <div className="champion-avatar-frame">
-                      <img src={champ.image} alt={champ.teamName} className="champion-avatar-img" />
-                    </div>
-
-                    <h3 className="champion-team-name">{champ.teamName}</h3>
-                    <div className="champion-event-name">{champ.eventName}</div>
-
-                    <div className={`champion-score-row rank-${champ.rank}`}>
-                      <span className="star-icon">★</span>
-                      <span>{champ.score}</span>
-                      <span className="score-max">/ 100</span>
-                    </div>
-
-                    <div className="champion-footer-pill">
-                      <div className="pill-item">
-                        <span>🏫 {champ.institution}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Dots */}
-          <div className="champions-dots">
-            {currentChampions.map((_, idx) => (
-              <span
+            {currentChampions.map((champ, idx) => (
+              <div
                 key={idx}
-                className={`dot ${idx === activeChampIdx ? 'active' : ''}`}
-                onClick={() => setActiveChampIdx(idx)}
-                style={{ cursor: 'pointer' }}
-              />
+                className={`champion-card rank-${champ.rank}`}
+                style={{
+                  minWidth: '280px',
+                  maxWidth: '280px',
+                  scrollSnapAlign: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <div className="card-top-row">
+                  <div className={`medal-badge rank-${champ.rank}`}>
+                    <div className="medal-circle">{champ.rank}</div>
+                  </div>
+                  <div className={`rank-pill rank-${champ.rank}`}>
+                    {champ.rankLabel}
+                  </div>
+                </div>
+
+                <div className="champion-avatar-frame">
+                  <img 
+                    src={champ.image?.startsWith('http') ? champ.image : (champ.image?.startsWith('/') ? `http://localhost:8000${champ.image}` : champ.image)} 
+                    alt={champ.teamName} 
+                    className="champion-avatar-img" 
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150'; }}
+                  />
+                </div>
+
+                <h3 className="champion-team-name">{champ.teamName}</h3>
+                <div className="champion-event-name">{champ.eventName}</div>
+
+                <div className={`champion-score-row rank-${champ.rank}`}>
+                  <span className="star-icon">★</span>
+                  <span>{champ.score}</span>
+                  <span className="score-max">/ 100</span>
+                </div>
+
+                <div className="champion-footer-pill">
+                  <div className="pill-item">
+                    <span>🏫 {champ.institution}</span>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
 
