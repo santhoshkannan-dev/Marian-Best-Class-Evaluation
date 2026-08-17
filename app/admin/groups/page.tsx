@@ -285,7 +285,11 @@ export default function AdminGroupsPage() {
                   <button
                     className="btn btn-danger"
                     style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 700 }}
-                    onClick={() => deleteUserGroup(group.id)}
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to delete the group "${group.name}"? This action cannot be undone.`)) {
+                        deleteUserGroup(group.id);
+                      }
+                    }}
                   >
                     🗑️ Delete Group
                   </button>

@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import (
     Department, AcademicYear, Class, User,
     CriteriaCategory, CriteriaItem, Submission,
-    AcademicGradeBreakdown, WorkflowAuditTrail, ClassIndexResult
+    AcademicGradeBreakdown, WorkflowAuditTrail, ClassIndexResult,
+    Champion
 )
 
 class AcademicYearSerializer(serializers.ModelSerializer):
@@ -34,7 +35,7 @@ class CriteriaCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CriteriaCategory
-        fields = ['id', 'code', 'category', 'access_level', 'items', 'created_at']
+        fields = ['id', 'code', 'category', 'access_level', 'evaluators', 'items', 'created_at']
 
 class UserSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField(source='department.name', read_only=True)
@@ -83,3 +84,8 @@ class ClassIndexResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassIndexResult
         fields = ['id', 'class_name', 'class_name_display', 'academic_year', 'academic_year_display', 'academic_score', 'co_curricular_score', 'extra_curricular_score', 'final_index', 'rank', 'updated_at']
+
+class ChampionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Champion
+        fields = '__all__'

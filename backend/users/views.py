@@ -1,3 +1,7 @@
+
+from .models import Champion
+from .serializers import ChampionSerializer
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 import logging
 from datetime import datetime
 from django.conf import settings
@@ -1130,7 +1134,10 @@ class CriteriaCategoryDetailView(APIView):
 
     def put(self, request, pk):
         try:
-            category = CriteriaCategory.objects.get(pk=pk)
+            if str(pk).isdigit():
+                category = CriteriaCategory.objects.get(pk=int(pk))
+            else:
+                category = CriteriaCategory.objects.get(code=pk)
         except CriteriaCategory.DoesNotExist:
             return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = CriteriaCategorySerializer(category, data=request.data, partial=True)
@@ -1141,7 +1148,10 @@ class CriteriaCategoryDetailView(APIView):
 
     def delete(self, request, pk):
         try:
-            category = CriteriaCategory.objects.get(pk=pk)
+            if str(pk).isdigit():
+                category = CriteriaCategory.objects.get(pk=int(pk))
+            else:
+                category = CriteriaCategory.objects.get(code=pk)
             category.delete()
         except CriteriaCategory.DoesNotExist:
             pass
@@ -1214,3 +1224,44 @@ class UserGroupDetailView(APIView):
         except UserGroupModel.DoesNotExist:
             pass
         return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+class ChampionListView(APIView):
+    permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get(self, request):
+        champions = Champion.objects.all()
+        serializer = ChampionSerializer(champions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = ChampionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ChampionDetailView(APIView):
+    permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def put(self, request, pk):
+        try:
+            champion = Champion.objects.get(pk=pk)
+        except Champion.DoesNotExist:
+            return Response({'error': 'Champion not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ChampionSerializer(champion, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            champion = Champion.objects.get(pk=pk)
+            champion.delete()
+        except Champion.DoesNotExist:
+            pass
+        return Response({'success': True}, status=status.HTTP_200_OK)

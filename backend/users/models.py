@@ -112,6 +112,7 @@ class CriteriaCategory(models.Model):
     code = models.CharField(max_length=50, unique=True) # e.g. 'cat-academics'
     category = models.CharField(max_length=100)
     access_level = models.CharField(max_length=20, default='all_students') # 'all_students', 'student_rep_only'
+    evaluators = models.JSONField(default=list, blank=True) # list of evaluator emails
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -194,3 +195,20 @@ class UserGroupModel(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.group_id})"
+
+class Champion(models.Model):
+    year = models.CharField(max_length=20)
+    rank = models.IntegerField()
+    rankLabel = models.CharField(max_length=50)
+    teamName = models.CharField(max_length=100)
+    eventName = models.CharField(max_length=255, blank=True, null=True)
+    score = models.CharField(max_length=20)
+    institution = models.CharField(max_length=100, blank=True, null=True)
+    image = models.ImageField(upload_to='champions/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-year', 'rank']
+
+    def __str__(self):
+        return f"{self.year} - Rank {self.rank}: {self.teamName}"

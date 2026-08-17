@@ -26,6 +26,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: 'years', label: 'Academic Years', href: '/admin/academic-years' },
     { id: 'criteria', label: 'Criteria Management', href: '/admin/criteria' },
     { id: 'groups', label: 'User Groups', href: '/admin/groups' },
+    { id: 'evaluators', label: 'Evaluator Management', href: '/admin/evaluators' },
+    { id: 'champions', label: 'Previous Champions', href: '/admin/champions' },
     { id: 'departments', label: 'Department Management', href: '/admin/departments' },
     { id: 'settings', label: 'Settings', href: '/admin/settings' },
   ];

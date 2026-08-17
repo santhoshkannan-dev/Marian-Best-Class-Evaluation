@@ -19,6 +19,7 @@ export interface CriteriaCategory {
   category: string;
   code?: string;
   accessLevel?: string;
+  evaluators?: string[]; // Array of evaluator emails assigned to this category
   items: CriteriaItem[];
 }
 
@@ -96,6 +97,18 @@ export interface AppUser {
   className?: string;
   isApproved?: boolean;
   isStudentRep?: boolean;
+}
+
+export interface Champion {
+  id?: number;
+  year: string;
+  rank: number;
+  rankLabel: string;
+  teamName: string;
+  eventName: string;
+  score: string;
+  institution: string;
+  image: string;
 }
 
 export interface UserGroup {
@@ -280,6 +293,12 @@ export const defaultUserGroups: UserGroup[] = [
     emails: ["allen.george@mariancollege.org"]
   },
   {
+    id: "grp-evaluators",
+    name: "Evaluator Group",
+    description: "Evaluation team members responsible for scoring and finalizing student submissions.",
+    emails: ["allen.george@mariancollege.org"]
+  },
+  {
     id: "grp-class-teachers",
     name: "Class Teachers Council",
     description: "Faculty members acting as class advisors.",
@@ -290,5 +309,11 @@ export const defaultUserGroups: UserGroup[] = [
     name: "Student Representatives",
     description: "Student council and DQC lead members.",
     emails: ["santhosh.25pmc152@mariancollege.org", "amal.25pmc114@mariancollege.org"]
+  },
+  {
+    id: "grp-dqc-student-rep",
+    name: "DQC Student Rep Group",
+    description: "Data Quality Cell student representatives responsible for initial verification of peer submissions.",
+    emails: ["santhosh.25pmc152@mariancollege.org"]
   }
 ];

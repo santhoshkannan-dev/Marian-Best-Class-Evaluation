@@ -15,7 +15,9 @@ from .views import (
     CriteriaCategoryListView,
     CriteriaCategoryDetailView,
     CriteriaItemListView,
-    CriteriaItemDetailView
+    CriteriaItemDetailView,
+    ChampionListView,
+    ChampionDetailView
 )
 
 urlpatterns = [
@@ -32,7 +34,9 @@ urlpatterns = [
     path('user-groups/', UserGroupListView.as_view(), name='user-groups'),
     path('user-groups/<str:pk>/', UserGroupDetailView.as_view(), name='user-group-detail'),
     path('criteria-categories/', CriteriaCategoryListView.as_view(), name='criteria-categories'),
-    path('criteria-categories/<int:pk>/', CriteriaCategoryDetailView.as_view(), name='criteria-category-detail'),
+    path('criteria-categories/<str:pk>/', CriteriaCategoryDetailView.as_view(), name='criteria-category-detail'),
     path('criteria-items/', CriteriaItemListView.as_view(), name='criteria-items'),
     path('criteria-items/<int:pk>/', CriteriaItemDetailView.as_view(), name='criteria-item-detail'),
+    path('champions/', ChampionListView.as_view(), name='champions-list'),
+    path('champions/<int:pk>/', ChampionDetailView.as_view(), name='champions-detail'),
 ]

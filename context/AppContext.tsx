@@ -13,7 +13,8 @@ import {
   defaultSubmissions,
   defaultUsers,
   defaultAcademicYears,
-  defaultUserGroups
+  defaultUserGroups,
+  Champion
 } from '@/data/initialData';
 
 interface AppContextType {
@@ -88,6 +89,9 @@ interface AppContextType {
   addClassGlobal: (name: string, deptCode: string) => Promise<void>;
   updateClassMapping: (name: string, teacherEmail: string, dqcEmail: string) => Promise<void>;
   addUserGlobal: (email: string, role: string, name: string, deptCode: string, className: string) => Promise<void>;
+  assignEvaluatorsToCategory: (categoryId: string, evaluators: string[]) => Promise<void>;
+  championsData: Record<string, Champion[]>;
+  fetchChampions: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -228,6 +232,25 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [currentUserInfo, setCurrentUserInfo] = useState<AppContextType['currentUserInfo']>(null);
   const [classes, setClasses] = useState<any[]>(defaultClasses);
   const [departments, setDepartments] = useState<any[]>(defaultDepartments);
+  const [championsData, setChampionsData] = useState<Record<string, Champion[]>>({});
+
+  const fetchChampions = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/champions/');
+      if (res.ok) {
+        const data: Champion[] = await res.json();
+        // Group by year
+        const grouped: Record<string, Champion[]> = {};
+        data.forEach(champ => {
+          if (!grouped[champ.year]) grouped[champ.year] = [];
+          grouped[champ.year].push(champ);
+        });
+        setChampionsData(grouped);
+      }
+    } catch (e) {
+      console.error('Failed to fetch champions:', e);
+    }
+  };
 
   // Fetch departments and classes from backend on mount
   useEffect(() => {
@@ -248,6 +271,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }
       })
       .catch((err) => console.error("Failed to fetch classes from backend:", err));
+
+    fetchChampions();
   }, []);
 
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -281,12 +306,32 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               if (data.evaluationOpen !== undefined) setEvaluationOpen(data.evaluationOpen);
               if (data.submissionWindowStart !== undefined) setSubmissionWindowStart(data.submissionWindowStart);
               if (data.submissionWindowEnd !== undefined) setSubmissionWindowEnd(data.submissionWindowEnd);
-              if (data.submissions) setSubmissions(data.submissions);
+              if (data.submissions && Array.isArray(data.submissions)) {
+                // Normalize any cached submissions that still have snake_case fields
+                const normalized = data.submissions.map((raw: any) => ({
+                  ...raw,
+                  studentId: raw.studentId ?? raw.user ?? raw.student_id ?? 0,
+                  criteriaId: raw.criteriaId ?? raw.criteria_id ?? 0,
+                }));
+                setSubmissions(normalized);
+              } else if (data.submissions) {
+                setSubmissions(data.submissions);
+              }
               if (data.users) setUsers(data.users);
-              setCriteriaCatalog(defaultCriteriaCatalog);
+              // Only restore cached catalog if it is non-empty (empty means it was fetched from an unseeded backend)
+              if (data.criteriaCatalog && Array.isArray(data.criteriaCatalog) && data.criteriaCatalog.length > 0) {
+                setCriteriaCatalog(data.criteriaCatalog);
+              } else {
+                setCriteriaCatalog(defaultCriteriaCatalog);
+              }
               if (data.academicYears) setAcademicYears(data.academicYears);
               if (data.students) setStudents(data.students);
-              if (data.userGroups) setUserGroups(data.userGroups);
+              // Only restore cached user groups if non-empty
+              if (data.userGroups && Array.isArray(data.userGroups) && data.userGroups.length > 0) {
+                setUserGroups(data.userGroups);
+              } else if (data.userGroups) {
+                setUserGroups(data.userGroups);
+              }
               if (data.activeAcademicYear) {
                 setActiveAcademicYear(data.activeAcademicYear);
                 setSelectedAcademicYear(data.activeAcademicYear);
@@ -488,6 +533,41 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  /**
+   * Normalize a raw submission object from the Django REST API into the shape
+   * expected by the frontend (camelCase fields).
+   *
+   * The backend serializer returns snake_case keys such as:
+   *   - criteria_id  →  criteriaId
+   *   - user         →  studentId   (integer FK)
+   *   - academic_year → academicYear
+   *   - verified_by_name → verifiedByName  (etc.)
+   */
+  const normalizeSubmission = (raw: any): Submission => ({
+    id: raw.id,
+    studentId: raw.studentId ?? raw.user ?? raw.student_id ?? 0,
+    criteriaId: raw.criteriaId ?? raw.criteria_id ?? 0,
+    academicYear: raw.academicYear ?? raw.academic_year ?? '',
+    description: raw.description ?? '',
+    status: raw.status ?? 'Pending',
+    remarks: raw.remarks ?? '',
+    marks: raw.marks ?? null,
+    proof: raw.proof ?? '',
+    eventId: raw.eventId ?? raw.event_id ?? '',
+    evaluatorVerified: raw.evaluatorVerified ?? raw.evaluator_verified ?? false,
+    evidence: raw.evidence ?? undefined,
+    verifiedByName: raw.verifiedByName ?? raw.verified_by_name ?? '',
+    user_email: raw.user_email ?? '',
+    user_name: raw.user_name ?? '',
+    className: raw.className ?? raw.class_name ?? '',
+    repVerifiedByName: raw.repVerifiedByName ?? raw.rep_verified_by_name ?? '',
+    repRemarks: raw.repRemarks ?? raw.rep_remarks ?? '',
+    teacherVerifiedByName: raw.teacherVerifiedByName ?? raw.teacher_verified_by_name ?? '',
+    teacherRemarks: raw.teacherRemarks ?? raw.teacher_remarks ?? '',
+    evaluatorVerifiedByName: raw.evaluatorVerifiedByName ?? raw.evaluator_verified_by_name ?? '',
+    evaluatorRemarks: raw.evaluatorRemarks ?? raw.evaluator_remarks ?? '',
+  });
+
   const fetchSubmissions = async () => {
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
@@ -499,7 +579,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const res = await fetch('http://localhost:8000/api/submissions/', { headers });
       if (res.ok) {
         const data = await res.json();
-        setSubmissions(data);
+        // Normalize API snake_case → frontend camelCase
+        setSubmissions(Array.isArray(data) ? data.map(normalizeSubmission) : data);
       }
     } catch (err) {
       console.error("Failed to fetch submissions:", err);
@@ -553,6 +634,18 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
+        
+        // Populate students array from the users data
+        const studentUsers = data.filter((u: any) => u.role === 'student');
+        if (studentUsers.length > 0) {
+           setStudents(studentUsers.map((u: any) => ({
+             id: u.id,
+             name: u.name || u.username || u.email,
+             email: u.email,
+             department: u.department,
+             className: u.className || u.class_name || 'Unknown',
+           })));
+        }
       }
     } catch (e) {
       console.error(e);
@@ -569,6 +662,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             const defCat = defaultCriteriaCatalog.find(
               (d) =>
                 (d.code && cat.code && d.code.toLowerCase() === cat.code.toLowerCase()) ||
+                (d.id && cat.id && d.id.toLowerCase() === cat.id.toLowerCase()) ||
                 (d.category && cat.category && d.category.toLowerCase().trim() === cat.category.toLowerCase().trim())
             );
             const items = cat.items && Array.isArray(cat.items) && cat.items.length > 0
@@ -576,10 +670,44 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               : (defCat ? defCat.items : []);
             return {
               ...cat,
+              id: cat.code || cat.id,
               items
             };
           });
           setCriteriaCatalog(merged);
+        } else {
+          // Backend DB is empty — seed default criteria catalog
+          setCriteriaCatalog(defaultCriteriaCatalog);
+          
+          defaultCriteriaCatalog.forEach((cat) => {
+            fetch('http://localhost:8000/api/criteria-categories/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                code: cat.id,
+                category: cat.category,
+                evaluators: cat.evaluators || []
+              })
+            }).then(res => {
+              if (res.ok) {
+                res.json().then(savedCat => {
+                  cat.items.forEach(item => {
+                    fetch('http://localhost:8000/api/criteria-items/', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        category: savedCat.id,
+                        title: item.title,
+                        type: item.type,
+                        marks: item.marks,
+                        rules_json: item.rules || null
+                      })
+                    }).catch(console.error);
+                  });
+                });
+              }
+            }).catch(console.error);
+          });
         }
       }
     } catch (e) {
@@ -592,10 +720,44 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const res = await fetch('http://localhost:8000/api/user-groups/');
       if (res.ok) {
         const data = await res.json();
-        setUserGroups(data);
+
+        // Normalize backend 'members' field → frontend 'emails' field
+        const fromBackend: UserGroup[] = Array.isArray(data)
+          ? data.map((g: any) => ({
+              id: g.id ?? g.group_id,
+              name: g.name,
+              description: g.description ?? '',
+              emails: Array.isArray(g.emails) ? g.emails
+                : Array.isArray(g.members) ? g.members
+                : []
+            }))
+          : [];
+
+        // Only seed defaultUserGroups if the backend database is COMPLETELY empty (first run).
+        // If it's not empty, it means the DB is initialized, so missing default groups were likely deleted by the user.
+        if (fromBackend.length === 0) {
+          // Seed missing groups to backend silently
+          defaultUserGroups.forEach((g) => {
+            fetch('http://localhost:8000/api/user-groups/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: g.id,
+                name: g.name,
+                description: g.description,
+                members: g.emails
+              })
+            }).catch(() => {/* silently ignore if backend unreachable */});
+          });
+          setUserGroups(defaultUserGroups);
+        } else {
+          setUserGroups(fromBackend);
+        }
       }
     } catch (e) {
       console.error(e);
+      // Fallback to defaults if backend is unreachable
+      setUserGroups(defaultUserGroups);
     }
   };
 
@@ -678,7 +840,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (res.ok) {
         const createdSub = await res.json();
         setSubmissions((prev) =>
-          prev.map((s) => (s.id === tempId ? createdSub : s))
+          prev.map((s) => (s.id === tempId ? normalizeSubmission(createdSub) : s))
         );
       }
     } catch (err: any) {
@@ -1343,6 +1505,26 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     );
   };
 
+  const assignEvaluatorsToCategory = async (categoryId: string, evaluators: string[]) => {
+    const category = criteriaCatalog.find(c => c.id === categoryId);
+    if (!category) return;
+
+    // Optimistically update state
+    setCriteriaCatalog(prev =>
+      prev.map(c => c.id === categoryId ? { ...c, evaluators } : c)
+    );
+
+    try {
+      await fetch(`http://localhost:8000/api/criteria-categories/${categoryId}/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ evaluators })
+      });
+    } catch (e) {
+      console.error('Failed to assign evaluators', e);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1407,7 +1589,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         deleteDepartmentGlobal,
         addClassGlobal,
         updateClassMapping,
-        addUserGlobal
+        addUserGlobal,
+        assignEvaluatorsToCategory,
+        championsData,
+        fetchChampions
       }}
     >
       {children}

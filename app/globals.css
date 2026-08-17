@@ -721,9 +721,9 @@ h1, h2, h3, h4, p {
 }
 
 .champion-card.rank-1 {
-  border: 2px solid #f59e0b;
-  box-shadow: 0 14px 35px rgba(245, 158, 11, 0.14);
-  background: linear-gradient(180deg, #ffffff 0%, #fffdf5 100%);
+  border: 2px solid #3b82f6;
+  box-shadow: 0 14px 35px rgba(59, 130, 246, 0.18);
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
 }
 
 .card-top-row {
@@ -747,7 +747,7 @@ h1, h2, h3, h4, p {
   border: 2px solid #ffffff;
 }
 
-.medal-badge.rank-1 .medal-circle { background: linear-gradient(135deg, #fef08a, #eab308); color: #78350f; }
+.medal-badge.rank-1 .medal-circle { background: linear-gradient(135deg, #bfdbfe, #3b82f6); color: #1e3a8a; }
 .medal-badge.rank-2 .medal-circle { background: linear-gradient(135deg, #f1f5f9, #94a3b8); color: #334155; }
 .medal-badge.rank-3 .medal-circle { background: linear-gradient(135deg, #ffedd5, #c2410c); color: #7c2d12; }
 .medal-badge.rank-4 .medal-circle, .medal-badge.rank-5 .medal-circle { background: linear-gradient(135deg, #f1f5f9, #cbd5e1); color: #475569; }
@@ -761,7 +761,7 @@ h1, h2, h3, h4, p {
   text-transform: uppercase;
 }
 
-.rank-pill.rank-1 { background: #fef3c7; color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3); }
+.rank-pill.rank-1 { background: #eff6ff; color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.3); }
 .rank-pill.rank-2 { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
 .rank-pill.rank-3 { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
 .rank-pill.rank-4, .rank-pill.rank-5 { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
