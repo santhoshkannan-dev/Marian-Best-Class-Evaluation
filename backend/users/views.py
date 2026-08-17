@@ -876,8 +876,6 @@ class SubmissionListView(APIView):
                 "exam_date": s.exam_date,
                 "awardedDate": s.awarded_date or (s.evidence and s.evidence.get('awardedDate')) or None,
                 "awarded_date": s.awarded_date,
-                "researchSubOption": s.research_sub_option or (s.evidence and s.evidence.get('researchSubOption')) or None,
-                "research_sub_option": s.research_sub_option,
                 "evaluatorVerified": s.evaluator_verified,
                 "evidence": s.evidence,
                 "verifiedByName": s.verified_by_name,
@@ -913,7 +911,6 @@ class SubmissionListView(APIView):
         end_date = request.data.get('end_date') or request.data.get('endDate') or (evidence and evidence.get('endDate')) or None
         exam_date = request.data.get('exam_date') or request.data.get('examDate') or (evidence and evidence.get('examDate')) or None
         awarded_date = request.data.get('awarded_date') or request.data.get('awardedDate') or (evidence and evidence.get('awardedDate')) or None
-        research_sub_option = request.data.get('research_sub_option') or request.data.get('researchSubOption') or (evidence and evidence.get('researchSubOption')) or None
         
         if not criteria_id:
             return Response({"error": "criteriaId is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -951,7 +948,6 @@ class SubmissionListView(APIView):
             end_date=end_date,
             exam_date=exam_date,
             awarded_date=awarded_date,
-            research_sub_option=research_sub_option,
             evidence=evidence
         )
         
@@ -1012,8 +1008,6 @@ class SubmissionListView(APIView):
             "exam_date": submission.exam_date,
             "awardedDate": submission.awarded_date,
             "awarded_date": submission.awarded_date,
-            "researchSubOption": submission.research_sub_option,
-            "research_sub_option": submission.research_sub_option,
             "evaluatorVerified": submission.evaluator_verified,
             "evidence": submission.evidence,
             "verifiedByName": submission.verified_by_name,
@@ -1085,8 +1079,6 @@ class SubmissionDetailView(APIView):
             submission.exam_date = request.data.get('exam_date') or request.data.get('examDate')
         if 'awarded_date' in request.data or 'awardedDate' in request.data:
             submission.awarded_date = request.data.get('awarded_date') or request.data.get('awardedDate')
-        if 'research_sub_option' in request.data or 'researchSubOption' in request.data:
-            submission.research_sub_option = request.data.get('research_sub_option') or request.data.get('researchSubOption')
         if 'evidence' in request.data:
             submission.evidence = request.data.get('evidence')
             if isinstance(submission.evidence, dict):
@@ -1098,8 +1090,6 @@ class SubmissionDetailView(APIView):
                     submission.start_date = submission.evidence.get('startDate')
                 if submission.evidence.get('endDate'):
                     submission.end_date = submission.evidence.get('endDate')
-                if submission.evidence.get('researchSubOption'):
-                    submission.research_sub_option = submission.evidence.get('researchSubOption')
         if 'repVerifiedByName' in request.data:
             submission.rep_verified_by_name = request.data.get('repVerifiedByName')
         if 'repRemarks' in request.data:
@@ -1134,8 +1124,6 @@ class SubmissionDetailView(APIView):
             "exam_date": submission.exam_date,
             "awardedDate": submission.awarded_date,
             "awarded_date": submission.awarded_date,
-            "researchSubOption": submission.research_sub_option,
-            "research_sub_option": submission.research_sub_option,
             "evaluatorVerified": submission.evaluator_verified,
             "evidence": submission.evidence,
             "verifiedByName": submission.verified_by_name,
