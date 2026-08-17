@@ -183,7 +183,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
   // Verification Desk Search & Filter State for Student Representative
   const [repSearchQuery, setRepSearchQuery] = useState('');
-  const [repStatusFilter, setRepStatusFilter] = useState('all');
+  const [repStatusFilter, setRepStatusFilter] = useState('pending');
   const [repPage, setRepPage] = useState(1);
   const repPageSize = 5;
 
@@ -1465,8 +1465,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       setRepPage(1);
                     }}
                   >
-                    <option value="all">All Peer Submissions</option>
                     <option value="pending">Pending Student Rep Verification</option>
+                    <option value="all">All Peer Submissions</option>
                     <option value="verified">Verified by Student Rep</option>
                     <option value="approved">Teacher Approved</option>
                     <option value="correction">Correction Requested</option>
