@@ -517,8 +517,8 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
     showToast('Students imported from CSV successfully.');
   };
 
-  const totalStudentPages = Math.ceil(students.length / studentPageSize) || 1;
-  const paginatedStudents = students.slice(
+  const totalStudentPages = Math.ceil(classStudents.length / studentPageSize) || 1;
+  const paginatedStudents = classStudents.slice(
     (studentManagementPage - 1) * studentPageSize,
     studentManagementPage * studentPageSize
   );
