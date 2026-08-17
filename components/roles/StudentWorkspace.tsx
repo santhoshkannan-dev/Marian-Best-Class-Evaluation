@@ -105,6 +105,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName === 'academics' || catCode === 'cat-academics' || catId === 'cat-academics' || catId === '1';
   }, [currentCategory]);
 
+  const isOnlineCoursesCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('online course') || catCode === 'cat-online-courses' || catId === 'cat-online-courses' || catId === '2';
+  }, [currentCategory]);
+
   const existingAcademicSubmission = React.useMemo(() => {
     if (!isAcademicCategory) return null;
     return submissions.find(
@@ -129,6 +137,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   }, [availableCriteriaCatalog, selectedCategory]);
 
   const [countValue, setCountValue] = useState<number>(1);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [proofFile, setProofFile] = useState<string>('');
   const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -144,6 +154,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         if (cat) setSelectedCategory(cat.id);
         setSelectedCriteriaId(sub.criteriaId);
         setDescription(sub.description);
+        if (sub.startDate) setStartDate(sub.startDate);
+        else if (sub.evidence?.startDate) setStartDate(sub.evidence.startDate);
+        if (sub.endDate) setEndDate(sub.endDate);
+        else if (sub.evidence?.endDate) setEndDate(sub.evidence.endDate);
         if (sub.evidence?.count) setCountValue(sub.evidence.count);
         if (sub.evidence?.submissionType) {
           setAcademicSubmissionType(sub.evidence.submissionType as 'Sem Result' | 'SAVE Sem Result');
@@ -428,12 +442,22 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       currentCategory?.id === 'cat-academics' ||
       currentCategory?.category.toLowerCase().trim() === 'academics';
 
+    const isOnlineCourses =
+      currentCategory?.id === 'cat-online-courses' ||
+      currentCategory?.code === 'cat-online-courses' ||
+      currentCategory?.category.toLowerCase().trim() === 'online courses';
+
     const isProgramsOrganized =
       currentCategory?.id === 'cat-programs-organized' ||
       currentCategory?.category.toLowerCase().trim() === 'programs organized';
 
     if (isAcademicCategory && existingAcademicSubmission && !editingSubId) {
       alert(`"${academicSubmissionType}" has already been updated for this evaluation cycle. Only one submission per type is allowed.`);
+      return;
+    }
+
+    if (isOnlineCourses && (!startDate || !endDate)) {
+      alert("Please select both a Starting Date and an End Date for the online course.");
       return;
     }
 
@@ -482,6 +506,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
           classPassPercentage: effectivePassPercentage,
           totalStudents
         }
+      : isOnlineCourses
+      ? {
+          type: 'online_course_dates',
+          startDate,
+          endDate
+        }
       : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
@@ -510,6 +540,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         description: finalDescription,
         proof: computedProof,
         eventId: computedEventId,
+        startDate: isOnlineCourses ? startDate : undefined,
+        endDate: isOnlineCourses ? endDate : undefined,
         status: initialStatus,
         evidence: computedEvidence
       });
@@ -523,6 +555,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         remarks: status === 'Submitted' ? 'Awaiting Student Rep verification' : 'Saved as draft',
         proof: computedProof,
         eventId: computedEventId,
+        startDate: isOnlineCourses ? startDate : undefined,
+        endDate: isOnlineCourses ? endDate : undefined,
         evaluatorVerified: false,
         evidence: computedEvidence
       });
@@ -531,6 +565,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     setDescription('');
     setProofFile('');
     setEventId('');
+    setStartDate('');
+    setEndDate('');
     setCountValue(1);
     setCount90Above(0);
     setCount80to90(0);
@@ -953,7 +989,34 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  {!isAcademicCategory && (
+                  {isOnlineCoursesCategory ? (
+                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', padding: '16px', background: 'rgba(59, 130, 246, 0.04)', border: '1.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px' }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          📅 Starting Date
+                        </label>
+                        <input
+                          type="date"
+                          className="input"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          📅 End Date
+                        </label>
+                        <input
+                          type="date"
+                          className="input"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  ) : !isAcademicCategory && (
                     <div className="form-group">
                       <label className="form-label">Count / Frequency</label>
                       <input
@@ -1168,6 +1231,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                   <span style={{ color: '#dc2626' }}>Fail: {sub.evidence.markBreakdown?.failCount ?? sub.evidence.grades?.Fail ?? 0}</span> |
                                   <span style={{ color: '#7c3aed' }}>Pass: {sub.evidence.classPassPercentage !== undefined ? `${sub.evidence.classPassPercentage}%` : '-'}</span>
                                 </div>
+                              ) : (sub.startDate || sub.evidence?.startDate) ? (
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
+                                  📅 {sub.startDate || sub.evidence?.startDate} to {sub.endDate || sub.evidence?.endDate}
+                                </span>
                               ) : (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{sub.evidence?.count ? `Count: ${sub.evidence.count}` : ''}</span>
                               )}

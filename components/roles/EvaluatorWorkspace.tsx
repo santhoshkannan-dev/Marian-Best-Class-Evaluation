@@ -267,7 +267,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                   {(currentUserInfo?.name || 'Evaluator').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>{currentUserInfo?.name || currentUserInfo?.username || 'Evaluator'}</h3>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>{currentUserInfo?.name || (currentUserInfo as any)?.username || 'Evaluator'}</h3>
                   <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>{currentUserInfo?.role === 'evaluator' ? 'Senior Evaluator' : (currentUserInfo?.role || 'Evaluator')} | System Auditor</p>
                 </div>
               </div>

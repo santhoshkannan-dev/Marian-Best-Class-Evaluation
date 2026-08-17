@@ -92,6 +92,8 @@ class Submission(models.Model):
     marks = models.IntegerField(blank=True, null=True)
     proof = models.CharField(max_length=255, blank=True, null=True)
     event_id = models.CharField(max_length=100, blank=True, null=True)
+    start_date = models.CharField(max_length=50, blank=True, null=True)
+    end_date = models.CharField(max_length=50, blank=True, null=True)
     evaluator_verified = models.BooleanField(default=False)
     evidence = models.JSONField(blank=True, null=True)
     verified_by_name = models.CharField(max_length=255, blank=True, null=True)

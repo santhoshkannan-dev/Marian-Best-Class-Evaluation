@@ -28,11 +28,14 @@ export interface Student {
   name: string;
   className: string;
   email?: string;
+  department?: string;
 }
 
 export interface SubmissionEvidence {
   type: string;
   count?: number;
+  startDate?: string;
+  endDate?: string;
   value?: number;
   checked?: boolean;
   submissionType?: string;
@@ -65,6 +68,8 @@ export interface Submission {
   studentId: number;
   criteriaId: number;
   academicYear?: string;
+  startDate?: string;
+  endDate?: string;
   description: string;
   status: 'Approved' | 'Pending' | 'Pending Verification' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Verified by Student Rep' | 'Teacher Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
   remarks?: string;
