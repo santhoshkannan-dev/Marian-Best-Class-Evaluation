@@ -1065,6 +1065,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
                       </div>
                     )}
+                    {isInternshipsCategory && (
+                      <div style={{
+                        padding: '14px 16px',
+                        background: '#eff6ff',
+                        border: '1.5px solid #bfdbfe',
+                        borderRadius: '12px',
+                        marginTop: '12px',
+                        color: '#1e40af',
+                        fontSize: '0.86rem'
+                      }}>
+                        <div style={{ fontWeight: 800, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>⚠️</span> Internship Guidelines & Conditions:
+                        </div>
+                        <ul style={{ margin: 0, paddingLeft: '20px', fontWeight: 600, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <li>Only internships that are not part of the syllabus will be considered.</li>
+                          <li>Required minimum duration - One month.</li>
+                          <li>Internships must be during the period June 01 - February 28.</li>
+                        </ul>
+                      </div>
+                    )}
                     {isScholarshipsCategory && (
                       <div style={{
                         padding: '12px 16px',
