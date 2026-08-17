@@ -669,6 +669,10 @@ class ClassListView(APIView):
             return Response({"error": f"Department '{dept_code}' not found"}, status=status.HTTP_404_NOT_FOUND)
 
         cls, created = Class.objects.get_or_create(name=name, defaults={"department": dept})
+        if not created and cls.department != dept:
+            cls.department = dept
+            cls.save(update_fields=['department'])
+
         return Response({
             "id": cls.id,
             "name": cls.name,
