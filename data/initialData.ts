@@ -38,6 +38,7 @@ export interface SubmissionEvidence {
   endDate?: string;
   examDate?: string;
   awardedDate?: string;
+  researchSubOption?: string;
   value?: number;
   checked?: boolean;
   submissionType?: string;
@@ -76,6 +77,8 @@ export interface Submission {
   exam_date?: string;
   awardedDate?: string;
   awarded_date?: string;
+  researchSubOption?: string;
+  research_sub_option?: string;
   description: string;
   status: 'Approved' | 'Pending' | 'Pending Verification' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Verified by Student Rep' | 'Teacher Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
   remarks?: string;
@@ -192,19 +195,11 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
     id: "cat-research",
     category: "Research",
     items: [
-      { id: 601, title: "Publication - Scopus / Web of Science", marks: 15, type: "count" },
-      { id: 602, title: "Publication - Conference Proceedings / Peer-Reviewed Article", marks: 10, type: "count" },
-      { id: 603, title: "Paper Presentation - Outside Marian College", marks: 8, type: "count" },
-      { id: 604, title: "Paper Presentation - Inside Marian College", marks: 5, type: "count" },
-      { id: 605, title: "Patent - Utility", marks: 20, type: "count" },
-      { id: 606, title: "Patent - Design", marks: 15, type: "count" },
-      { id: 607, title: "Book Published", marks: 15, type: "count" },
-      { id: 608, title: "Book Chapter Published", marks: 8, type: "count" },
-      { id: 609, title: "Article Published", marks: 5, type: "count" },
-      { id: 610, title: "Funded Project - International Level", marks: 20, type: "count" },
-      { id: 611, title: "Funded Project - National Level", marks: 15, type: "count" },
-      { id: 612, title: "Funded Project - State Level", marks: 10, type: "count" },
-      { id: 613, title: "Funded Project - Other", marks: 5, type: "count" }
+      { id: 601, title: "Publications", marks: 15, type: "count" },
+      { id: 602, title: "Paper Presentation", marks: 8, type: "count" },
+      { id: 603, title: "Patents", marks: 20, type: "count" },
+      { id: 604, title: "Books & Articles", marks: 15, type: "count" },
+      { id: 605, title: "Funded Projects", marks: 20, type: "count" }
     ]
   },
   {
