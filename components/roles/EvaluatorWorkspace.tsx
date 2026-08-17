@@ -27,7 +27,8 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
     updateSubmission,
     students,
     criteriaCatalog,
-    currentUserInfo
+    currentUserInfo,
+    classes
   } = useApp();
 
   // Helper to check if submission belongs to a category assigned to the current evaluator
@@ -126,7 +127,19 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
      }
      classesMap.get(st.class).score += st.score;
   });
-  const classesList = Array.from(classesMap.values());
+  let classesList = Array.from(classesMap.values());
+  
+  // Filter only classes that exist in the admin classes list
+  classesList = classesList.filter(c => classes.some((ac: any) => ac.name === c.name));
+  
+  // Optionally update mentor
+  classesList.forEach(c => {
+    const adminClass = classes.find((ac: any) => ac.name === c.name);
+    if (adminClass && adminClass.classTeacherName) {
+      c.mentor = adminClass.classTeacherName;
+    }
+  });
+
   if (classesList.length === 0) {
       classesList.push({ name: 'N/A', dept: 'N/A', score: 0, mentor: 'N/A' });
   }
