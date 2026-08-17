@@ -9,7 +9,7 @@ export interface CriteriaItem {
   title: string;
   category?: string;
   marks: number;
-  type: 'count' | 'range' | 'fixed' | 'negative' | 'boolean';
+  type: 'count' | 'range' | 'fixed' | 'negative' | 'boolean' | 'date';
   details?: string;
   rules?: CriteriaRule[];
 }
@@ -36,6 +36,7 @@ export interface SubmissionEvidence {
   count?: number;
   startDate?: string;
   endDate?: string;
+  examDate?: string;
   value?: number;
   checked?: boolean;
   submissionType?: string;
@@ -70,6 +71,8 @@ export interface Submission {
   academicYear?: string;
   startDate?: string;
   endDate?: string;
+  examDate?: string;
+  exam_date?: string;
   description: string;
   status: 'Approved' | 'Pending' | 'Pending Verification' | 'Pending Rep Verification' | 'Student Rep Verified' | 'Verified by Student Rep' | 'Teacher Verified' | 'Correction Requested' | 'Rejected' | 'Draft' | 'Submitted' | 'Verified' | 'Evaluated' | 'Locked' | 'Correction';
   remarks?: string;
@@ -161,7 +164,7 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
       { id: 401, title: "JRF Passed", marks: 20, type: "fixed" },
       { id: 402, title: "NET Passed", marks: 10, type: "fixed" },
       { id: 403, title: "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", marks: 5, type: "fixed" },
-      { id: 404, title: "Participation in Relevant Exam (UPSC / PSC Exams)", marks: 3, type: "count" }
+      { id: 404, title: "Participation in Relevant Exam (UPSC / PSC Exams)", marks: 3, type: "date" }
     ]
   },
   {

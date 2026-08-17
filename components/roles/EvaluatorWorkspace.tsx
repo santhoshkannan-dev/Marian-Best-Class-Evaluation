@@ -638,6 +638,16 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                                   <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
                                     Category: {catObj?.category || 'General'} | Item: {itemObj?.title || sub.description} | Class: {studentObj?.className || 'Unknown'}
                                   </p>
+                                  {(sub.examDate || sub.evidence?.examDate) && (
+                                    <div style={{ fontSize: '0.78rem', color: '#c2410c', fontWeight: 700, marginTop: '2px' }}>
+                                      📅 Exam Date: {sub.examDate || sub.evidence?.examDate}
+                                    </div>
+                                  )}
+                                  {(sub.startDate || sub.evidence?.startDate) && (
+                                    <div style={{ fontSize: '0.78rem', color: '#1d4ed8', fontWeight: 700, marginTop: '2px' }}>
+                                      📅 Duration: {sub.startDate || sub.evidence?.startDate} to {sub.endDate || sub.evidence?.endDate}
+                                    </div>
+                                  )}
                                   {sub.proof && (
                                     <div style={{ fontSize: '0.76rem', marginTop: '4px' }}>
                                       Proof: <a href={isDriveUrl ? sub.proof : `/Assets/Proofs/${sub.proof}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 700 }}>{sub.proof}</a>

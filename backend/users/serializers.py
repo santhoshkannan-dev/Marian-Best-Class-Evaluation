@@ -64,7 +64,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'user_email', 'user_name', 'criteria_id',
             'academic_year', 'submission_type', 'description', 'status',
-            'remarks', 'marks', 'proof', 'event_id', 'start_date', 'end_date', 'evaluator_verified',
+            'remarks', 'marks', 'proof', 'event_id', 'start_date', 'end_date', 'exam_date', 'evaluator_verified',
             'evidence', 'verified_by_name', 'rep_verified_by_name', 'rep_remarks',
             'teacher_verified_by_name', 'teacher_remarks', 'evaluator_verified_by_name',
             'evaluator_remarks', 'grade_breakdown', 'created_at', 'updated_at'

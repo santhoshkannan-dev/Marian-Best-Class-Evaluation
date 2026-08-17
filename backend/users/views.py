@@ -868,6 +868,12 @@ class SubmissionListView(APIView):
                 "marks": s.marks,
                 "proof": s.proof,
                 "eventId": s.event_id,
+                "startDate": s.start_date or (s.evidence and s.evidence.get('startDate')) or None,
+                "start_date": s.start_date,
+                "endDate": s.end_date or (s.evidence and s.evidence.get('endDate')) or None,
+                "end_date": s.end_date,
+                "examDate": s.exam_date or (s.evidence and s.evidence.get('examDate')) or None,
+                "exam_date": s.exam_date,
                 "evaluatorVerified": s.evaluator_verified,
                 "evidence": s.evidence,
                 "verifiedByName": s.verified_by_name,
@@ -899,12 +905,26 @@ class SubmissionListView(APIView):
         event_id = request.data.get('eventId', '')
         evidence = request.data.get('evidence')
         
+        start_date = request.data.get('start_date') or request.data.get('startDate') or (evidence and evidence.get('startDate')) or None
+        end_date = request.data.get('end_date') or request.data.get('endDate') or (evidence and evidence.get('endDate')) or None
+        exam_date = request.data.get('exam_date') or request.data.get('examDate') or (evidence and evidence.get('examDate')) or None
+        
         if not criteria_id:
             return Response({"error": "criteriaId is required"}, status=status.HTTP_400_BAD_REQUEST)
             
+        c_id = int(criteria_id)
+        # Validation Rule: Limit to maximum 3 submissions for UPSC/PSC Exams (criteria 404)
+        if c_id == 404:
+            existing_count = Submission.objects.filter(user=user, criteria_id=404).count()
+            if existing_count >= 3:
+                return Response(
+                    {"error": "Maximum limit reached. A student can only submit a maximum of 3 examinations for Participation in Relevant Examination (UPSC/PSC exams)."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
         submission = Submission.objects.create(
             user=user,
-            criteria_id=int(criteria_id),
+            criteria_id=c_id,
             academic_year=academic_year,
             description=description,
             status=status_val,
@@ -912,6 +932,9 @@ class SubmissionListView(APIView):
             marks=marks,
             proof=proof,
             event_id=event_id,
+            start_date=start_date,
+            end_date=end_date,
+            exam_date=exam_date,
             evidence=evidence
         )
         
@@ -964,6 +987,12 @@ class SubmissionListView(APIView):
             "marks": submission.marks,
             "proof": submission.proof,
             "eventId": submission.event_id,
+            "startDate": submission.start_date,
+            "start_date": submission.start_date,
+            "endDate": submission.end_date,
+            "end_date": submission.end_date,
+            "examDate": submission.exam_date,
+            "exam_date": submission.exam_date,
             "evaluatorVerified": submission.evaluator_verified,
             "evidence": submission.evidence,
             "verifiedByName": submission.verified_by_name,
@@ -993,7 +1022,15 @@ class SubmissionDetailView(APIView):
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
             
         if 'criteriaId' in request.data:
-            submission.criteria_id = int(request.data.get('criteriaId'))
+            new_cid = int(request.data.get('criteriaId'))
+            if new_cid == 404 and submission.criteria_id != 404:
+                existing_count = Submission.objects.filter(user=user, criteria_id=404).exclude(id=submission.id).count()
+                if existing_count >= 3:
+                    return Response(
+                        {"error": "Maximum limit reached. A student can only submit a maximum of 3 examinations for Participation in Relevant Examination (UPSC/PSC exams)."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            submission.criteria_id = new_cid
         if 'academicYear' in request.data:
             submission.academic_year = request.data.get('academicYear')
         if 'description' in request.data:
@@ -1012,8 +1049,21 @@ class SubmissionDetailView(APIView):
             submission.proof = request.data.get('proof')
         if 'eventId' in request.data:
             submission.event_id = request.data.get('eventId')
+        if 'start_date' in request.data or 'startDate' in request.data:
+            submission.start_date = request.data.get('start_date') or request.data.get('startDate')
+        if 'end_date' in request.data or 'endDate' in request.data:
+            submission.end_date = request.data.get('end_date') or request.data.get('endDate')
+        if 'exam_date' in request.data or 'examDate' in request.data:
+            submission.exam_date = request.data.get('exam_date') or request.data.get('examDate')
         if 'evidence' in request.data:
             submission.evidence = request.data.get('evidence')
+            if isinstance(submission.evidence, dict):
+                if submission.evidence.get('examDate'):
+                    submission.exam_date = submission.evidence.get('examDate')
+                if submission.evidence.get('startDate'):
+                    submission.start_date = submission.evidence.get('startDate')
+                if submission.evidence.get('endDate'):
+                    submission.end_date = submission.evidence.get('endDate')
         if 'repVerifiedByName' in request.data:
             submission.rep_verified_by_name = request.data.get('repVerifiedByName')
         if 'repRemarks' in request.data:
@@ -1040,6 +1090,12 @@ class SubmissionDetailView(APIView):
             "marks": submission.marks,
             "proof": submission.proof,
             "eventId": submission.event_id,
+            "startDate": submission.start_date,
+            "start_date": submission.start_date,
+            "endDate": submission.end_date,
+            "end_date": submission.end_date,
+            "examDate": submission.exam_date,
+            "exam_date": submission.exam_date,
             "evaluatorVerified": submission.evaluator_verified,
             "evidence": submission.evidence,
             "verifiedByName": submission.verified_by_name,

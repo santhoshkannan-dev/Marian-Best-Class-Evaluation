@@ -557,6 +557,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     eventId: raw.eventId ?? raw.event_id ?? '',
     startDate: raw.startDate ?? raw.start_date ?? raw.evidence?.startDate ?? '',
     endDate: raw.endDate ?? raw.end_date ?? raw.evidence?.endDate ?? '',
+    examDate: raw.examDate ?? raw.exam_date ?? raw.evidence?.examDate ?? '',
     evaluatorVerified: raw.evaluatorVerified ?? raw.evaluator_verified ?? false,
     evidence: raw.evidence ?? undefined,
     verifiedByName: raw.verifiedByName ?? raw.verified_by_name ?? '',
@@ -838,6 +839,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           eventId: newSub.eventId || '',
           start_date: newSub.startDate || '',
           end_date: newSub.endDate || '',
+          exam_date: newSub.examDate || '',
           evidence: newSub.evidence || null
         })
       });
@@ -879,6 +881,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             eventId: updates.eventId,
             start_date: updates.startDate,
             end_date: updates.endDate,
+            exam_date: updates.examDate,
             evidence: updates.evidence,
             evaluatorVerified: updates.evaluatorVerified,
             verifiedByName: updates.verifiedByName,
