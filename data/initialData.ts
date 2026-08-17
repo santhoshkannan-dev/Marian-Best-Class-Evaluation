@@ -171,8 +171,8 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
     id: "cat-internships",
     category: "Internships",
     items: [
-      { id: 301, title: "Offline Internship (Min. 1 month)", marks: 5, type: "count" },
-      { id: 302, title: "Online Internship (Min. 1 month)", marks: 3, type: "count" }
+      { id: 301, title: "Offline Internship (Min. 1 month)", marks: 5, type: "range" },
+      { id: 302, title: "Online Internship (Min. 1 month)", marks: 3, type: "range" }
     ]
   },
   {

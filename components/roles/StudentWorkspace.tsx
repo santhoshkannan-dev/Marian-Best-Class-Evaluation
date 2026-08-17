@@ -121,6 +121,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('competitive exam') || catCode === 'cat-competitive-exams' || catId === 'cat-competitive-exams' || catId === '4';
   }, [currentCategory]);
 
+  const isInternshipsCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('internship') || catCode === 'cat-internships' || catId === 'cat-internships' || catId === '3';
+  }, [currentCategory]);
+
   const isUpscPscExamItem = React.useMemo(() => {
     if (!currentItem) return false;
     const title = String(currentItem.title || '').toLowerCase();
@@ -479,8 +487,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
-    if (isOnlineCourses && (!startDate || !endDate)) {
-      alert("Please select both a Starting Date and an End Date for the online course.");
+    if ((isOnlineCourses || isInternshipsCategory) && (!startDate || !endDate)) {
+      alert("Please select both a Starting Date and an End Date.");
       return;
     }
 
@@ -539,9 +547,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
           classPassPercentage: effectivePassPercentage,
           totalStudents
         }
-      : isOnlineCourses
+      : (isOnlineCourses || isInternshipsCategory)
       ? {
-          type: 'online_course_dates',
+          type: isInternshipsCategory ? 'internship_dates' : 'online_course_dates',
           startDate,
           endDate
         }
@@ -578,8 +586,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         description: finalDescription,
         proof: computedProof,
         eventId: computedEventId,
-        startDate: isOnlineCourses ? startDate : undefined,
-        endDate: isOnlineCourses ? endDate : undefined,
+        startDate: (isOnlineCourses || isInternshipsCategory) ? startDate : undefined,
+        endDate: (isOnlineCourses || isInternshipsCategory) ? endDate : undefined,
         examDate: isCompetitiveExamsCategory ? examDate : undefined,
         status: initialStatus,
         evidence: computedEvidence
@@ -594,8 +602,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         remarks: status === 'Submitted' ? 'Awaiting Student Rep verification' : 'Saved as draft',
         proof: computedProof,
         eventId: computedEventId,
-        startDate: isOnlineCourses ? startDate : undefined,
-        endDate: isOnlineCourses ? endDate : undefined,
+        startDate: (isOnlineCourses || isInternshipsCategory) ? startDate : undefined,
+        endDate: (isOnlineCourses || isInternshipsCategory) ? endDate : undefined,
         examDate: isCompetitiveExamsCategory ? examDate : undefined,
         evaluatorVerified: false,
         evidence: computedEvidence
@@ -1025,6 +1033,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             ? 'COURSE NAME'
                             : isCompetitiveExamsCategory
                             ? 'EXAM NAME'
+                            : isInternshipsCategory
+                            ? 'INTERNSHIP DETAIL'
                             : `${currentItem.type.toUpperCase()} BASED`}
                         </span>
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
@@ -1060,7 +1070,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  {isOnlineCoursesCategory ? (
+                  {isOnlineCoursesCategory || isInternshipsCategory ? (
                     <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', padding: '16px', background: 'rgba(59, 130, 246, 0.04)', border: '1.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px' }}>
                       <div className="form-group">
                         <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
