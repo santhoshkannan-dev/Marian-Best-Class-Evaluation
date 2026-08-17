@@ -329,6 +329,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     ).length;
   }, [mySubmissions, editingSubId]);
 
+  const onlineCoursesSubmissionsCount = React.useMemo(() => {
+    const onlineCourseIds = [201, 202];
+    return mySubmissions.filter(
+      (s) => (onlineCourseIds.includes(s.criteriaId) || s.evidence?.type === 'online_course_dates') && s.id !== editingSubId
+    ).length;
+  }, [mySubmissions, editingSubId]);
+
   const totalChecklistPages = Math.ceil(availableCriteriaCatalog.length / checklistPageSize) || 1;
   const paginatedChecklist = availableCriteriaCatalog.slice((checklistPage - 1) * checklistPageSize, checklistPage * checklistPageSize);
 
@@ -510,6 +517,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
     if (isScholarshipsCategory && !awardedDate) {
       alert("Please select an Awarded Date for the scholarship.");
+      return;
+    }
+
+    if (isOnlineCoursesCategory && onlineCoursesSubmissionsCount >= 3 && !editingSubId) {
+      alert("Maximum Limit Reached: A student can only submit a maximum of 3 courses for Online Courses.");
       return;
     }
 
@@ -1063,6 +1075,32 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             : `${currentItem.type.toUpperCase()} BASED`}
                         </span>
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
+                      </div>
+                    )}
+                    {isOnlineCoursesCategory && (
+                      <div style={{
+                        padding: '12px 16px',
+                        background: onlineCoursesSubmissionsCount >= 3 ? '#fef2f2' : '#eff6ff',
+                        border: `1.5px solid ${onlineCoursesSubmissionsCount >= 3 ? '#fca5a5' : '#bfdbfe'}`,
+                        borderRadius: '12px',
+                        marginTop: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <span style={{ fontSize: '0.86rem', fontWeight: 700, color: onlineCoursesSubmissionsCount >= 3 ? '#991b1b' : '#1d4ed8' }}>
+                          ⚠️ Submission Limit: Maximum 3 courses allowed per student for Online Courses.
+                        </span>
+                        <span style={{
+                          fontSize: '0.8rem',
+                          fontWeight: 800,
+                          background: onlineCoursesSubmissionsCount >= 3 ? '#ef4444' : '#2563eb',
+                          color: '#ffffff',
+                          padding: '4px 10px',
+                          borderRadius: '20px'
+                        }}>
+                          {onlineCoursesSubmissionsCount} / 3 Submitted
+                        </span>
                       </div>
                     )}
                     {isInternshipsCategory && (

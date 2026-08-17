@@ -924,6 +924,15 @@ class SubmissionListView(APIView):
                     {"error": "Maximum limit reached. A student can only submit a maximum of 3 examinations for Participation in Relevant Examination (UPSC/PSC exams)."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+        # Validation Rule: Limit to maximum 3 submissions for Online Courses (criteria 201, 202)
+        if c_id in [201, 202]:
+            existing_count = Submission.objects.filter(user=user, criteria_id__in=[201, 202]).count()
+            if existing_count >= 3:
+                return Response(
+                    {"error": "Maximum limit reached. A student can only submit a maximum of 3 courses for Online Courses."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
         submission = Submission.objects.create(
             user=user,
@@ -1034,6 +1043,13 @@ class SubmissionDetailView(APIView):
                 if existing_count >= 3:
                     return Response(
                         {"error": "Maximum limit reached. A student can only submit a maximum of 3 examinations for Participation in Relevant Examination (UPSC/PSC exams)."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            if new_cid in [201, 202] and submission.criteria_id not in [201, 202]:
+                existing_count = Submission.objects.filter(user=user, criteria_id__in=[201, 202]).exclude(id=submission.id).count()
+                if existing_count >= 3:
+                    return Response(
+                        {"error": "Maximum limit reached. A student can only submit a maximum of 3 courses for Online Courses."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
             submission.criteria_id = new_cid
