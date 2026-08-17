@@ -379,7 +379,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   const filteredTeacherSubmissions = classSubmissions.filter((sub) => {
     const student = classStudents.find((st) => st.id === sub.studentId) || realStudents.find((st) => st.id === sub.studentId);
     const studentName = student ? student.name : ((sub as any).user_name || '');
-    const studentEmail = studentName.toLowerCase().replace(/\s+/g, '.') + '@college.edu';
+    const studentEmail = student?.email || (sub as any).user_email || (studentName.toLowerCase().replace(/\s+/g, '.') + '@mariancollege.org');
     const activityTitle = formatActivityTitle(sub);
 
     const matchesSearch =
@@ -2146,7 +2146,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                     </thead>
                     <tbody>
                       {paginatedStudents.map((s) => {
-                        const studentEmail = s.name.toLowerCase().replace(/\s+/g, '.') + '@college.edu';
+                        const studentEmail = s.email || (s.name.toLowerCase().replace(/\s+/g, '.') + '@mariancollege.org');
                         return (
                           <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                             <td style={{ fontWeight: 700, padding: '12px 14px', color: '#0f172a' }}>{s.name}</td>
@@ -2228,7 +2228,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                       <input
                         type="email"
                         className="input"
-                        placeholder="student@college.edu"
+                        placeholder="student@mariancollege.org"
                         value={newStudentEmail}
                         onChange={(e) => setNewStudentEmail(e.target.value)}
                         required
