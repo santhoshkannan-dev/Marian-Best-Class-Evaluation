@@ -314,7 +314,7 @@ export const defaultUserGroups: UserGroup[] = [
     id: "grp-student-reps",
     name: "Student Representatives",
     description: "Student council and DQC lead members.",
-    emails: ["santhosh.25pmc152@mariancollege.org", "amal.25pmc114@mariancollege.org"]
+    emails: ["santhosh.25pmc152@mariancollege.org"]
   },
   {
     id: "grp-dqc-student-rep",

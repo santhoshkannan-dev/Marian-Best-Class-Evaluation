@@ -1518,7 +1518,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         (c.dqc_member && c.dqc_member.trim().toLowerCase() === cleanEmail)
     );
     if (isDqcMemberInClass) return true;
-    if (cleanEmail === 'santhosh.25pmc152@mariancollege.org' || cleanEmail === 'santhosh.25ubc154@mariancollege.org') {
+    if (cleanEmail === 'santhosh.25pmc152@mariancollege.org') {
       return true;
     }
     return false;
