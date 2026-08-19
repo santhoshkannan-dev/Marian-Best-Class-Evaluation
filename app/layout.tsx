@@ -3,6 +3,7 @@ import './globals.css';
 import { AppContextProvider } from '@/context/AppContext';
 import { NavSidebar } from '@/components/NavSidebar';
 import { Footer } from '@/components/Footer';
+import { ToastProvider } from '@/components/ToastProvider';
 
 export const metadata: Metadata = {
   title: 'Marian Excellence Grid — Marian College Kuttikkanam',
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AppContextProvider>
+          <ToastProvider />
           <NavSidebar />
           {children}
           <Footer />

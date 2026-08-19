@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { toast } from 'react-toastify';
 
 interface AdminWorkspaceProps {
   view?: 'years' | 'criteria' | 'users' | 'departments' | 'settings' | 'champions';
@@ -92,12 +93,12 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
   const handleAddYear = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newYearInput.trim() || !/^\d{4}-\d{4}$/.test(newYearInput.trim())) {
-      alert('Please enter year in YYYY-YYYY format (e.g. 2026-2027)');
+      toast.warning('Please enter year in YYYY-YYYY format (e.g. 2026-2027)');
       return;
     }
     const exists = academicYears.some((y) => y.year === newYearInput.trim());
     if (exists) {
-      alert('This academic year already exists.');
+      toast.error('This academic year already exists.');
       return;
     }
     const formatted = newYearInput.trim();
@@ -785,10 +786,10 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
               >
                 Add User
               </button>
-              <button className="btn btn-secondary" onClick={() => alert('Simulated CSV import file picker')}>
+              <button className="btn btn-secondary" onClick={() => toast.info('Simulated CSV import file picker')}>
                 Upload CSV
               </button>
-              <button className="btn btn-secondary" onClick={() => alert('Downloading user template CSV...')}>
+              <button className="btn btn-secondary" onClick={() => toast.info('Downloading user template CSV...')}>
                 Download Sample
               </button>
             </div>
@@ -911,14 +912,14 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                         <td style={{ display: 'flex', gap: '6px' }}>
                           <button
                             className="btn btn-sm btn-secondary"
-                            onClick={() => alert(`Editing user: ${u.name}`)}
+                            onClick={() => toast.info(`Editing user: ${u.name}`)}
                           >
                             Edit
                           </button>
                           <button
                             className="btn btn-sm"
                             style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', fontWeight: 700 }}
-                            onClick={() => alert('Role delete action is currently blocked.')}
+                            onClick={() => toast.warning('Role delete action is currently blocked.')}
                           >
                             Delete Blocked
                           </button>
@@ -1259,7 +1260,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                   style={{ background: '#f97316', color: '#ffffff', fontWeight: 700 }}
                   onClick={() => {
                     setSubmissionWindow(startTimeWindow, endTimeWindow);
-                    alert(`Submission window saved: ${startTimeWindow || 'Immediately'} to ${endTimeWindow || 'Open'}`);
+                    toast.success(`Submission window saved: ${startTimeWindow || 'Immediately'} to ${endTimeWindow || 'Open'}`);
                   }}
                 >
                   Save Time Window
@@ -1270,7 +1271,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                     setStartTimeWindow('');
                     setEndTimeWindow('');
                     setSubmissionWindow('', '');
-                    alert('Submission time window cleared.');
+                    toast.info('Submission time window cleared.');
                   }}
                 >
                   Clear Time Window

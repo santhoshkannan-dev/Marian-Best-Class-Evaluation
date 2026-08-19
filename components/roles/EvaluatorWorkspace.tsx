@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 interface EvaluatorWorkspaceProps {
   view?: 'dashboard' | 'evaluation';
@@ -59,7 +60,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
 
   const handleVerifySubmissionEvaluator = (subId: number) => {
     if (!evaluationOpen) {
-      alert('Evaluation access is currently CLOSED by system administrator.');
+      toast.error('Evaluation access is currently CLOSED by system administrator.');
       return;
     }
 
@@ -75,7 +76,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
       marks: numMarks
     });
 
-    alert('Submission successfully verified, evaluated, and locked by Evaluation Team!');
+    toast.success('Submission successfully verified, evaluated, and locked by Evaluation Team!');
   };
 
   // --- REAL DATA BINDINGS ---

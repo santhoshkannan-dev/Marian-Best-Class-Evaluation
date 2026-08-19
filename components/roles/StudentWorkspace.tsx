@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { Submission, CriteriaItem } from '@/data/initialData';
+import { toast } from 'react-toastify';
 
 interface StudentWorkspaceProps {
   view?: 'dashboard' | 'submit' | 'submissions' | 'verification' | 'profile';
@@ -541,7 +542,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       currentCategory?.category.toLowerCase().trim() === 'programs organized';
 
     if (isAcademicCategory && existingAcademicSubmission && !editingSubId) {
-      alert(`"${academicSubmissionType}" has already been updated for this evaluation cycle. Only one submission per type is allowed.`);
+      toast.warning(`"${academicSubmissionType}" has already been updated for this evaluation cycle. Only one submission per type is allowed.`);
       return;
     }
 
@@ -586,17 +587,17 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     }
 
     if (!finalDescription) {
-      alert("Please enter a Description for the activity before submitting.");
+      toast.warning("Please enter a Description for the activity before submitting.");
       return;
     }
 
     if (isProgramsOrganized && !eventId.trim() && !proofFile.trim()) {
-      alert("Please provide an Event ID or Proof Document link before submitting.");
+      toast.warning("Please provide an Event ID or Proof Document link before submitting.");
       return;
     }
 
     if (!isProgramsOrganized && !proofFile.trim()) {
-      alert("Please provide a Proof Document link or reference before submitting.");
+      toast.warning("Please provide a Proof Document link or reference before submitting.");
       return;
     }
 
@@ -646,18 +647,18 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     // Enforce Admin Settings: Submission Status & Submission Time Window
     if (status === 'Submitted') {
       if (!submissionOpen) {
-        alert('Activity submissions are currently CLOSED by system administrator.');
+        toast.error('Activity submissions are currently CLOSED by system administrator.');
         return;
       }
 
       if (submissionWindowStart || submissionWindowEnd) {
         const now = new Date();
         if (submissionWindowStart && new Date(submissionWindowStart) > now) {
-          alert(`Submissions have not opened yet. Opening time: ${new Date(submissionWindowStart).toLocaleString()}`);
+          toast.info(`Submissions have not opened yet. Opening time: ${new Date(submissionWindowStart).toLocaleString()}`);
           return;
         }
         if (submissionWindowEnd && new Date(submissionWindowEnd) < now) {
-          alert(`Submissions closed at ${new Date(submissionWindowEnd).toLocaleString()}`);
+          toast.error(`Submissions closed at ${new Date(submissionWindowEnd).toLocaleString()}`);
           return;
         }
       }
@@ -677,6 +678,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         status: initialStatus,
         evidence: computedEvidence
       });
+      toast.success('Submission updated successfully!');
       setEditingSubId(null);
     } else {
       addSubmission({
@@ -695,6 +697,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         evaluatorVerified: false,
         evidence: computedEvidence
       });
+      toast.success(status === 'Submitted' ? 'Activity submitted successfully!' : 'Activity saved as draft!');
     }
 
     setDescription('');

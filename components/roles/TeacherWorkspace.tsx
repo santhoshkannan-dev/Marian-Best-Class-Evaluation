@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { Student, Submission } from '@/data/initialData';
+import { toast } from 'react-toastify';
 
 interface TeacherWorkspaceProps {
   view?: 'dashboard' | 'verification' | 'student-management' | 'profile';
@@ -54,6 +55,13 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
   const [submissionRemarksMap, setSubmissionRemarksMap] = useState<Record<number, string>>({});
 
   const showToast = (msg: string) => {
+    if (msg.toLowerCase().includes('failed') || msg.toLowerCase().includes('closed') || msg.toLowerCase().includes('error')) {
+      toast.error(msg);
+    } else if (msg.toLowerCase().includes('success') || msg.toLowerCase().includes('approved') || msg.startsWith('✓')) {
+      toast.success(msg);
+    } else {
+      toast.info(msg);
+    }
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
@@ -441,7 +449,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
 
   const handleBulkApproveSelected = () => {
     if (!evaluationOpen) {
-      alert('Evaluation access is currently CLOSED by system administrator.');
+      toast.error('Evaluation access is currently CLOSED by system administrator.');
       return;
     }
     if (selectedStudentIds.length === 0) return;
@@ -469,7 +477,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
 
   const handleApproveAllPending = () => {
     if (!evaluationOpen) {
-      alert('Evaluation access is currently CLOSED by system administrator.');
+      toast.error('Evaluation access is currently CLOSED by system administrator.');
       return;
     }
     const pendingSubsToApprove = submissions.filter(
@@ -511,7 +519,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
 
   const handleCSVUpload = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Simulated Import: 3 students parsed from CSV and added successfully!');
+    toast.info('Simulated Import: 3 students parsed from CSV and added successfully!');
     addStudent({ name: 'Bhavya Sharma', className: 'BSc CS A' });
     addStudent({ name: 'Chitra Sharma', className: 'BSc CS A' });
     showToast('Students imported from CSV successfully.');

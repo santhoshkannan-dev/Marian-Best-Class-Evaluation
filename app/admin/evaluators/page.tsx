@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { toast } from 'react-toastify';
 
 export default function EvaluatorManagementPage() {
   const { criteriaCatalog, userGroups, assignEvaluatorsToCategory } = useApp();
@@ -54,10 +55,10 @@ export default function EvaluatorManagementPage() {
       for (const [categoryId, evaluators] of Object.entries(categoryAssignments)) {
         await assignEvaluatorsToCategory(categoryId, evaluators);
       }
-      alert('Changes saved successfully to the database!');
+      toast.success('Changes saved successfully to the database!');
     } catch (e) {
       console.error(e);
-      alert('Failed to save changes. Please try again.');
+      toast.error('Failed to save changes. Please try again.');
     } finally {
       setIsSaving(false);
     }

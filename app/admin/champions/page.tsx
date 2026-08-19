@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { toast } from 'react-toastify';
 
 export default function ChampionsManagementPage() {
   const { championsData, fetchChampions, academicYears, classes } = useApp();
@@ -62,17 +63,17 @@ export default function ChampionsManagementPage() {
       });
 
       if (res.ok) {
-        alert('Champion added successfully!');
+        toast.success('Champion added successfully!');
         setTeamName('');
         setScore('');
         setImageFile(null);
         await fetchChampions();
       } else {
-        alert('Failed to add champion.');
+        toast.error('Failed to add champion.');
       }
     } catch (err) {
       console.error(err);
-      alert('Error adding champion.');
+      toast.error('Error adding champion.');
     } finally {
       setIsSubmitting(false);
     }

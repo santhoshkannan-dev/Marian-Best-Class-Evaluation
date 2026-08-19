@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
+import { toast } from 'react-toastify';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,20 +65,25 @@ export default function LoginPage() {
     const result = await loginWithGoogleToken(response.credential);
     setLoading(false);
     if (result.success) {
+      toast.success(`Welcome, ${(result as any).user?.name || 'User'}!`);
       const targetRole = ((result as any).user?.role || currentRole || 'student').toLowerCase();
       if (targetRole === 'student') router.push('/student/dashboard');
       else if (targetRole === 'teacher' || targetRole === 'faculty') router.push('/teacher/dashboard');
       else if (targetRole === 'admin') router.push('/admin/academic-years');
       else if (targetRole === 'evaluator' || targetRole === 'evaluation') router.push('/evaluator/dashboard');
     } else {
-      setErrorMsg(result.error || 'Google Sign-In failed.');
+      const err = result.error || 'Google Sign-In failed.';
+      setErrorMsg(err);
+      toast.error(err);
     }
   };
 
   const handleBypassLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBypassEmail) {
-      setErrorMsg('Please select a profile to bypass authentication.');
+      const err = 'Please select a profile to bypass authentication.';
+      setErrorMsg(err);
+      toast.warning(err);
       return;
     }
     
@@ -98,13 +104,16 @@ export default function LoginPage() {
     const result = await loginBypass(emailToUse, overrideRole);
     setLoading(false);
     if (result.success) {
+      toast.success(`Welcome back, ${(result as any).user?.name || 'User'}!`);
       const targetRole = ((result as any).user?.role || overrideRole || 'student').toLowerCase();
       if (targetRole === 'student') router.push('/student/dashboard');
       else if (targetRole === 'teacher' || targetRole === 'faculty') router.push('/teacher/dashboard');
       else if (targetRole === 'admin') router.push('/admin/academic-years');
       else if (targetRole === 'evaluator' || targetRole === 'evaluation') router.push('/evaluator/dashboard');
     } else {
-      setErrorMsg(result.error || 'Bypass authentication failed.');
+      const err = result.error || 'Bypass authentication failed.';
+      setErrorMsg(err);
+      toast.error(err);
     }
   };
 
