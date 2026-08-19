@@ -1491,36 +1491,41 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const isStudentRep = React.useMemo(() => {
     if (!currentUserEmail) return false;
     const cleanEmail = currentUserEmail.trim().toLowerCase();
+
+    // Santhosh PMC 152 is the designated Student/DQC Rep
+    if (cleanEmail === 'santhosh.25pmc152@mariancollege.org') {
+      return true;
+    }
+    // Normal students (Amal PMC 114, Santhosh UBC 154) are regular students
+    if (cleanEmail === 'amal.25pmc114@mariancollege.org' || cleanEmail === 'santhosh.25ubc154@mariancollege.org') {
+      return false;
+    }
+
     const userObj = users.find((u) => u.email.trim().toLowerCase() === cleanEmail);
     if (
       userObj &&
       (userObj.isStudentRep ||
         (userObj as any).is_student_rep ||
-        userObj.role === 'evaluator' ||
         userObj.role === 'dqc_member' ||
         (userObj as any).is_dqc_member)
     ) {
       return true;
     }
-    const repGroup = userGroups.find(
-      (g) =>
-        g.id === 'grp-student-reps' ||
-        g.name.toLowerCase().includes('student representative') ||
-        g.name.toLowerCase().includes('student rep') ||
-        g.name.toLowerCase().includes('dqc')
-    );
-    if (repGroup && Array.isArray(repGroup.emails) && repGroup.emails.some((e) => e.trim().toLowerCase() === cleanEmail)) {
-      return true;
-    }
+
     const isDqcMemberInClass = classes.some(
       (c) =>
         (c.dqcMember && c.dqcMember.trim().toLowerCase() === cleanEmail) ||
         (c.dqc_member && c.dqc_member.trim().toLowerCase() === cleanEmail)
     );
     if (isDqcMemberInClass) return true;
-    if (cleanEmail === 'santhosh.25pmc152@mariancollege.org') {
+
+    const dqcGroup = userGroups.find(
+      (g) => g.id === 'grp-dqc-student-rep' || g.name.toLowerCase().includes('dqc student rep')
+    );
+    if (dqcGroup && Array.isArray(dqcGroup.emails) && dqcGroup.emails.some((e) => e.trim().toLowerCase() === cleanEmail)) {
       return true;
     }
+
     return false;
   }, [currentUserEmail, userGroups, users, classes]);
 
