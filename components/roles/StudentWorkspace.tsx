@@ -1063,8 +1063,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           type="number"
                           className="input"
                           min={0}
-                          value={count90Above}
-                          onChange={(e) => setCount90Above(Math.max(0, parseInt(e.target.value) || 0))}
+                          placeholder="0"
+                          value={count90Above === 0 ? '' : count90Above}
+                          onChange={(e) => setCount90Above(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          onFocus={(e) => e.target.select()}
                           required
                         />
                       </div>
@@ -1077,8 +1079,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           type="number"
                           className="input"
                           min={0}
-                          value={count80to90}
-                          onChange={(e) => setCount80to90(Math.max(0, parseInt(e.target.value) || 0))}
+                          placeholder="0"
+                          value={count80to90 === 0 ? '' : count80to90}
+                          onChange={(e) => setCount80to90(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          onFocus={(e) => e.target.select()}
                           required
                         />
                       </div>
@@ -1091,8 +1095,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           type="number"
                           className="input"
                           min={0}
-                          value={count70to80}
-                          onChange={(e) => setCount70to80(Math.max(0, parseInt(e.target.value) || 0))}
+                          placeholder="0"
+                          value={count70to80 === 0 ? '' : count70to80}
+                          onChange={(e) => setCount70to80(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          onFocus={(e) => e.target.select()}
                           required
                         />
                       </div>
@@ -1105,8 +1111,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           type="number"
                           className="input"
                           min={0}
-                          value={failCount}
-                          onChange={(e) => setFailCount(Math.max(0, parseInt(e.target.value) || 0))}
+                          placeholder="0"
+                          value={failCount === 0 ? '' : failCount}
+                          onChange={(e) => setFailCount(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          onFocus={(e) => e.target.select()}
                           required
                         />
                       </div>
@@ -1125,9 +1133,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           value={passPercentage > 0 ? passPercentage : (
                             (count90Above + count80to90 + count70to80 + failCount) > 0
                               ? parseFloat(((((count90Above + count80to90 + count70to80) / (count90Above + count80to90 + count70to80 + failCount)) * 100)).toFixed(2))
-                              : 0
+                              : ''
                           )}
-                          onChange={(e) => setPassPercentage(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                          onChange={(e) => setPassPercentage(e.target.value === '' ? 0 : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                          onFocus={(e) => e.target.select()}
                           required
                         />
                       </div>
@@ -1308,8 +1317,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         type="number"
                         className="input"
                         min={1}
-                        value={countValue}
-                        onChange={(e) => setCountValue(Number(e.target.value))}
+                        placeholder="1"
+                        value={countValue === 0 ? '' : countValue}
+                        onChange={(e) => setCountValue(e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        onFocus={(e) => e.target.select()}
                         required
                       />
                     </div>
