@@ -339,12 +339,22 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 setSubmissions(data.submissions);
               }
               if (data.users) setUsers(data.users);
-              // Restore cached catalog and merge any newly added categories from defaultCriteriaCatalog (e.g., Programs Organized)
+              // Restore cached catalog and deep-merge any newly added categories & items from defaultCriteriaCatalog (e.g., Programs Organized items in Leaderships)
               if (data.criteriaCatalog && Array.isArray(data.criteriaCatalog) && data.criteriaCatalog.length > 0) {
                 const cachedMap = new Map(data.criteriaCatalog.map((c: any) => [c.id || c.code, c]));
                 const mergedCatalog = defaultCriteriaCatalog.map((defCat) => {
                   const key = defCat.id || defCat.code;
-                  return cachedMap.get(key) || defCat;
+                  const cachedCat = cachedMap.get(key);
+                  if (!cachedCat) return defCat;
+
+                  const cachedItemsMap = new Map((cachedCat.items || []).map((it: any) => [it.id, it]));
+                  const mergedItems = defCat.items.map((defItem) => cachedItemsMap.get(defItem.id) || defItem);
+
+                  return {
+                    ...cachedCat,
+                    category: defCat.category,
+                    items: mergedItems
+                  };
                 });
                 setCriteriaCatalog(mergedCatalog);
               } else {
