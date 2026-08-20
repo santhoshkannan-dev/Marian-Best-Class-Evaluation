@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import {
   CriteriaCategory,
   CriteriaItem,
@@ -823,6 +824,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Keep submissions state intact so student submissions permanently persist on logout and system restarts
     localStorage.removeItem('bc_access_token');
     localStorage.removeItem('bc_refresh_token');
+    toast.info('👋 Logged out successfully!');
   };
 
   const setAcademicYear = (year: string) => {
@@ -855,6 +857,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     // Optimistically update local state immediately so My Submissions updates instantly
     setSubmissions((prev) => [createdTempSub, ...prev]);
+
+    if (newSub.status === 'Draft') {
+      toast.success('📝 Draft saved successfully!');
+    } else {
+      toast.success('🎉 Activity submitted successfully!');
+    }
 
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
@@ -899,6 +907,20 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setSubmissions((prev) =>
       prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
     );
+
+    if (updates.status) {
+      if (updates.status === 'Approved' || updates.status === 'Rep Verified') {
+        toast.success(`✅ Submission marked as ${updates.status}!`);
+      } else if (updates.status === 'Rejected') {
+        toast.error('❌ Submission rejected.');
+      } else if (updates.status === 'Clarification Requested') {
+        toast.warning('💬 Clarification requested for submission.');
+      } else {
+        toast.info(`Submission updated (${updates.status}).`);
+      }
+    } else {
+      toast.success('✏️ Submission updated successfully!');
+    }
 
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
@@ -949,6 +971,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const deleteSubmission = async (id: number) => {
     // Optimistically remove from state locally first
     setSubmissions((prev) => prev.filter((s) => s.id !== id));
+    toast.success('🗑️ Submission deleted successfully!');
 
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
@@ -1574,8 +1597,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     if (repGroup.emails.map(e => e.toLowerCase()).includes(cleanEmail)) {
       removeUserFromGroup(repGroup.id, currentUserEmail);
+      toast.info('Switched view to Regular Student Mode');
     } else {
       addUserToGroup(repGroup.id, currentUserEmail);
+      toast.success('Switched view to Student Representative Mode');
     }
   };
 
