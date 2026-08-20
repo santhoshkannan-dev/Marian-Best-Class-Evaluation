@@ -154,45 +154,23 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('research') || catCode === 'cat-research' || catId === 'cat-research' || catId === '6';
   }, [currentCategory]);
 
-  const isPrizesCategory = React.useMemo(() => {
+  const isStartupsCategory = React.useMemo(() => {
     if (!currentCategory) return false;
     const catName = String(currentCategory.category || '').toLowerCase().trim();
     const catCode = String(currentCategory.code || '').toLowerCase().trim();
     const catId = String(currentCategory.id || '').toLowerCase().trim();
-    return catName.includes('prize') || catCode === 'cat-prizes' || catId === 'cat-prizes' || catId === '7';
+    return catName.includes('startup') || catCode === 'cat-startups' || catId === 'cat-startups' || catId === '7';
   }, [currentCategory]);
 
-  const [prizesType, setPrizesType] = useState<'From Marian College' | 'Outside Marian College'>('From Marian College');
+  const isLeadershipCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('leadership') || catCode === 'cat-leadership' || catId === 'cat-leadership' || catId === '8';
+  }, [currentCategory]);
 
-  const prizesItems = React.useMemo(() => {
-    if (!isPrizesCategory || !currentCategory || !currentCategory.items) return [];
-    let items = [];
-    if (prizesType === 'From Marian College') {
-      items = currentCategory.items.filter((item) => {
-        const title = (item.title || '').toLowerCase();
-        return title.includes('marian college') && !title.includes('outside');
-      });
-    } else {
-      items = currentCategory.items.filter((item) => {
-        const title = (item.title || '').toLowerCase();
-        return title.includes('outside');
-      });
-    }
-    // Sort items so all Individual items come first, then all Group items
-    return [...items].sort((a, b) => {
-      const aIsInd = (a.title || '').toLowerCase().includes('individual');
-      const bIsInd = (b.title || '').toLowerCase().includes('individual');
-      if (aIsInd && !bIsInd) return -1;
-      if (!aIsInd && bIsInd) return 1;
-      return 0;
-    });
-  }, [isPrizesCategory, currentCategory, prizesType]);
-
-  const formatPrizeTitle = (title: string): string => {
-    return title
-      .replace(/^Marian College\s*-\s*/i, '')
-      .replace(/^Outside Marian\s*-\s*/i, '');
-  };
+  const [leadershipNamePosition, setLeadershipNamePosition] = useState<string>('');
 
   const getResearchSubOptions = React.useCallback((title: string): string[] => {
     const t = (title || '').toLowerCase().trim();
@@ -209,7 +187,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return ['Book', 'Book Chapter', 'Article'];
     }
     if (t.includes('funded')) {
-      return ['International', 'National', 'State and Any Other'];
+      return ['International', 'National', 'State', 'Any Other'];
     }
     return ['General'];
   }, []);
@@ -261,25 +239,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
   }, [isResearchCategory, currentItem, getResearchSubOptions]);
-
-  React.useEffect(() => {
-    if (isPrizesCategory && prizesItems && prizesItems.length > 0) {
-      if (!prizesItems.some((item) => matchItem(item, selectedCriteriaId))) {
-        setSelectedCriteriaId(prizesItems[0].id);
-      }
-    }
-  }, [isPrizesCategory, prizesType, prizesItems]);
-
-  React.useEffect(() => {
-    if (isPrizesCategory && currentItem) {
-      const title = (currentItem.title || '').toLowerCase();
-      if (title.includes('outside')) {
-        setPrizesType('Outside Marian College');
-      } else if (title.includes('marian college')) {
-        setPrizesType('From Marian College');
-      }
-    }
-  }, [isPrizesCategory, currentItem]);
 
   const [submissionRemarksMap, setSubmissionRemarksMap] = useState<Record<number, string>>({});
 
@@ -351,7 +310,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
   const [profileErrorMsg, setProfileErrorMsg] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
-  const [classList, setClassList] = useState<{name: string, department: string}[]>([]);
+  const [classList, setClassList] = useState<{ name: string, department: string }[]>([]);
 
   // Sync state if currentUserInfo changes
   React.useEffect(() => {
@@ -464,7 +423,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const filteredSubmissions = mySubmissions.filter((sub) => {
     const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
     const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
-    
+
     const matchesSearch =
       !searchQuery ||
       sub.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -633,6 +592,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
+    if (isLeadershipCategory && !leadershipNamePosition.trim()) {
+      alert("Please enter Name and position details.");
+      return;
+    }
+
     if (isOnlineCoursesCategory && onlineCoursesSubmissionsCount >= 3 && !editingSubId) {
       alert("Maximum Limit Reached: A student can only submit a maximum of 3 courses for Online Courses.");
       return;
@@ -676,40 +640,49 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
     const computedEvidence = isAcademicCategory
       ? {
-          type: 'academic_marks',
-          submissionType: academicSubmissionType,
-          markBreakdown: {
-            count90Above,
-            count80to90,
-            count70to80,
-            failCount
-          },
-          grades: { S: count90Above, APlus: count80to90, A: count70to80, Fail: failCount },
-          classPassPercentage: effectivePassPercentage,
-          totalStudents
-        }
+        type: 'academic_marks',
+        submissionType: academicSubmissionType,
+        markBreakdown: {
+          count90Above,
+          count80to90,
+          count70to80,
+          failCount
+        },
+        grades: { S: count90Above, APlus: count80to90, A: count70to80, Fail: failCount },
+        classPassPercentage: effectivePassPercentage,
+        totalStudents
+      }
       : (isOnlineCourses || isInternshipsCategory)
-      ? {
+        ? {
           type: isInternshipsCategory ? 'internship_dates' : 'online_course_dates',
           startDate,
           endDate
         }
-      : isCompetitiveExamsCategory
-      ? {
-          type: 'competitive_exam_date',
-          examDate
-        }
-      : isScholarshipsCategory
-      ? {
-          type: 'scholarship_date',
-          awardedDate
-        }
-      : isResearchCategory
-      ? {
-          type: 'research',
-          researchSubOption
-        }
-      : { type: currentItem?.type || 'count', count: countValue };
+        : isCompetitiveExamsCategory
+          ? {
+            type: 'competitive_exam_date',
+            examDate
+          }
+          : isScholarshipsCategory
+            ? {
+              type: 'scholarship_date',
+              awardedDate
+            }
+            : isResearchCategory
+              ? {
+                type: 'research',
+                researchSubOption
+              }
+              : isStartupsCategory
+                ? {
+                  type: 'startup'
+                }
+                : isLeadershipCategory
+                  ? {
+                    type: 'leadership',
+                    nameAndPosition: leadershipNamePosition
+                  }
+                  : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
     if (status === 'Submitted') {
@@ -774,6 +747,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     setEndDate('');
     setExamDate('');
     setCountValue(1);
+    setLeadershipNamePosition('');
     setCount90Above(0);
     setCount80to90(0);
     setCount70to80(0);
@@ -974,35 +948,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   </button>
                 </div>
               )}
-              {/* Category Availability Notice */}
-              <div
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  marginBottom: '16px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  background: isStudentRep ? 'rgba(99, 102, 241, 0.08)' : 'rgba(234, 179, 8, 0.1)',
-                  border: isStudentRep ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid rgba(234, 179, 8, 0.25)',
-                  color: isStudentRep ? '#3730a3' : '#854d0e',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}
-              >
-                <span>{isStudentRep ? '⭐' : 'ℹ️'}</span>
-                <div>
-                  {isStudentRep ? (
-                    <>
-                      <strong>⭐ Student Representative Access:</strong> All 12 evaluation categories (including <em>Academics</em> and <em>Documentation</em>) are fully unlocked for class submissions.
-                    </>
-                  ) : (
-                    <>
-                      <strong>ℹ️ Student Access:</strong> All 12 evaluation categories are fully accessible for your claim submissions.
-                    </>
-                  )}
-                </div>
-              </div>
 
               <form
                 onSubmit={(e) => {
@@ -1049,18 +994,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         <option value="SAVE Sem Result">SAVE Sem Result (Supplementary / Special Exam)</option>
                       </select>
                     </div>
-                  ) : isPrizesCategory ? (
-                    <div className="form-group">
-                      <label className="form-label" style={{ fontWeight: 800 }}>TYPE</label>
-                      <select
-                        className="select"
-                        value={prizesType}
-                        onChange={(e) => setPrizesType(e.target.value as 'From Marian College' | 'Outside Marian College')}
-                      >
-                        <option value="From Marian College">From Marian College</option>
-                        <option value="Outside Marian College">Outside Marian College</option>
-                      </select>
-                    </div>
                   ) : (
                     <div className="form-group">
                       <label className="form-label">Item</label>
@@ -1079,54 +1012,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   )}
                 </div>
 
-                {isPrizesCategory && (
-                  <div
-                    className="form-group"
-                    style={{
-                      padding: '16px',
-                      background: 'rgba(16, 185, 129, 0.04)',
-                      border: '1.5px solid rgba(16, 185, 129, 0.2)',
-                      borderRadius: '14px'
-                    }}
-                  >
-                    <label className="form-label" style={{ fontWeight: 800, color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      🏆 Prize Position / Level ({prizesType === 'From Marian College' ? '6 Items Available' : '8 Items Available'})
-                    </label>
-                    <select
-                      className="select"
-                      value={selectedCriteriaId}
-                      onChange={(e) => setSelectedCriteriaId(Number(e.target.value))}
-                      style={{ border: '2px solid #10b981', background: '#ecfdf5', fontWeight: 700, color: '#047857' }}
-                    >
-                      {prizesItems.map((item) => (
-                        <option key={item.id} value={item.id} style={{ color: '#0f172a', background: '#ffffff' }}>
-                          {formatPrizeTitle(item.title)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {isProgramsOrganized && (
-                  <div
-                    style={{
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      background: '#fffbeb',
-                      border: '1.5px solid #fde68a',
-                      color: '#b45309',
-                      fontSize: '0.86rem',
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginTop: '14px'
-                    }}
-                  >
-                    <span>⚠️ <strong>Note:</strong> There will be no marks awarded for any events conducted during the dates of <strong>SAHYA</strong> and <strong>CALIGO</strong>.</span>
-                  </div>
-                )}
-
                 {isResearchCategory && (
                   <div className="form-group" style={{ marginTop: '14px' }}>
                     <label className="form-label" style={{ fontWeight: 800, color: '#0369a1', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1139,7 +1024,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       style={{ border: '2px solid #0284c7', background: '#f0f9ff', fontWeight: 700, color: '#0369a1' }}
                     >
                       {getResearchSubOptions(currentItem?.title || '').map((opt) => (
-                        <option key={opt} value={opt} style={{ color: '#0f172a', background: '#ffffff' }}>
+                        <option key={opt} value={opt}>
                           {opt}
                         </option>
                       ))}
@@ -1278,14 +1163,18 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           {isOnlineCoursesCategory
                             ? 'COURSE NAME'
                             : isCompetitiveExamsCategory
-                            ? 'EXAM NAME'
-                            : isInternshipsCategory
-                            ? 'INTERNSHIP DETAIL'
-                            : isScholarshipsCategory
-                            ? 'SCHOLARSHIP DETAIL'
-                            : isResearchCategory
-                            ? 'RESEARCH DETAIL'
-                            : `${currentItem.type.toUpperCase()} BASED`}
+                              ? 'EXAM NAME'
+                              : isInternshipsCategory
+                                ? 'INTERNSHIP DETAIL'
+                                : isScholarshipsCategory
+                                  ? 'SCHOLARSHIP DETAIL'
+                                  : isResearchCategory
+                                    ? 'RESEARCH DETAIL'
+                                    : isStartupsCategory
+                                      ? 'STARTUPS DETAILS'
+                                      : isLeadershipCategory
+                                        ? 'LEADERSHIP DETAILS'
+                                        : `${currentItem.type.toUpperCase()} BASED`}
                         </span>
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, marginTop: '4px' }}>{currentItem.title}</h3>
                       </div>
@@ -1437,7 +1326,21 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         required
                       />
                     </div>
-                  ) : !isAcademicCategory && (
+                  ) : isLeadershipCategory ? (
+                    <div className="form-group" style={{ gridColumn: '1 / -1', padding: '16px', background: 'rgba(6, 182, 212, 0.04)', border: '1.5px solid rgba(6, 182, 212, 0.2)', borderRadius: '14px' }}>
+                      <label className="form-label" style={{ fontWeight: 800, color: '#0891b2', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        👨‍💼 Name and position
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="Enter name and position details..."
+                        value={leadershipNamePosition}
+                        onChange={(e) => setLeadershipNamePosition(e.target.value)}
+                        required
+                      />
+                    </div>
+                  ) : !isAcademicCategory && !isResearchCategory && !isStartupsCategory && !isLeadershipCategory && (
                     <div className="form-group">
                       <label className="form-label">Count / Frequency</label>
                       <input
@@ -1495,12 +1398,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           title="Open Google Drive to upload proof document"
                         >
                           <svg width="20" height="20" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
-                            <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
-                            <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/>
-                            <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 10.15z" fill="#ea4335"/>
-                            <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
-                            <path d="m59.8 53h27.5c0-1.55-.4-3.1-1.2-4.5l-25.4-44c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8z" fill="#ffba00"/>
-                            <path d="m73.55 76.8h-59.8c1.55.8 3.25 1.2 4.95 1.2h49.9c1.7 0 3.4-.4 4.95-1.2z" fill="#2684fc"/>
+                            <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da" />
+                            <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47" />
+                            <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 10.15z" fill="#ea4335" />
+                            <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" />
+                            <path d="m59.8 53h27.5c0-1.55-.4-3.1-1.2-4.5l-25.4-44c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8z" fill="#ffba00" />
+                            <path d="m73.55 76.8h-59.8c1.55.8 3.25 1.2 4.95 1.2h49.9c1.7 0 3.4-.4 4.95-1.2z" fill="#2684fc" />
                           </svg>
                           Upload Proof to Google Drive
                         </a>
@@ -1625,7 +1528,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       const isRepApproved = sub.status === 'Student Rep Verified' || ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) || (sub.repVerifiedByName && !['Correction Requested', 'Correction', 'Rejected'].includes(sub.status));
                       const isRepCorrection = ['Correction Requested', 'Correction'].includes(sub.status) && (!!sub.repRemarks || (!!sub.repVerifiedByName && !sub.teacherVerifiedByName) || (!!sub.remarks && !sub.teacherRemarks && !sub.teacherVerifiedByName));
                       const isRepRejected = sub.status === 'Rejected' && (!!sub.repRemarks || (!!sub.repVerifiedByName && !sub.teacherVerifiedByName) || (!!sub.remarks && !sub.teacherRemarks && !sub.teacherVerifiedByName));
-                      
+
                       const isTeacherApproved = ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status);
                       const isTeacherCorrection = ['Correction Requested', 'Correction'].includes(sub.status) && !isRepCorrection;
                       const isTeacherRejected = sub.status === 'Rejected' && !isRepRejected;
@@ -1706,7 +1609,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             </div>
                           </td>
                           <td style={{ maxWidth: '200px', fontSize: '0.84rem' }}>{sub.description}</td>
-                          
+
                           {/* Round 1: Student Representative Review */}
                           <td>
                             {isRepCorrection ? (

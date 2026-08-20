@@ -280,7 +280,7 @@ class Command(BaseCommand):
                 "category": "Startups",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Government-Registered Start-up", "type": "count", "marks": 20.0},
+                    {"title": "Government-Registered Start-up", "type": "startup", "marks": 20.0},
                 ]
             },
             {
@@ -288,20 +288,8 @@ class Command(BaseCommand):
                 "category": "Prizes",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Marian College - 1st Prize (Individual)", "type": "count", "marks": 10.0},
-                    {"title": "Marian College - 2nd Prize (Individual)", "type": "count", "marks": 5.0},
-                    {"title": "Marian College - 3rd Prize (Individual)", "type": "count", "marks": 3.0},
-                    {"title": "Marian College - 1st Prize (Group)", "type": "count", "marks": 5.0},
-                    {"title": "Marian College - 2nd Prize (Group)", "type": "count", "marks": 3.0},
-                    {"title": "Marian College - 3rd Prize (Group)", "type": "count", "marks": 2.0},
-                    {"title": "Outside Marian - 1st Prize (Individual)", "type": "count", "marks": 15.0},
-                    {"title": "Outside Marian - 2nd Prize (Individual)", "type": "count", "marks": 10.0},
-                    {"title": "Outside Marian - 3rd Prize (Individual)", "type": "count", "marks": 5.0},
-                    {"title": "Outside Marian - Participation (Individual)", "type": "count", "marks": 3.0},
-                    {"title": "Outside Marian - 1st Prize (Group)", "type": "count", "marks": 10.0},
-                    {"title": "Outside Marian - 2nd Prize (Group)", "type": "count", "marks": 5.0},
-                    {"title": "Outside Marian - 3rd Prize (Group)", "type": "count", "marks": 3.0},
-                    {"title": "Outside Marian - Participation (Group)", "type": "count", "marks": 2.0},
+                    {"title": "From Marian College", "type": "count", "marks": 5.0},
+                    {"title": "Outside Marian College", "type": "count", "marks": 10.0},
                 ]
             },
             {
@@ -309,19 +297,8 @@ class Command(BaseCommand):
                 "category": "Leaderships",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "MCSC Executive Body Position", "type": "fixed", "marks": 10.0},
-                    {"title": "SAHYA Executive Body Position", "type": "fixed", "marks": 10.0},
-                    {"title": "Clubs & Associations Leadership Position", "type": "fixed", "marks": 8.0},
-                ]
-            },
-            {
-                "code": "cat-programs-organized",
-                "category": "Programs Organized",
-                "access_level": "all_students",
-                "items": [
-                    {"title": "Intercollegiate", "type": "count", "marks": 5.0},
-                    {"title": "Intra - collegiate", "type": "count", "marks": 3.0},
-                    {"title": "Class Magazine", "type": "count", "marks": 5.0},
+                    {"title": "Elected Body", "type": "fixed", "marks": 10.0},
+                    {"title": "Quality Suggestions", "type": "fixed", "marks": 5.0},
                 ]
             },
             {
