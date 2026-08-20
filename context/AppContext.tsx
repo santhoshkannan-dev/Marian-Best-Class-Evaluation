@@ -345,14 +345,14 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 const cachedMap = new Map(data.criteriaCatalog.map((c: any) => [c.id || c.code, c]));
                 const mergedCatalog = defaultCriteriaCatalog.map((defCat) => {
                   const key = defCat.id || defCat.code;
-                  const cachedCat = cachedMap.get(key);
+                  const cachedCat: any = cachedMap.get(key);
                   if (!cachedCat) return defCat;
 
-                  const cachedItemsMap = new Map((cachedCat.items || []).map((it: any) => [it.id, it]));
+                  const cachedItemsMap = new Map(((cachedCat as any).items || []).map((it: any) => [it.id, it]));
                   const mergedItems = defCat.items.map((defItem) => cachedItemsMap.get(defItem.id) || defItem);
 
                   return {
-                    ...cachedCat,
+                    ...(cachedCat as any),
                     category: defCat.category,
                     items: mergedItems
                   };
@@ -909,12 +909,13 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     );
 
     if (updates.status) {
-      if (updates.status === 'Approved' || updates.status === 'Rep Verified') {
+      const statusStr = String(updates.status);
+      if (statusStr.includes('Approved') || statusStr.includes('Verified')) {
         toast.success(`✅ Submission marked as ${updates.status}!`);
-      } else if (updates.status === 'Rejected') {
+      } else if (statusStr.includes('Rejected')) {
         toast.error('❌ Submission rejected.');
-      } else if (updates.status === 'Clarification Requested') {
-        toast.warning('💬 Clarification requested for submission.');
+      } else if (statusStr.includes('Clarification') || statusStr.includes('Correction')) {
+        toast.warning('💬 Clarification/Correction requested for submission.');
       } else {
         toast.info(`Submission updated (${updates.status}).`);
       }

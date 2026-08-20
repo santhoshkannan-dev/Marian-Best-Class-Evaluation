@@ -233,9 +233,10 @@ def determine_role_from_email(email):
 
 def verify_google_id_token(token):
     """
-    Verifies Google OAuth ID Token.
-    Tries the google-auth library first, and falls back to Google's official
-    /tokeninfo HTTP endpoint for maximum environment compatibility.
+    Verifies Google OAuth ID Token using:
+    1. google-auth library
+    2. requests REST API
+    3. urllib standard library REST API
     """
     expected_cid = str(settings.GOOGLE_CLIENT_ID or "").strip()
     if id_token and google_requests and expected_cid:
@@ -246,8 +247,9 @@ def verify_google_id_token(token):
                 expected_cid
             )
         except Exception as e:
-            logger.warning(f"google-auth verify_oauth2_token failed: {e}. Falling back to tokeninfo endpoint.")
+            logger.warning(f"google-auth verify_oauth2_token failed: {e}. Falling back to tokeninfo REST API.")
 
+    # 2. Try requests library
     try:
         import requests
         resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10)
@@ -260,11 +262,28 @@ def verify_google_id_token(token):
             else:
                 logger.error(f"Google token audience mismatch: expected '{expected_cid}', got aud='{aud}', azp='{azp}'")
                 return None
-        else:
-            logger.error(f"Google tokeninfo endpoint returned status {resp.status_code}: {resp.text}")
-            return None
     except Exception as e:
-        logger.error(f"Failed to verify Google token via tokeninfo REST API: {e}")
+        logger.warning(f"requests verification failed: {e}. Trying urllib stdlib fallback.")
+
+    # 3. Fallback to built-in urllib (guaranteed to exist in standard Python library)
+    try:
+        import json
+        import urllib.request
+        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 200:
+                body = response.read().decode('utf-8')
+                data = json.loads(body)
+                aud = str(data.get("aud", "")).strip()
+                azp = str(data.get("azp", "")).strip()
+                if not expected_cid or aud == expected_cid or azp == expected_cid:
+                    return data
+                else:
+                    logger.error(f"Google token audience mismatch: expected '{expected_cid}', got aud='{aud}', azp='{azp}'")
+                    return None
+    except Exception as e:
+        logger.error(f"Failed to verify Google token via urllib tokeninfo REST API: {e}")
         return None
 
 
