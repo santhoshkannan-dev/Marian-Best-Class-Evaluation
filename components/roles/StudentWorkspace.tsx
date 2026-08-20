@@ -61,7 +61,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     }
   }, [activeTab]);
 
-  // All 12 criteria categories available for Student Rep / DQC member, limited categories for regular students
+  // All categories available for Student Rep / DQC member; Academics, Documentation & Programs Organized are limited to Student Rep / DQC only
   const availableCriteriaCatalog = React.useMemo(() => {
     if (isStudentRep) return criteriaCatalog;
     return criteriaCatalog.filter((c) => {
@@ -70,7 +70,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       const id = String(c.id || '').toLowerCase().trim();
       const isAcademics = code.includes('academic') || cat.includes('academic') || id.includes('academic');
       const isDocumentation = code.includes('documentation') || cat.includes('documentation') || id.includes('documentation');
-      return !isAcademics && !isDocumentation;
+      const isProgramsOrganized = code.includes('programs-organized') || cat.includes('programs organized') || id.includes('programs-organized');
+      return !isAcademics && !isDocumentation && !isProgramsOrganized;
     });
   }, [criteriaCatalog, isStudentRep]);
 

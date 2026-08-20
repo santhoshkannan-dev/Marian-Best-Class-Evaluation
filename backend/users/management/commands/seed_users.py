@@ -317,7 +317,7 @@ class Command(BaseCommand):
             {
                 "code": "cat-programs-organized",
                 "category": "Programs Organized",
-                "access_level": "all_students",
+                "access_level": "student_rep_only",
                 "items": [
                     {"title": "Intercollegiate", "type": "count", "marks": 5.0},
                     {"title": "Intra - collegiate", "type": "count", "marks": 3.0},
