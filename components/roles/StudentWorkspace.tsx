@@ -1032,6 +1032,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   </div>
                 )}
 
+                {currentItem && (String(currentItem.title || '').toLowerCase().includes('programs organized') || String(currentItem.title || '').toLowerCase().includes('intercollegiate') || String(currentItem.title || '').toLowerCase().includes('intra') || String(currentItem.title || '').toLowerCase().includes('magazine')) && (
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      background: '#fffbeb',
+                      border: '1.5px solid #fde68a',
+                      color: '#b45309',
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginTop: '14px'
+                    }}
+                  >
+                    <span>⚠️ <strong>Note:</strong> There will be no marks awarded for any events conducted during the dates of <strong>SAHYA</strong> and <strong>CALIGO</strong>.</span>
+                  </div>
+                )}
+
                 {existingAcademicSubmission && !editingSubId && (
                   <div
                     style={{
