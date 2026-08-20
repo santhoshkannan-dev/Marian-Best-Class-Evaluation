@@ -1099,7 +1099,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       style={{ border: '2px solid #10b981', background: '#ecfdf5', fontWeight: 700, color: '#047857' }}
                     >
                       {prizesItems.map((item) => (
-                        <option key={item.id} value={item.id}>
+                        <option key={item.id} value={item.id} style={{ color: '#0f172a', background: '#ffffff' }}>
                           {formatPrizeTitle(item.title)}
                         </option>
                       ))}
@@ -1119,7 +1119,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       style={{ border: '2px solid #0284c7', background: '#f0f9ff', fontWeight: 700, color: '#0369a1' }}
                     >
                       {getResearchSubOptions(currentItem?.title || '').map((opt) => (
-                        <option key={opt} value={opt}>
+                        <option key={opt} value={opt} style={{ color: '#0f172a', background: '#ffffff' }}>
                           {opt}
                         </option>
                       ))}

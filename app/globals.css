@@ -1111,6 +1111,13 @@ h1, h2, h3, h4, p {
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
 }
 
+.select option, select option {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  font-weight: 600;
+  padding: 8px 12px;
+}
+
 .table-container {
   width: 100%;
   overflow-x: auto;
