@@ -312,9 +312,16 @@ class Command(BaseCommand):
                     {"title": "MCSC Executive Body Position", "type": "fixed", "marks": 10.0},
                     {"title": "SAHYA Executive Body Position", "type": "fixed", "marks": 10.0},
                     {"title": "Clubs & Associations Leadership Position", "type": "fixed", "marks": 8.0},
-                    {"title": "Programs Organized - Intercollegiate", "type": "count", "marks": 5.0},
-                    {"title": "Programs Organized - Intra-collegiate", "type": "count", "marks": 3.0},
-                    {"title": "Programs Organized - Class Magazine", "type": "count", "marks": 5.0},
+                ]
+            },
+            {
+                "code": "cat-programs-organized",
+                "category": "Programs Organized",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Intercollegiate", "type": "count", "marks": 5.0},
+                    {"title": "Intra - collegiate", "type": "count", "marks": 3.0},
+                    {"title": "Class Magazine", "type": "count", "marks": 5.0},
                 ]
             },
             {

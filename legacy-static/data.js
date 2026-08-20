@@ -101,10 +101,16 @@ window.criteriaData = [
     items: [
       { id: 801, title: "MCSC Executive Body Position", marks: 10, type: "fixed" },
       { id: 802, title: "SAHYA Executive Body Position", marks: 10, type: "fixed" },
-      { id: 803, title: "Clubs & Associations Leadership Position", marks: 8, type: "fixed" },
-      { id: 901, title: "Programs Organized - Intercollegiate", marks: 5, type: "count" },
-      { id: 902, title: "Programs Organized - Intra-collegiate", marks: 3, type: "count" },
-      { id: 903, title: "Programs Organized - Class Magazine", marks: 5, type: "count" }
+      { id: 803, title: "Clubs & Associations Leadership Position", marks: 8, type: "fixed" }
+    ]
+  },
+  {
+    id: "cat-programs-organized",
+    category: "Programs Organized",
+    items: [
+      { id: 901, title: "Intercollegiate", marks: 5, type: "count" },
+      { id: 902, title: "Intra - collegiate", marks: 3, type: "count" },
+      { id: 903, title: "Class Magazine", marks: 5, type: "count" }
     ]
   },
   {

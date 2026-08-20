@@ -1131,7 +1131,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   </div>
                 )}
 
-                {currentItem && (String(currentItem.title || '').toLowerCase().includes('programs organized') || String(currentItem.title || '').toLowerCase().includes('intercollegiate') || String(currentItem.title || '').toLowerCase().includes('intra') || String(currentItem.title || '').toLowerCase().includes('magazine')) && (
+                {((currentCategory && String(currentCategory.category || '').toLowerCase().includes('programs organized')) || (currentItem && (String(currentItem.title || '').toLowerCase().includes('programs organized') || String(currentItem.title || '').toLowerCase().includes('intercollegiate') || String(currentItem.title || '').toLowerCase().includes('intra') || String(currentItem.title || '').toLowerCase().includes('magazine')))) && (
                   <div
                     style={{
                       padding: '12px 16px',
