@@ -166,17 +166,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
   const prizesItems = React.useMemo(() => {
     if (!isPrizesCategory || !currentCategory || !currentCategory.items) return [];
+    let items = [];
     if (prizesType === 'From Marian College') {
-      return currentCategory.items.filter((item) => {
+      items = currentCategory.items.filter((item) => {
         const title = (item.title || '').toLowerCase();
         return title.includes('marian college') && !title.includes('outside');
       });
     } else {
-      return currentCategory.items.filter((item) => {
+      items = currentCategory.items.filter((item) => {
         const title = (item.title || '').toLowerCase();
         return title.includes('outside');
       });
     }
+    // Sort items so all Individual items come first, then all Group items
+    return [...items].sort((a, b) => {
+      const aIsInd = (a.title || '').toLowerCase().includes('individual');
+      const bIsInd = (b.title || '').toLowerCase().includes('individual');
+      if (aIsInd && !bIsInd) return -1;
+      if (!aIsInd && bIsInd) return 1;
+      return 0;
+    });
   }, [isPrizesCategory, currentCategory, prizesType]);
 
   const formatPrizeTitle = (title: string): string => {
@@ -1091,7 +1100,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     >
                       {prizesItems.map((item) => (
                         <option key={item.id} value={item.id}>
-                          {formatPrizeTitle(item.title)} ({item.marks} Marks)
+                          {formatPrizeTitle(item.title)}
                         </option>
                       ))}
                     </select>
