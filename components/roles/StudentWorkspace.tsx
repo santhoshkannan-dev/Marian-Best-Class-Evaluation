@@ -162,6 +162,46 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('startup') || catCode === 'cat-startups' || catId === 'cat-startups' || catId === '7';
   }, [currentCategory]);
 
+  const isPrizesCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('prize') || catCode === 'cat-prizes' || catId === 'cat-prizes' || catId === '7';
+  }, [currentCategory]);
+
+  const [prizesType, setPrizesType] = useState<'From Marian College' | 'Outside Marian College'>('From Marian College');
+
+  const prizesItems = React.useMemo(() => {
+    if (!isPrizesCategory || !currentCategory || !currentCategory.items) return [];
+    let items = [];
+    if (prizesType === 'From Marian College') {
+      items = currentCategory.items.filter((item) => {
+        const title = (item.title || '').toLowerCase();
+        return title.includes('marian college') && !title.includes('outside');
+      });
+    } else {
+      items = currentCategory.items.filter((item) => {
+        const title = (item.title || '').toLowerCase();
+        return title.includes('outside');
+      });
+    }
+    // Sort items so all Individual items come first, then all Group items
+    return [...items].sort((a, b) => {
+      const aIsInd = (a.title || '').toLowerCase().includes('individual');
+      const bIsInd = (b.title || '').toLowerCase().includes('individual');
+      if (aIsInd && !bIsInd) return -1;
+      if (!aIsInd && bIsInd) return 1;
+      return 0;
+    });
+  }, [isPrizesCategory, currentCategory, prizesType]);
+
+  const formatPrizeTitle = (title: string): string => {
+    return title
+      .replace(/^Marian College\s*-\s*/i, '')
+      .replace(/^Outside Marian\s*-\s*/i, '');
+  };
+
   const isLeadershipCategory = React.useMemo(() => {
     if (!currentCategory) return false;
     const catName = String(currentCategory.category || '').toLowerCase().trim();
@@ -239,6 +279,25 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
   }, [isResearchCategory, currentItem, getResearchSubOptions]);
+
+  React.useEffect(() => {
+    if (isPrizesCategory && prizesItems && prizesItems.length > 0) {
+      if (!prizesItems.some((item) => matchItem(item, selectedCriteriaId))) {
+        setSelectedCriteriaId(prizesItems[0].id);
+      }
+    }
+  }, [isPrizesCategory, prizesType, prizesItems]);
+
+  React.useEffect(() => {
+    if (isPrizesCategory && currentItem) {
+      const title = (currentItem.title || '').toLowerCase();
+      if (title.includes('outside')) {
+        setPrizesType('Outside Marian College');
+      } else if (title.includes('marian college')) {
+        setPrizesType('From Marian College');
+      }
+    }
+  }, [isPrizesCategory, currentItem]);
 
   const [submissionRemarksMap, setSubmissionRemarksMap] = useState<Record<number, string>>({});
 
@@ -994,6 +1053,18 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         <option value="SAVE Sem Result">SAVE Sem Result (Supplementary / Special Exam)</option>
                       </select>
                     </div>
+                  ) : isPrizesCategory ? (
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: 800 }}>TYPE</label>
+                      <select
+                        className="select"
+                        value={prizesType}
+                        onChange={(e) => setPrizesType(e.target.value as 'From Marian College' | 'Outside Marian College')}
+                      >
+                        <option value="From Marian College">From Marian College</option>
+                        <option value="Outside Marian College">Outside Marian College</option>
+                      </select>
+                    </div>
                   ) : (
                     <div className="form-group">
                       <label className="form-label">Item</label>
@@ -1011,6 +1082,34 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     </div>
                   )}
                 </div>
+
+                {isPrizesCategory && (
+                  <div
+                    className="form-group"
+                    style={{
+                      padding: '16px',
+                      background: 'rgba(16, 185, 129, 0.04)',
+                      border: '1.5px solid rgba(16, 185, 129, 0.2)',
+                      borderRadius: '14px'
+                    }}
+                  >
+                    <label className="form-label" style={{ fontWeight: 800, color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      🏆 Prize Position / Level ({prizesType === 'From Marian College' ? '6 Items Available' : '8 Items Available'})
+                    </label>
+                    <select
+                      className="select"
+                      value={selectedCriteriaId}
+                      onChange={(e) => setSelectedCriteriaId(Number(e.target.value))}
+                      style={{ border: '2px solid #10b981', background: '#ecfdf5', fontWeight: 700, color: '#047857' }}
+                    >
+                      {prizesItems.map((item) => (
+                        <option key={item.id} value={item.id} style={{ color: '#0f172a', background: '#ffffff' }}>
+                          {formatPrizeTitle(item.title)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {isResearchCategory && (
                   <div className="form-group" style={{ marginTop: '14px' }}>

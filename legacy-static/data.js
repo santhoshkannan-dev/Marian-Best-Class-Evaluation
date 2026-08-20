@@ -79,8 +79,20 @@ window.criteriaData = [
     id: "cat-prizes",
     category: "Prizes",
     items: [
-      { id: 701, title: "From Marian College", marks: 5, type: "count" },
-      { id: 702, title: "Outside Marian College", marks: 10, type: "count" }
+      { id: 701, title: "Marian College - 1st Prize (Individual)", marks: 10, type: "count" },
+      { id: 703, title: "Marian College - 2nd Prize (Individual)", marks: 5, type: "count" },
+      { id: 705, title: "Marian College - 3rd Prize (Individual)", marks: 3, type: "count" },
+      { id: 702, title: "Marian College - 1st Prize (Group)", marks: 5, type: "count" },
+      { id: 704, title: "Marian College - 2nd Prize (Group)", marks: 3, type: "count" },
+      { id: 706, title: "Marian College - 3rd Prize (Group)", marks: 2, type: "count" },
+      { id: 707, title: "Outside Marian - 1st Prize (Individual)", marks: 15, type: "count" },
+      { id: 709, title: "Outside Marian - 2nd Prize (Individual)", marks: 10, type: "count" },
+      { id: 711, title: "Outside Marian - 3rd Prize (Individual)", marks: 5, type: "count" },
+      { id: 713, title: "Outside Marian - Participation (Individual)", marks: 3, type: "count" },
+      { id: 708, title: "Outside Marian - 1st Prize (Group)", marks: 10, type: "count" },
+      { id: 710, title: "Outside Marian - 2nd Prize (Group)", marks: 5, type: "count" },
+      { id: 712, title: "Outside Marian - 3rd Prize (Group)", marks: 3, type: "count" },
+      { id: 714, title: "Outside Marian - Participation (Group)", marks: 2, type: "count" }
     ]
   },
   {
