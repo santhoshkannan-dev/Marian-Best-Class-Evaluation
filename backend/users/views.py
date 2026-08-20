@@ -237,12 +237,13 @@ def verify_google_id_token(token):
     Tries the google-auth library first, and falls back to Google's official
     /tokeninfo HTTP endpoint for maximum environment compatibility.
     """
-    if id_token and google_requests:
+    expected_cid = str(settings.GOOGLE_CLIENT_ID or "").strip()
+    if id_token and google_requests and expected_cid:
         try:
             return id_token.verify_oauth2_token(
                 token,
                 google_requests.Request(),
-                settings.GOOGLE_CLIENT_ID
+                expected_cid
             )
         except Exception as e:
             logger.warning(f"google-auth verify_oauth2_token failed: {e}. Falling back to tokeninfo endpoint.")
@@ -252,11 +253,12 @@ def verify_google_id_token(token):
         resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10)
         if resp.status_code == 200:
             data = resp.json()
-            aud = data.get("aud")
-            if aud == settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_ID:
+            aud = str(data.get("aud", "")).strip()
+            azp = str(data.get("azp", "")).strip()
+            if not expected_cid or aud == expected_cid or azp == expected_cid:
                 return data
             else:
-                logger.error(f"Google token audience mismatch: expected {settings.GOOGLE_CLIENT_ID}, got {aud}")
+                logger.error(f"Google token audience mismatch: expected '{expected_cid}', got aud='{aud}', azp='{azp}'")
                 return None
         else:
             logger.error(f"Google tokeninfo endpoint returned status {resp.status_code}: {resp.text}")

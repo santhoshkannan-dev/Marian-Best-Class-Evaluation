@@ -16,15 +16,20 @@ export default function LoginPage() {
 
   // Load Google Identity Services SDK
   useEffect(() => {
-    const initGoogleSignIn = () => {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '844955988511-9f9oh4sjrp3eqoimenpkdg0ho3ljr1bo.apps.googleusercontent.com';
+    let retryTimer: NodeJS.Timeout | null = null;
+    const clientId = (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '844955988511-9f9oh4sjrp3eqoimenpkdg0ho3ljr1bo.apps.googleusercontent.com').trim();
+
+    const renderBtnWhenReady = () => {
       if ((window as any).google && (window as any).google.accounts) {
         (window as any).google.accounts.id.initialize({
           client_id: clientId,
           callback: handleGoogleCredentialResponse,
+          auto_select: false,
         });
+
         const btnContainer = document.getElementById('google-signin-btn');
         if (btnContainer) {
+          btnContainer.innerHTML = '';
           (window as any).google.accounts.id.renderButton(
             btnContainer,
             {
@@ -35,13 +40,15 @@ export default function LoginPage() {
               shape: 'pill'
             }
           );
+        } else {
+          retryTimer = setTimeout(renderBtnWhenReady, 200);
         }
       }
     };
 
     if (typeof window !== 'undefined') {
-      if ((window as any).google) {
-        initGoogleSignIn();
+      if ((window as any).google && (window as any).google.accounts) {
+        renderBtnWhenReady();
       } else {
         const existingScript = document.getElementById('google-gsi-script');
         if (!existingScript) {
@@ -50,13 +57,18 @@ export default function LoginPage() {
           script.id = 'google-gsi-script';
           script.async = true;
           script.defer = true;
-          script.onload = initGoogleSignIn;
+          script.onload = renderBtnWhenReady;
           document.body.appendChild(script);
         } else {
-          existingScript.addEventListener('load', initGoogleSignIn);
+          existingScript.addEventListener('load', renderBtnWhenReady);
+          renderBtnWhenReady();
         }
       }
     }
+
+    return () => {
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, []);
 
   const handleGoogleCredentialResponse = async (response: any) => {
