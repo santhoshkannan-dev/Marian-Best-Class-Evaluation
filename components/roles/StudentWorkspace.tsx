@@ -289,6 +289,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [examDate, setExamDate] = useState<string>('');
   const [awardedDate, setAwardedDate] = useState<string>('');
   const [researchSubOption, setResearchSubOption] = useState<string>('');
+  const [startupName, setStartupName] = useState<string>('');
+  const [startupDate, setStartupDate] = useState<string>('');
+  const [startupGovtId, setStartupGovtId] = useState<string>('');
   const [proofFile, setProofFile] = useState<string>('');
   const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -668,6 +671,21 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
+    if (isStartupsCategory) {
+      if (!startupName.trim()) {
+        toast.warning("Please enter Startup Name.");
+        return;
+      }
+      if (!startupDate) {
+        toast.warning("Please select Registration Date.");
+        return;
+      }
+      if (!startupGovtId.trim()) {
+        toast.warning("Please enter Government Registration ID.");
+        return;
+      }
+    }
+
     if (isResearchCategory && !researchSubOption) {
       alert("Please select a Research Sub-Option.");
       return;
@@ -756,7 +774,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
               }
               : isStartupsCategory
                 ? {
-                  type: 'startup'
+                  type: 'startup',
+                  startupName: startupName.trim(),
+                  startupDate,
+                  startupGovtId: startupGovtId.trim()
                 }
                 : isLeadershipCategory
                   ? {
@@ -1466,6 +1487,47 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         onChange={(e) => setAwardedDate(e.target.value)}
                         required
                       />
+                    </div>
+                  ) : isStartupsCategory ? (
+                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', padding: '16px', background: 'rgba(16, 185, 129, 0.04)', border: '1.5px solid rgba(16, 185, 129, 0.2)', borderRadius: '14px' }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          🚀 Startup Name
+                        </label>
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="Enter startup name..."
+                          value={startupName}
+                          onChange={(e) => setStartupName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          📅 Registration Date
+                        </label>
+                        <input
+                          type="date"
+                          className="input"
+                          value={startupDate}
+                          onChange={(e) => setStartupDate(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label className="form-label" style={{ fontWeight: 800, color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          🏛️ Government Registration ID / Number
+                        </label>
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="Enter Government Registration ID / Number..."
+                          value={startupGovtId}
+                          onChange={(e) => setStartupGovtId(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
                   ) : isLeadershipCategory ? (
                     <div className="form-group" style={{ gridColumn: '1 / -1', padding: '16px', background: 'rgba(6, 182, 212, 0.04)', border: '1.5px solid rgba(6, 182, 212, 0.2)', borderRadius: '14px' }}>
