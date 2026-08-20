@@ -61,18 +61,39 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     }
   }, [activeTab]);
 
-  // All categories available for Student Rep / DQC member; Academics, Documentation & Programs Organized are limited to Student Rep / DQC only
+  // Full catalog for Student Rep / DQC member; Academics, Documentation & Programs Organized are limited to Rep/DQC, and Social Responsibilities is limited to Participation for regular students
   const availableCriteriaCatalog = React.useMemo(() => {
     if (isStudentRep) return criteriaCatalog;
-    return criteriaCatalog.filter((c) => {
-      const code = String(c.code || '').toLowerCase().trim();
-      const cat = String(c.category || '').toLowerCase().trim();
-      const id = String(c.id || '').toLowerCase().trim();
-      const isAcademics = code.includes('academic') || cat.includes('academic') || id.includes('academic');
-      const isDocumentation = code.includes('documentation') || cat.includes('documentation') || id.includes('documentation');
-      const isProgramsOrganized = code.includes('programs-organized') || cat.includes('programs organized') || id.includes('programs-organized');
-      return !isAcademics && !isDocumentation && !isProgramsOrganized;
-    });
+    return criteriaCatalog
+      .map((c) => {
+        const code = String(c.code || '').toLowerCase().trim();
+        const cat = String(c.category || '').toLowerCase().trim();
+        const id = String(c.id || '').toLowerCase().trim();
+
+        const isSocialResponsibility =
+          code.includes('social-responsibility') || cat.includes('social responsibil') || id.includes('social-responsibility');
+
+        if (isSocialResponsibility) {
+          const filteredItems = (c.items || []).filter((item) => {
+            const t = String(item.title || '').toLowerCase();
+            return t.includes('participation');
+          });
+          return {
+            ...c,
+            items: filteredItems.length > 0 ? filteredItems : c.items
+          };
+        }
+        return c;
+      })
+      .filter((c) => {
+        const code = String(c.code || '').toLowerCase().trim();
+        const cat = String(c.category || '').toLowerCase().trim();
+        const id = String(c.id || '').toLowerCase().trim();
+        const isAcademics = code.includes('academic') || cat.includes('academic') || id.includes('academic');
+        const isDocumentation = code.includes('documentation') || cat.includes('documentation') || id.includes('documentation');
+        const isProgramsOrganized = code.includes('programs-organized') || cat.includes('programs organized') || id.includes('programs-organized');
+        return !isAcademics && !isDocumentation && !isProgramsOrganized;
+      });
   }, [criteriaCatalog, isStudentRep]);
 
   const { activeAcademicYear } = useApp();
