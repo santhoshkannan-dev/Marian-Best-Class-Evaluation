@@ -929,12 +929,12 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
               </p>
             </div>
 
-            {/* Four KPI Cards Grid */}
+            {/* Three KPI Cards Grid */}
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                gap: '18px'
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: '20px'
               }}
             >
               {/* Card 1: TOTAL SUBMISSIONS */}
@@ -943,7 +943,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   background: '#ffffff',
                   borderRadius: '20px',
                   padding: '24px 26px',
-                  border: '1px solid rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(0,0,0,0.06)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
                   display: 'flex',
                   flexDirection: 'column',
@@ -952,23 +952,24 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Total Submissions
                   </span>
                   <div
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '36px',
+                      height: '36px',
                       borderRadius: '50%',
-                      background: '#1e293b',
-                      color: '#ffffff',
+                      background: 'rgba(30, 41, 59, 0.08)',
+                      color: '#1e293b',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      flexShrink: 0
                     }}
                   >
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
                       <line x1="8" y1="6" x2="16" y2="16" />
                       <line x1="8" y1="10" x2="16" y2="10" />
@@ -987,7 +988,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   background: '#ffffff',
                   borderRadius: '20px',
                   padding: '24px 26px',
-                  border: '1px solid rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(0,0,0,0.06)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
                   display: 'flex',
                   flexDirection: 'column',
@@ -996,20 +997,21 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Verified
                   </span>
                   <div
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '36px',
+                      height: '36px',
                       borderRadius: '50%',
                       background: '#ecfdf5',
                       color: '#059669',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      flexShrink: 0
                     }}
                   >
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1029,7 +1031,7 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   background: '#ffffff',
                   borderRadius: '20px',
                   padding: '24px 26px',
-                  border: '1px solid rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(0,0,0,0.06)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
                   display: 'flex',
                   flexDirection: 'column',
@@ -1038,21 +1040,24 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Pending Review
                   </span>
                   <div
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: 'rgba(124, 58, 237, 0.08)',
+                      color: '#7c3aed',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: '#7c3aed'
+                      flexShrink: 0
                     }}
                   >
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#7c3aed" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#7c3aed" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 22h14" />
                       <path d="M5 2h14" />
                       <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
@@ -1062,53 +1067,6 @@ export const TeacherWorkspace: React.FC<TeacherWorkspaceProps> = ({ view }) => {
                 </div>
                 <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', marginTop: '14px', lineHeight: 1 }}>
                   {pendingDisplay}
-                </div>
-              </div>
-
-              {/* Card 4: TOTAL SCORE */}
-              <div
-                style={{
-                  background: '#ffffff',
-                  borderRadius: '20px',
-                  padding: '24px 26px',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  minHeight: '140px',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                }}
-              >
-                <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Total Score
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                  <div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>
-                      {totalScoreVal.toFixed(0)} / {targetScoreVal.toFixed(0)}
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500, marginTop: '3px' }}>
-                      {progressPercent}% completed
-                    </div>
-                  </div>
-                  {/* Circular Grade Badge */}
-                  <div
-                    style={{
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: '50%',
-                      border: '3.5px solid #0f766e',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#0f766e',
-                      fontWeight: 800,
-                      fontSize: '1.15rem'
-                    }}
-                  >
-                    A+
-                  </div>
                 </div>
               </div>
             </div>
