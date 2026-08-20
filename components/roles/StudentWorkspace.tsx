@@ -1460,6 +1460,22 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         required
                       />
                     </div>
+                  ) : isProgramsOrganized ? (
+                    <div className="form-group" style={{ gridColumn: '1 / -1', padding: '16px', background: 'rgba(245, 158, 11, 0.04)', border: '1.5px solid rgba(245, 158, 11, 0.2)', borderRadius: '14px' }}>
+                      <label className="form-label" style={{ fontWeight: 800, color: '#b45309', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        📅 Program Date
+                      </label>
+                      <input
+                        type="date"
+                        className="input"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        required
+                      />
+                      <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
+                        Select the official date when the program was conducted.
+                      </p>
+                    </div>
                   ) : !isAcademicCategory && !isResearchCategory && !isStartupsCategory && !isLeadershipCategory && (
                     <div className="form-group">
                       <label className="form-label">Count / Frequency</label>
@@ -1476,24 +1492,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     </div>
                   )}
 
-                  {isProgramsOrganized ? (
-                    <div className="form-group">
-                      <label className="form-label">Event ID</label>
-                      <input
-                        type="text"
-                        className="input"
-                        placeholder="Enter Event ID (e.g. EVT-2026-001, EVT-901)..."
-                        value={eventId}
-                        onChange={(e) => setEventId(e.target.value)}
-                        required
-                      />
-                      <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
-                        Include the official Event ID for this organized program instead of uploading a proof document.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="form-group">
-                      <label className="form-label">Proof Document (Google Drive Upload)</label>
+                  <div className="form-group" style={{ gridColumn: isProgramsOrganized ? '1 / -1' : undefined }}>
+                    <label className="form-label">Proof Document (Google Drive Upload)</label>
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <a
                           href="https://drive.google.com/"
@@ -1541,7 +1541,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         Click the button above to upload your document to Google Drive, then paste the file link or reference here.
                       </p>
                     </div>
-                  )}
                 </div>
 
                 <div className="form-group">
