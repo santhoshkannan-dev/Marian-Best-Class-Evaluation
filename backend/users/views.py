@@ -231,11 +231,45 @@ def determine_role_from_email(email):
     return "student"
 
 
+def verify_google_id_token(token):
+    """
+    Verifies Google OAuth ID Token.
+    Tries the google-auth library first, and falls back to Google's official
+    /tokeninfo HTTP endpoint for maximum environment compatibility.
+    """
+    if id_token and google_requests:
+        try:
+            return id_token.verify_oauth2_token(
+                token,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID
+            )
+        except Exception as e:
+            logger.warning(f"google-auth verify_oauth2_token failed: {e}. Falling back to tokeninfo endpoint.")
+
+    try:
+        import requests
+        resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            aud = data.get("aud")
+            if aud == settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_ID:
+                return data
+            else:
+                logger.error(f"Google token audience mismatch: expected {settings.GOOGLE_CLIENT_ID}, got {aud}")
+                return None
+        else:
+            logger.error(f"Google tokeninfo endpoint returned status {resp.status_code}: {resp.text}")
+            return None
+    except Exception as e:
+        logger.error(f"Failed to verify Google token via tokeninfo REST API: {e}")
+        return None
+
+
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-
         token = request.data.get("token")
 
         if not token:
@@ -250,103 +284,83 @@ class GoogleLoginView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        if not id_token or not google_requests:
+        id_info = verify_google_id_token(token)
+        if not id_info:
             return Response(
-                {"error": "google-auth package is missing in server environment."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Invalid or expired Google ID token."},
+                status=status.HTTP_400_BAD_REQUEST
             )
+
+        email = id_info.get("email")
+        google_id = id_info.get("sub")
+        full_name = id_info.get("name", "")
+        picture = id_info.get("picture")
+
+        if not email:
+            return Response(
+                {"error": "Unable to retrieve email."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Strict domain check: Only permit login if email ends with @mariancollege.org
+        if not email.endswith("@mariancollege.org"):
+            return Response(
+                {"error": "Access denied. Only official Marian College accounts (@mariancollege.org) are permitted to log in."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        detected_role = determine_role_from_email(email)
 
         try:
-            id_info = id_token.verify_oauth2_token(
-                token,
-                google_requests.Request(),
-                settings.GOOGLE_CLIENT_ID
-            )
-
-            email = id_info.get("email")
-            google_id = id_info.get("sub")
-            full_name = id_info.get("name", "")
-            picture = id_info.get("picture")
-
-            if not email:
-                return Response(
-                    {"error": "Unable to retrieve email."},
-                    status=status.HTTP_400_BAD_REQUEST
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            if detected_role == 'student':
+                names = full_name.split(" ", 1) if full_name else [email.split("@")[0], ""]
+                user = User.objects.create(
+                    username=email,
+                    email=email,
+                    first_name=names[0],
+                    last_name=names[1] if len(names) > 1 else "",
+                    role='student',
+                    google_id=google_id
                 )
-
-            # Strict domain check: Only permit login if email ends with @mariancollege.org
-            if not email.endswith("@mariancollege.org"):
+            else:
                 return Response(
-                    {"error": "Access denied. Only official Marian College accounts (@mariancollege.org) are permitted to log in."},
+                    {"error": "Access denied. Your email is not registered in the system. Please contact your Administrator."},
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            detected_role = determine_role_from_email(email)
+        # Store google_id and other details on first-time login
+        if not user.google_id:
+            user.google_id = google_id
 
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                if detected_role == 'student':
-                    names = full_name.split(" ", 1) if full_name else [email.split("@")[0], ""]
-                    user = User.objects.create(
-                        username=email,
-                        email=email,
-                        first_name=names[0],
-                        last_name=names[1] if len(names) > 1 else "",
-                        role='student',
-                        google_id=google_id
-                    )
-                else:
-                    return Response(
-                        {"error": "Access denied. Your email is not registered in the system. Please contact your Administrator."},
-                        status=status.HTTP_403_FORBIDDEN
-                    )
+        if full_name:
+            names = full_name.split(" ", 1)
+            user.first_name = names[0]
+            if len(names) > 1:
+                user.last_name = names[1]
 
-            # Store google_id and other details on first-time login
-            if not user.google_id:
-                user.google_id = google_id
+        user.save()
+        user = allocate_student_from_email(user)
 
-            if full_name:
-                names = full_name.split(" ", 1)
-                user.first_name = names[0]
-                if len(names) > 1:
-                    user.last_name = names[1]
+        tokens = get_tokens_for_user(user)
 
-            user.save()
-            user = allocate_student_from_email(user)
-
-            tokens = get_tokens_for_user(user)
-
-            return Response(
-                {
-                    "tokens": tokens,
-                    "user": {
-                        "id": user.id,
-                        "email": user.email,
-                        "name": user.get_full_name() or user.username,
-                        "role": user.role,
-                        "department": user.department.name if user.department else None,
-                        "department_code": user.department.code if user.department else None,
-                        "class_name": user.class_name.name if user.class_name else None,
-                        "picture": picture,
-                    }
-                },
-                status=status.HTTP_200_OK
-            )
-
-        except ValueError as e:
-            logger.warning(f"Google Token Verification Failed: {e}")
-            return Response(
-                {"error": f"Invalid Google token: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return Response(
-                {"error": f"Google authentication failed: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response(
+            {
+                "tokens": tokens,
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": user.get_full_name() or user.username,
+                    "role": user.role,
+                    "department": user.department.name if user.department else None,
+                    "department_code": user.department.code if user.department else None,
+                    "class_name": user.class_name.name if user.class_name else None,
+                    "picture": picture,
+                }
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class DevBypassLoginView(APIView):

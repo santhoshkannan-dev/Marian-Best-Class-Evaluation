@@ -4,4 +4,5 @@ djangorestframework-simplejwt
 django-cors-headers
 google-auth
 requests
+Pillow
 psycopg2-binary
