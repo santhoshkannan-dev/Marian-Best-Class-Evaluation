@@ -315,6 +315,16 @@ class Command(BaseCommand):
                 ]
             },
             {
+                "code": "cat-programs-organized",
+                "category": "Programs Organized",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Intercollegiate", "type": "count", "marks": 5.0},
+                    {"title": "Intra - collegiate", "type": "count", "marks": 3.0},
+                    {"title": "Class Magazine", "type": "count", "marks": 5.0},
+                ]
+            },
+            {
                 "code": "cat-social-responsibility",
                 "category": "Social Responsibilities",
                 "access_level": "all_students",

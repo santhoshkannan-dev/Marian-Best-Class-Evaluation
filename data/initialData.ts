@@ -238,6 +238,15 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
       { id: 803, title: "Clubs & Associations Leadership Position", marks: 8, type: "fixed" }
     ]
   },
+  {
+    id: "cat-programs-organized",
+    category: "Programs Organized",
+    items: [
+      { id: 901, title: "Intercollegiate", marks: 5, type: "count" },
+      { id: 902, title: "Intra - collegiate", marks: 3, type: "count" },
+      { id: 903, title: "Class Magazine", marks: 5, type: "count" }
+    ]
+  },
 
   {
     id: "cat-social-responsibility",
