@@ -273,6 +273,26 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       })
       .catch((err) => console.error("Failed to fetch classes from backend:", err));
 
+    fetch('http://localhost:8000/api/criteria-categories/')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const backendCatalog: CriteriaCategory[] = data.map((cat: any) => ({
+            id: cat.code || `cat-${cat.id}`,
+            category: cat.category,
+            code: cat.code,
+            items: (cat.items || []).map((it: any) => ({
+              id: it.id,
+              title: it.title,
+              marks: typeof it.marks === 'string' ? parseFloat(it.marks) : (it.marks || 0),
+              type: it.type || 'count'
+            }))
+          }));
+          setCriteriaCatalog(backendCatalog);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch criteria-categories from backend:", err));
+
     fetchChampions();
   }, []);
 
@@ -319,9 +339,14 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 setSubmissions(data.submissions);
               }
               if (data.users) setUsers(data.users);
-              // Only restore cached catalog if it is non-empty (empty means it was fetched from an unseeded backend)
+              // Restore cached catalog and merge any newly added categories from defaultCriteriaCatalog (e.g., Programs Organized)
               if (data.criteriaCatalog && Array.isArray(data.criteriaCatalog) && data.criteriaCatalog.length > 0) {
-                setCriteriaCatalog(data.criteriaCatalog);
+                const cachedMap = new Map(data.criteriaCatalog.map((c: any) => [c.id || c.code, c]));
+                const mergedCatalog = defaultCriteriaCatalog.map((defCat) => {
+                  const key = defCat.id || defCat.code;
+                  return cachedMap.get(key) || defCat;
+                });
+                setCriteriaCatalog(mergedCatalog);
               } else {
                 setCriteriaCatalog(defaultCriteriaCatalog);
               }
