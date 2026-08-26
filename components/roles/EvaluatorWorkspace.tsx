@@ -54,7 +54,8 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
   // Submissions forwarded from Class Teacher (Round 2) awaiting Evaluator Verification (Round 3)
   const teacherApprovedSubmissions = submissions.filter((s) => {
     const isValidStatus = ['Teacher Verified', 'Approved', 'Verified'].includes(s.status) && !s.evaluatorVerified && s.status !== 'Locked' && s.status !== 'Evaluated';
-    return isValidStatus && isAssignedToEvaluator(s);
+    const isVerifiedByBoth = !!s.repVerifiedByName && (!!s.teacherVerifiedByName || !!s.verifiedByName);
+    return isValidStatus && isVerifiedByBoth && isAssignedToEvaluator(s);
   });
 
   const handleVerifySubmissionEvaluator = (subId: number) => {
@@ -162,7 +163,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
   const [expandedDept, setExpandedDept] = useState<string | null>(null);
 
   const [lookupType, setLookupType] = useState<'department' | 'class'>('department');
-  const [selectedLookupGroup, setSelectedLookupGroup] = useState<string>('Computer Applications');
+  const [selectedLookupGroup, setSelectedLookupGroup] = useState<string>('The Post-Graduate Department of Computer Applications');
 
   const getTopStudent = () => {
     const filtered = studentsList.filter(s => 
@@ -188,7 +189,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
         total: deptPending + deptVerified,
         verified: deptVerified
      };
-  }).filter(d => d.total > 0);
+  });
 
   const pendingItems = teacherApprovedSubmissions.map(s => {
     const item = criteriaCatalog.flatMap(c => c.items).find(it => String(it.id) === String(s.criteriaId));
@@ -211,7 +212,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
   };
 
   // Filtering Departments
-  const pendingDepts = deptStats.filter((d) => (d.total - d.verified) > 0);
+  const pendingDepts = deptStats.filter((d) => (d.total - d.verified) > 0 || d.total === 0);
   const completedDepts = deptStats.filter((d) => d.verified > 0);
 
   const activeDepts = activeTab === 'pending' ? pendingDepts : completedDepts;
@@ -338,7 +339,7 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                       onChange={(e) => {
                         const val = e.target.value as 'department' | 'class';
                         setLookupType(val);
-                        const firstDept = classes.length > 0 ? classes[0].department : 'Computer Applications';
+                        const firstDept = classes.length > 0 ? classes[0].department : 'The Post-Graduate Department of Computer Applications';
                         const firstClass = classes.length > 0 ? classes[0].name : 'BCA A';
                         setSelectedLookupGroup(val === 'department' ? firstDept : firstClass);
                       }}
@@ -626,9 +627,14 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                                       {studentObj ? studentObj.name : `Student #${sub.studentId}`}
                                     </h5>
                                     {activeTab === 'pending' ? (
-                                      <span className="badge badge-verified" style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontSize: '0.72rem', fontWeight: 800 }}>
-                                        ✓ Approved by Class Advisor ({sub.teacherVerifiedByName || 'Teacher'})
-                                      </span>
+                                      <div style={{ display: 'flex', gap: '6px' }}>
+                                        <span className="badge badge-verified" style={{ background: '#dbeafe', color: '#1e40af', border: '1px solid #bfdbfe', fontSize: '0.72rem', fontWeight: 800 }}>
+                                          ✓ Rep Verified ({sub.repVerifiedByName || 'Rep'})
+                                        </span>
+                                        <span className="badge badge-verified" style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontSize: '0.72rem', fontWeight: 800 }}>
+                                          ✓ Teacher Verified ({sub.teacherVerifiedByName || sub.verifiedByName || 'Teacher'})
+                                        </span>
+                                      </div>
                                     ) : (
                                       <span className="badge" style={{ background: '#dcfce7', color: '#16a34a', fontWeight: 700, fontSize: '0.72rem' }}>
                                         {sub.status}

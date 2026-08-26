@@ -23,12 +23,12 @@ const top9Data: StandingItem[] = [
   { className: 'BA English A', department: 'English', totalScore: 876, percentage: 10.8, color: '#14b8a6' },
   { className: 'BBA B', department: 'Business Admin', totalScore: 850, percentage: 10.5, color: '#f59e0b' },
   { className: 'BSc Physics A', department: 'Physics', totalScore: 754, percentage: 9.3, color: '#ef4444' },
-  { className: 'BCA A', department: 'Computer Applications', totalScore: 750, percentage: 9.2, color: '#06b6d4' },
+  { className: 'BCA A', department: 'The Under-Graduate Department of Computer Applications', totalScore: 750, percentage: 9.2, color: '#06b6d4' },
   { className: 'BBA A', department: 'Business Admin', totalScore: 730, percentage: 9.0, color: '#3b82f6' },
 ];
 
 const mockStudents = [
-  { name: 'Rahul S', className: 'BCA A', department: 'Computer Applications' },
+  { name: 'Rahul S', className: 'BCA A', department: 'The Under-Graduate Department of Computer Applications' },
   { name: 'Sneha K', className: 'BSc CS B', department: 'Computer Science' },
   { name: 'Arjun Prasad', className: 'BCom C', department: 'Commerce' },
   { name: 'Maria Antony', className: 'BA English A', department: 'English' },
@@ -731,7 +731,7 @@ export const LandingPage: React.FC = () => {
               <span className="performer-role-badge">Highest Internship</span>
               <div className="performer-avatar">💼</div>
               <div className="performer-name">BCA A</div>
-              <div className="performer-context">Computer Applications</div>
+              <div className="performer-context">The Under-Graduate Department of Computer Applications</div>
               <span className="performer-score">24 Placements</span>
             </div>
 

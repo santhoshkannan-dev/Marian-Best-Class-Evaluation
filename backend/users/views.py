@@ -95,9 +95,12 @@ def parse_student_email(email):
         (course_code.upper(), course_code.upper(), course_code.upper())
     )
 
-    if course_abbr in ['MCA', 'BCA']:
-        dept_name = "Department of Computer Applications"
-        dept_code = "DCA"
+    if course_abbr == 'BCA':
+        dept_name = "The Under-Graduate Department of Computer Applications"
+        dept_code = "UGDCA"
+    elif course_abbr == 'MCA':
+        dept_name = "The Post-Graduate Department of Computer Applications"
+        dept_code = "PGDCA"
     elif course_abbr in ['BBA', 'MBA']:
         dept_name = "Department of Business Administration"
         dept_code = "BBA_MBA"
@@ -551,7 +554,8 @@ class AcademicYearListView(APIView):
         return Response({"success": True, "deleted_year": year_str}, status=status.HTTP_200_OK)
 
 OFFICIAL_DEPT_ORDER = [
-    'DCA',
+    'UGDCA',
+    'PGDCA',
     'COMMERCE',
     'BBA_MBA',
     'SOCIAL_WORK',
@@ -672,7 +676,7 @@ class ClassListView(APIView):
         if not created and cls.department != dept:
             cls.department = dept
             cls.save(update_fields=['department'])
-
+            
         return Response({
             "id": cls.id,
             "name": cls.name,

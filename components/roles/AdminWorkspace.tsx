@@ -824,7 +824,8 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                     <option value="All Departments">All Departments</option>
                     <option value="Mathematics">Mathematics</option>
                     <option value="Commerce">Commerce</option>
-                    <option value="Computer Applications">Computer Applications</option>
+                    <option value="The Under-Graduate Department of Computer Applications">The Under-Graduate Department of Computer Applications</option>
+                    <option value="The Post-Graduate Department of Computer Applications">The Post-Graduate Department of Computer Applications</option>
                     <option value="Business Administration">Business Administration</option>
                   </select>
                 </div>
