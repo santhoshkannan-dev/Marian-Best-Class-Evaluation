@@ -248,8 +248,8 @@ class Command(BaseCommand):
                 "category": "Internships",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Offline Internship (Min. 1 month)", "type": "count", "marks": 5.0},
-                    {"title": "Online Internship (Min. 1 month)", "type": "count", "marks": 3.0},
+                    {"title": "Offline Internship (Min. 1 month)", "type": "range", "marks": 5.0},
+                    {"title": "Online Internship (Min. 1 month)", "type": "range", "marks": 3.0},
                 ]
             },
             {

@@ -1118,8 +1118,17 @@ class SubmissionDetailView(APIView):
             submission.evidence = request.data.get('evidence')
         if 'start_date' in request.data or 'startDate' in request.data:
             submission.start_date = request.data.get('start_date') or request.data.get('startDate')
+        elif 'evidence' in request.data and isinstance(request.data.get('evidence'), dict):
+            ev = request.data.get('evidence')
+            if ev.get('startDate') or ev.get('examDate'):
+                submission.start_date = ev.get('startDate') or ev.get('examDate')
+
         if 'end_date' in request.data or 'endDate' in request.data:
             submission.end_date = request.data.get('end_date') or request.data.get('endDate')
+        elif 'evidence' in request.data and isinstance(request.data.get('evidence'), dict):
+            ev = request.data.get('evidence')
+            if ev.get('endDate'):
+                submission.end_date = ev.get('endDate')
         if 'repVerifiedByName' in request.data:
             submission.rep_verified_by_name = request.data.get('repVerifiedByName')
         if 'repRemarks' in request.data:

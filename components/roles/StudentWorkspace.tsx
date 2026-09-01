@@ -158,6 +158,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('competitive exam') || catCode === 'cat-competitive-exams' || catId === 'cat-competitive-exams' || catId === '3';
   }, [currentCategory]);
 
+  const isInternshipsCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('internship') || catCode === 'cat-internships' || catId === 'cat-internships' || catId === '5';
+  }, [currentCategory]);
+
   const availableResearchSubItems = React.useMemo(() => {
     if (!isResearchCategory || !currentItem) return [];
     const itemTitle = String(currentItem.title || '').toLowerCase().trim();
@@ -672,6 +680,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
 
+    if (isInternshipsCategory) {
+      if (!startDate || !endDate) {
+        alert("Please select both a Starting Date and an End Date for the internship.");
+        return;
+      }
+    }
+
     if (isStartups && status === 'Submitted') {
       if (!startupName.trim() || !startupDate || !startupGovtId.trim()) {
         alert("Please enter Startup Name, Registration Date, and Government Registration ID before submitting.");
@@ -711,6 +726,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       finalDescription = `${currentItem?.title || 'Research'} — ${researchSubItem}`;
     } else if ((isCompetitiveExamsCategory || isUpscExamItem) && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Competitive Exam'} — Exam Date: ${examDate}`;
+    } else if (isInternshipsCategory && !finalDescription) {
+      finalDescription = `${currentItem?.title || 'Internship'} — ${startDate} to ${endDate}`;
     }
 
     if (!finalDescription) {
@@ -754,6 +771,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
           startDate,
           endDate
         }
+        : isInternshipsCategory
+          ? {
+            type: 'internship_dates',
+            startDate,
+            endDate
+          }
         : isStartups
           ? {
             type: 'startup_details',
@@ -802,8 +825,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         description: finalDescription,
         proof: computedProof,
         eventId: computedEventId,
-        startDate: isOnlineCourses ? startDate : (isCompetitiveExamsCategory || isUpscExamItem) ? examDate : undefined,
-        endDate: isOnlineCourses ? endDate : undefined,
+        startDate: (isOnlineCourses || isInternshipsCategory) ? startDate : (isCompetitiveExamsCategory || isUpscExamItem) ? examDate : undefined,
+        endDate: (isOnlineCourses || isInternshipsCategory) ? endDate : undefined,
         status: initialStatus,
         evidence: computedEvidence
       });
@@ -817,8 +840,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         remarks: status === 'Submitted' ? 'Awaiting Student Rep verification' : 'Saved as draft',
         proof: computedProof,
         eventId: computedEventId,
-        startDate: isOnlineCourses ? startDate : (isCompetitiveExamsCategory || isUpscExamItem) ? examDate : undefined,
-        endDate: isOnlineCourses ? endDate : undefined,
+        startDate: (isOnlineCourses || isInternshipsCategory) ? startDate : (isCompetitiveExamsCategory || isUpscExamItem) ? examDate : undefined,
+        endDate: (isOnlineCourses || isInternshipsCategory) ? endDate : undefined,
         evaluatorVerified: false,
         evidence: computedEvidence
       });
@@ -1262,44 +1285,46 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  {isOnlineCoursesCategory ? (
+                  {(isOnlineCoursesCategory || isInternshipsCategory) ? (
                     <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div
-                        style={{
-                          background: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fff1f2' : 'rgba(99, 102, 241, 0.06)',
-                          border: `1.5px solid ${onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fecdd3' : 'rgba(99, 102, 241, 0.25)'}`,
-                          borderRadius: '14px',
-                          padding: '14px 18px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '12px'
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: '0.92rem', fontWeight: 800, color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#9f1239' : '#3730a3' }}>
-                            Online Course Limit: {onlineCourseSubmissionsCount} / 3 Submitted
-                          </div>
-                          <div style={{ fontSize: '0.78rem', color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#4338ca', marginTop: '2px' }}>
-                            {onlineCourseSubmissionsCount >= 3 && !editingSubId
-                              ? 'Maximum limit reached (3 courses). You cannot submit additional online courses.'
-                              : 'Each student can submit a maximum of 3 online courses per evaluation cycle.'}
-                          </div>
-                        </div>
-                        <span
-                          className="badge"
+                      {isOnlineCoursesCategory && (
+                        <div
                           style={{
-                            background: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#ffe4e6' : '#e0e7ff',
-                            color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#3730a3',
-                            fontWeight: 800,
-                            fontSize: '0.82rem',
-                            whiteSpace: 'nowrap',
-                            border: `1px solid ${onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fca5a5' : '#c7d2fe'}`
+                            background: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fff1f2' : 'rgba(99, 102, 241, 0.06)',
+                            border: `1.5px solid ${onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fecdd3' : 'rgba(99, 102, 241, 0.25)'}`,
+                            borderRadius: '14px',
+                            padding: '14px 18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px'
                           }}
                         >
-                          {onlineCourseSubmissionsCount} / 3 Max
-                        </span>
-                      </div>
+                          <div>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#9f1239' : '#3730a3' }}>
+                              Online Course Limit: {onlineCourseSubmissionsCount} / 3 Submitted
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#4338ca', marginTop: '2px' }}>
+                              {onlineCourseSubmissionsCount >= 3 && !editingSubId
+                                ? 'Maximum limit reached (3 courses). You cannot submit additional online courses.'
+                                : 'Each student can submit a maximum of 3 online courses per evaluation cycle.'}
+                            </div>
+                          </div>
+                          <span
+                            className="badge"
+                            style={{
+                              background: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#ffe4e6' : '#e0e7ff',
+                              color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#3730a3',
+                              fontWeight: 800,
+                              fontSize: '0.82rem',
+                              whiteSpace: 'nowrap',
+                              border: `1px solid ${onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fca5a5' : '#c7d2fe'}`
+                            }}
+                          >
+                            {onlineCourseSubmissionsCount} / 3 Max
+                          </span>
+                        </div>
+                      )}
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', padding: '16px', background: 'rgba(59, 130, 246, 0.04)', border: '1.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px' }}>
                         <div className="form-group">
