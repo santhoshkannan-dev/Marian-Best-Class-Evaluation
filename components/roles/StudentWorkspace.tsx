@@ -150,6 +150,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('research') || catCode === 'cat-research' || catId === 'cat-research' || catId === '6';
   }, [currentCategory]);
 
+  const isPrizesCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('prize') || catCode === 'cat-prizes' || catId === 'cat-prizes' || catId === '701';
+  }, [currentCategory]);
+
   const isCompetitiveExamsCategory = React.useMemo(() => {
     if (!currentCategory) return false;
     const catName = String(currentCategory.category || '').toLowerCase().trim();
@@ -206,6 +214,33 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
     return ['Option 1', 'Option 2'];
   }, [isResearchCategory, currentItem]);
+
+  const availablePrizesSubItems = React.useMemo(() => {
+    if (!isPrizesCategory || !currentItem) return [];
+    const itemTitle = String(currentItem.title || '').toLowerCase().trim();
+
+    if (itemTitle.includes('outside')) {
+      return [
+        'Individual First',
+        'Individual Second',
+        'Individual Third',
+        'Group First',
+        'Group Second',
+        'Group Third',
+        'Participation (Individual)',
+        'Participation (Group)'
+      ];
+    }
+
+    return [
+      'Individual First',
+      'Individual Second',
+      'Individual Third',
+      'Group First',
+      'Group Second',
+      'Group Third'
+    ];
+  }, [isPrizesCategory, currentItem]);
 
   const existingAcademicSubmission = React.useMemo(() => {
     if (!isAcademicCategory) return null;
@@ -271,6 +306,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [startupDate, setStartupDate] = useState<string>('');
   const [startupGovtId, setStartupGovtId] = useState<string>('');
   const [researchSubItem, setResearchSubItem] = useState<string>('');
+  const [prizesSubItem, setPrizesSubItem] = useState<string>('');
 
   React.useEffect(() => {
     if (isResearchCategory && availableResearchSubItems.length > 0) {
@@ -279,6 +315,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
   }, [isResearchCategory, availableResearchSubItems, researchSubItem]);
+
+  React.useEffect(() => {
+    if (isPrizesCategory && availablePrizesSubItems.length > 0) {
+      if (!availablePrizesSubItems.includes(prizesSubItem)) {
+        setPrizesSubItem(availablePrizesSubItems[0]);
+      }
+    }
+  }, [isPrizesCategory, availablePrizesSubItems, prizesSubItem]);
 
   const [submissionRemarksMap, setSubmissionRemarksMap] = useState<Record<number, string>>({});
 
@@ -318,8 +362,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         else setStartupDate('');
         if (sub.evidence?.startupGovtId) setStartupGovtId(sub.evidence.startupGovtId);
         else setStartupGovtId('');
-        if (sub.evidence?.subItem || sub.evidence?.researchSubItem) {
-          setResearchSubItem(sub.evidence.subItem || sub.evidence.researchSubItem);
+        if (sub.evidence?.subItem || sub.evidence?.researchSubItem || sub.evidence?.prizesSubItem) {
+          setResearchSubItem(sub.evidence.subItem || sub.evidence.researchSubItem || '');
+          setPrizesSubItem(sub.evidence.subItem || sub.evidence.prizesSubItem || '');
         }
         if (sub.startDate) setExamDate(sub.startDate);
         else if (sub.evidence?.examDate) setExamDate(sub.evidence.examDate);
@@ -664,6 +709,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       currentCategory?.code === 'cat-research' ||
       currentCategory?.category.toLowerCase().trim().includes('research');
 
+    const isPrizes =
+      currentCategory?.id === 'cat-prizes' ||
+      currentCategory?.code === 'cat-prizes' ||
+      currentCategory?.category.toLowerCase().trim().includes('prize');
+
     if (isAcademicCategory && existingAcademicSubmission && !editingSubId) {
       alert(`"${academicSubmissionType}" has already been updated for this evaluation cycle. Only one submission per type is allowed.`);
       return;
@@ -701,6 +751,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
 
+    if (isPrizes && status === 'Submitted') {
+      if (!prizesSubItem) {
+        alert("Please select a Sub Item for the Prize activity before submitting.");
+        return;
+      }
+    }
+
     if (isCompetitiveExamsCategory || isUpscExamItem) {
       if (isUpscExamItem && upscExamSubmissionsCount >= 3 && !editingSubId) {
         alert("Maximum 3 submissions allowed for UPSC / PSC Exam Participation. You have reached the submission limit (3/3).");
@@ -724,6 +781,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       finalDescription = `Startup: ${startupName.trim()} | Reg. Date: ${startupDate} | Govt ID: ${startupGovtId.trim()}`;
     } else if (isResearch && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Research'} — ${researchSubItem}`;
+    } else if (isPrizes && !finalDescription) {
+      finalDescription = `${currentItem?.title || 'Prizes'} — ${prizesSubItem}`;
     } else if ((isCompetitiveExamsCategory || isUpscExamItem) && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Competitive Exam'} — Exam Date: ${examDate}`;
     } else if (isInternshipsCategory && !finalDescription) {
@@ -791,13 +850,19 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
               subItem: researchSubItem,
               count: countValue || 1
             }
-            : (isCompetitiveExamsCategory || isUpscExamItem)
+            : isPrizes
               ? {
-                type: 'upsc_exam_date',
-                examDate,
-                startDate: examDate
+                type: 'prizes_subitem',
+                subItem: prizesSubItem,
+                count: countValue || 1
               }
-            : { type: currentItem?.type || 'count', count: countValue };
+              : (isCompetitiveExamsCategory || isUpscExamItem)
+                ? {
+                  type: 'upsc_exam_date',
+                  examDate,
+                  startDate: examDate
+                }
+              : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
     if (status === 'Submitted') {
@@ -1403,57 +1468,29 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       </div>
                     </div>
                   ) : isResearchCategory ? (
-                    <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '14px', padding: '22px', background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.03) 0%, rgba(99, 102, 241, 0.06) 100%)', border: '1.5px solid rgba(79, 70, 229, 0.2)', borderRadius: '16px', boxShadow: '0 4px 20px rgba(79, 70, 229, 0.04)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-                        <div>
-                          <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#4338ca', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                            Research Sub Item / Classification
-                          </h4>
-                          <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '2px 0 0 0', fontWeight: 500 }}>
-                            Select the specific classification for your {currentItem?.title || 'research'} activity:
-                          </p>
-                        </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4338ca', background: '#e0e7ff', border: '1px solid #c7d2fe', padding: '3px 10px', borderRadius: '12px' }}>
-                          Select One Option
-                        </span>
+                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr', gap: '16px', padding: '20px', background: 'rgba(79, 70, 229, 0.04)', border: '1.5px solid rgba(79, 70, 229, 0.2)', borderRadius: '16px' }}>
+                      <div style={{ marginBottom: '2px' }}>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#4f46e5', margin: 0, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                          Research Sub Item Details
+                        </h4>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginTop: '4px' }}>
-                        {availableResearchSubItems.map((subOpt) => {
-                          const isSelected = researchSubItem === subOpt;
-                          return (
-                            <button
-                              key={subOpt}
-                              type="button"
-                              onClick={() => setResearchSubItem(subOpt)}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: '14px 18px',
-                                borderRadius: '12px',
-                                border: isSelected ? '2px solid #4f46e5' : '1.5px solid #e2e8f0',
-                                background: isSelected ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)' : '#ffffff',
-                                color: isSelected ? '#ffffff' : '#1e293b',
-                                fontWeight: isSelected ? 700 : 600,
-                                fontSize: '0.9rem',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: isSelected ? '0 4px 14px rgba(79, 70, 229, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.04)',
-                                textAlign: 'left'
-                              }}
-                            >
-                              <span>{subOpt}</span>
-                              {isSelected ? (
-                                <div style={{ minWidth: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900, color: '#ffffff' }}>
-                                  ✓
-                                </div>
-                              ) : (
-                                <div style={{ minWidth: '18px', height: '18px', borderRadius: '50%', border: '1.5px solid #cbd5e1' }} />
-                              )}
-                            </button>
-                          );
-                        })}
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#4f46e5' }}>
+                          Sub Item
+                        </label>
+                        <select
+                          className="select"
+                          value={researchSubItem}
+                          onChange={(e) => setResearchSubItem(e.target.value)}
+                          required
+                        >
+                          {availableResearchSubItems.map((subOpt) => (
+                            <option key={subOpt} value={subOpt}>
+                              {subOpt}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   ) : (isCompetitiveExamsCategory || isUpscExamItem) ? (
@@ -1508,6 +1545,32 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           onChange={(e) => setExamDate(e.target.value)}
                           required
                         />
+                      </div>
+                    </div>
+                  ) : isPrizesCategory ? (
+                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr', gap: '16px', padding: '20px', background: 'rgba(79, 70, 229, 0.04)', border: '1.5px solid rgba(79, 70, 229, 0.2)', borderRadius: '16px' }}>
+                      <div style={{ marginBottom: '2px' }}>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#4f46e5', margin: 0, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                          Prize Category Details
+                        </h4>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#4f46e5' }}>
+                          Sub Item
+                        </label>
+                        <select
+                          className="select"
+                          value={prizesSubItem}
+                          onChange={(e) => setPrizesSubItem(e.target.value)}
+                          required
+                        >
+                          {availablePrizesSubItems.map((subOpt) => (
+                            <option key={subOpt} value={subOpt}>
+                              {subOpt}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   ) : !isAcademicCategory && (
@@ -1743,6 +1806,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                   <span>Startup: {sub.evidence.startupName}</span>
                                   <span>Reg: {sub.evidence.startupDate} | ID: {sub.evidence.startupGovtId}</span>
                                 </div>
+                              ) : sub.evidence?.type === 'prizes_subitem' || sub.evidence?.type === 'research_subitem' || sub.evidence?.subItem ? (
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#4f46e5', background: '#e0e7ff', border: '1px solid #c7d2fe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
+                                  {sub.evidence.subItem || sub.evidence.prizesSubItem || sub.evidence.researchSubItem}
+                                </span>
                               ) : (sub.startDate || sub.evidence?.startDate || sub.evidence?.examDate) ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
                                   {sub.startDate || sub.evidence?.startDate || sub.evidence?.examDate}{(sub.endDate || sub.evidence?.endDate) ? ` to ${sub.endDate || sub.evidence?.endDate}` : ''}

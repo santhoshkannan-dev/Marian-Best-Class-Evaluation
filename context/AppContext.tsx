@@ -326,7 +326,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                   researchCat.items.length > 5 ||
                   researchCat.items.some((i: any) => i.title && (i.title.includes('Scopus') || i.title.includes('Outside Marian')))
                 );
-                if (isStaleResearch) {
+                const prizesCat = data.criteriaCatalog.find((c: any) => c.id === 'cat-prizes' || c.code === 'cat-prizes' || c.category === 'Prizes');
+                const isStalePrizes = prizesCat && (
+                  prizesCat.items.length > 2 ||
+                  prizesCat.items.some((i: any) => i.title && (i.title.includes('1st Prize') || i.title.includes('2nd Prize')))
+                );
+                if (isStaleResearch || isStalePrizes) {
                   setCriteriaCatalog(defaultCriteriaCatalog);
                 } else {
                   setCriteriaCatalog(data.criteriaCatalog);
