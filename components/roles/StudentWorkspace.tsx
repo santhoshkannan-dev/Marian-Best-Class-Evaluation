@@ -134,6 +134,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('online course') || catCode === 'cat-online-courses' || catId === 'cat-online-courses' || catId === '2';
   }, [currentCategory]);
 
+  const isStartupsCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('startup') || catCode === 'cat-startups' || catId === 'cat-startups' || catId === '7';
+  }, [currentCategory]);
+
   const existingAcademicSubmission = React.useMemo(() => {
     if (!isAcademicCategory) return null;
     return submissions.find(
@@ -193,6 +201,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [proofFile, setProofFile] = useState<string>('');
   const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [startupName, setStartupName] = useState<string>('');
+  const [startupDate, setStartupDate] = useState<string>('');
+  const [startupGovtId, setStartupGovtId] = useState<string>('');
 
   const [submissionRemarksMap, setSubmissionRemarksMap] = useState<Record<number, string>>({});
 
@@ -226,6 +237,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         if (sub.evidence?.classPassPercentage !== undefined) {
           setPassPercentage(sub.evidence.classPassPercentage);
         }
+        if (sub.evidence?.startupName) setStartupName(sub.evidence.startupName);
+        else setStartupName('');
+        if (sub.evidence?.startupDate) setStartupDate(sub.evidence.startupDate);
+        else setStartupDate('');
+        if (sub.evidence?.startupGovtId) setStartupGovtId(sub.evidence.startupGovtId);
+        else setStartupGovtId('');
+
         if (sub.eventId) {
           setEventId(sub.eventId);
           setProofFile('');
@@ -510,6 +528,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       currentCategory?.id === 'cat-programs-organized' ||
       currentCategory?.category.toLowerCase().trim() === 'programs organized';
 
+    const isStartups =
+      currentCategory?.id === 'cat-startups' ||
+      currentCategory?.code === 'cat-startups' ||
+      currentCategory?.category.toLowerCase().trim().includes('startup');
+
     if (isAcademicCategory && existingAcademicSubmission && !editingSubId) {
       alert(`"${academicSubmissionType}" has already been updated for this evaluation cycle. Only one submission per type is allowed.`);
       return;
@@ -520,6 +543,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
+    if (isStartups && status === 'Submitted') {
+      if (!startupName.trim() || !startupDate || !startupGovtId.trim()) {
+        alert("Please enter Startup Name, Registration Date, and Government Registration ID before submitting.");
+        return;
+      }
+    }
+
     const totalStudents = count90Above + count80to90 + count70to80 + failCount;
     const passedStudents = totalStudents - failCount;
     const autoPassPercentage = totalStudents > 0 ? parseFloat(((passedStudents / totalStudents) * 100).toFixed(2)) : 0;
@@ -528,6 +558,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     let finalDescription = description.trim();
     if (isAcademicCategory && !finalDescription) {
       finalDescription = `${academicSubmissionType} Mark Summary — ≥90%: ${count90Above}, 80-90%: ${count80to90}, 70-80%: ${count70to80}, Fail: ${failCount} (Pass: ${effectivePassPercentage}%, Total: ${totalStudents} students)`;
+    } else if (isStartups && !finalDescription) {
+      finalDescription = `Startup: ${startupName.trim()} | Reg. Date: ${startupDate} | Govt ID: ${startupGovtId.trim()}`;
     }
 
     if (!finalDescription) {
@@ -571,7 +603,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
           startDate,
           endDate
         }
-        : { type: currentItem?.type || 'count', count: countValue };
+        : isStartups
+          ? {
+            type: 'startup_details',
+            startupName: startupName.trim(),
+            startupDate: startupDate,
+            startupGovtId: startupGovtId.trim(),
+            count: countValue
+          }
+          : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
     if (status === 'Submitted') {
@@ -1085,6 +1125,56 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         />
                       </div>
                     </div>
+                  ) : isStartupsCategory ? (
+                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', padding: '20px', background: 'rgba(236, 72, 153, 0.04)', border: '1.5px solid rgba(236, 72, 153, 0.2)', borderRadius: '16px' }}>
+                      <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '1.2rem' }}>🚀</span>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#be185d', margin: 0 }}>
+                          Government-Registered Startup Details
+                        </h4>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          🏷️ Startup Name
+                        </label>
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="Enter Registered Startup / Company Name..."
+                          value={startupName}
+                          onChange={(e) => setStartupName(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          📅 Registration Date
+                        </label>
+                        <input
+                          type="date"
+                          className="input"
+                          value={startupDate}
+                          onChange={(e) => setStartupDate(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          🏛️ Government ID / Reg. No.
+                        </label>
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="e.g. CIN / MSME / UDYAM / DPIIT-12345..."
+                          value={startupGovtId}
+                          onChange={(e) => setStartupGovtId(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
                   ) : !isAcademicCategory && (
                     <div className="form-group">
                       <label className="form-label">Count / Frequency</label>
@@ -1299,6 +1389,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                   <span style={{ color: '#059669' }}>70-80%: {sub.evidence.markBreakdown?.count70to80 ?? sub.evidence.grades?.A ?? 0}</span> |
                                   <span style={{ color: '#dc2626' }}>Fail: {sub.evidence.markBreakdown?.failCount ?? sub.evidence.grades?.Fail ?? 0}</span> |
                                   <span style={{ color: '#7c3aed' }}>Pass: {sub.evidence.classPassPercentage !== undefined ? `${sub.evidence.classPassPercentage}%` : '-'}</span>
+                                </div>
+                              ) : sub.evidence?.type === 'startup_details' || sub.evidence?.startupName ? (
+                                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#be185d', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  <span>🚀 Startup: {sub.evidence.startupName}</span>
+                                  <span>📅 Reg: {sub.evidence.startupDate} | 🏛️ ID: {sub.evidence.startupGovtId}</span>
                                 </div>
                               ) : (sub.startDate || sub.evidence?.startDate) ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
