@@ -764,7 +764,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 examDate,
                 startDate: examDate
               }
-            }
             : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
@@ -1438,7 +1437,6 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           required
                         />
                       </div>
-                    </div>
                     </div>
                   ) : !isAcademicCategory && (
                     <div className="form-group">
