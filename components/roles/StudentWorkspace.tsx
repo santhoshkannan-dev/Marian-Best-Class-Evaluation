@@ -157,6 +157,36 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     }
   }, [availableCriteriaCatalog, selectedCategory]);
 
+  // Pre-select category and item when navigating from dashboard or via URL query parameters
+  React.useEffect(() => {
+    if (activeTab === 'submit' && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlCat = urlParams.get('category') || sessionStorage.getItem('preselect_category');
+      const urlItem = urlParams.get('item') || sessionStorage.getItem('preselect_item');
+
+      if (urlCat && availableCriteriaCatalog && availableCriteriaCatalog.length > 0) {
+        const cat = availableCriteriaCatalog.find((c) => matchCategory(c, urlCat));
+        if (cat) {
+          const catVal = cat.id || cat.code || cat.category;
+          setSelectedCategory(catVal);
+
+          if (urlItem && cat.items) {
+            const foundItem = cat.items.find((i) => matchItem(i, urlItem));
+            if (foundItem) {
+              setSelectedCriteriaId(foundItem.id);
+            } else if (cat.items.length > 0) {
+              setSelectedCriteriaId(cat.items[0].id);
+            }
+          } else if (cat.items && cat.items.length > 0) {
+            setSelectedCriteriaId(cat.items[0].id);
+          }
+        }
+        sessionStorage.removeItem('preselect_category');
+        sessionStorage.removeItem('preselect_item');
+      }
+    }
+  }, [activeTab, availableCriteriaCatalog]);
+
   const [countValue, setCountValue] = useState<number>(1);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -444,18 +474,26 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
   const handleNavToSubmit = (catId: string, itemId?: number) => {
     const cat = availableCriteriaCatalog.find((c) => matchCategory(c, catId));
-    if (cat) {
-      const catVal = cat.id || cat.code || cat.category;
-      setSelectedCategory(catVal);
-      if (cat.items && cat.items.length) {
-        const itemToSet = itemId ? cat.items.find((i) => matchItem(i, itemId)) : cat.items[0];
-        setSelectedCriteriaId(itemToSet ? itemToSet.id : cat.items[0].id);
-      }
-    } else {
-      setSelectedCategory(catId);
+    const catVal = cat ? (cat.id || cat.code || cat.category) : catId;
+    const targetItem = cat && cat.items && cat.items.length
+      ? (itemId ? cat.items.find((i) => matchItem(i, itemId)) : cat.items[0])
+      : null;
+    const targetItemId = targetItem ? targetItem.id : itemId;
+
+    setSelectedCategory(catVal);
+    if (targetItemId) {
+      setSelectedCriteriaId(targetItemId);
     }
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('preselect_category', String(catVal));
+      if (targetItemId) {
+        sessionStorage.setItem('preselect_item', String(targetItemId));
+      }
+    }
+
     setActivePage('submit');
-    router.push('/student/submit');
+    router.push(`/student/submit?category=${encodeURIComponent(catVal)}${targetItemId ? `&item=${targetItemId}` : ''}`);
   };
 
   const handleFormSubmit = (status: 'Submitted' | 'Draft') => {
@@ -690,12 +728,19 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 {paginatedChecklist.map((cat) => {
                   const isDone = completedCategoryIds.has(cat.id);
                   return (
-                    <div key={cat.id} className="checklist-row">
+                    <div
+                      key={cat.id}
+                      className="checklist-row"
+                      style={{ cursor: isDone ? 'default' : 'pointer' }}
+                      onClick={() => {
+                        if (!isDone) handleNavToSubmit(cat.id);
+                      }}
+                    >
                       <div className="checklist-left">
                         <span style={{ color: isDone ? 'var(--color-success)' : 'var(--color-text-soft)' }}>
                           {isDone ? '✓' : 'Σ'}
                         </span>
-                        <span>{cat.category}</span>
+                        <span style={{ fontWeight: 600 }}>{cat.category}</span>
                       </div>
 
                       {isDone ? (
@@ -703,7 +748,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       ) : (
                         <button
                           className="btn btn-sm btn-secondary checklist-add-btn"
-                          onClick={() => handleNavToSubmit(cat.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNavToSubmit(cat.id);
+                          }}
                           title={`Submit claim under ${cat.category}`}
                         >
                           +
