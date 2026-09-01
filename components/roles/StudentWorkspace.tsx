@@ -1378,20 +1378,30 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       </div>
                     </div>
                   ) : isResearchCategory ? (
-                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                      <label className="form-label">Sub Item</label>
-                      <select
-                        className="select"
-                        value={researchSubItem}
-                        onChange={(e) => setResearchSubItem(e.target.value)}
-                        required
-                      >
-                        {availableResearchSubItems.map((subOpt) => (
-                          <option key={subOpt} value={subOpt}>
-                            {subOpt}
-                          </option>
-                        ))}
-                      </select>
+                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr', gap: '16px', padding: '20px', background: 'rgba(79, 70, 229, 0.04)', border: '1.5px solid rgba(79, 70, 229, 0.2)', borderRadius: '16px' }}>
+                      <div style={{ marginBottom: '2px' }}>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#4f46e5', margin: 0, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                          Research Sub Item Details
+                        </h4>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#4f46e5' }}>
+                          Sub Item
+                        </label>
+                        <select
+                          className="select"
+                          value={researchSubItem}
+                          onChange={(e) => setResearchSubItem(e.target.value)}
+                          required
+                        >
+                          {availableResearchSubItems.map((subOpt) => (
+                            <option key={subOpt} value={subOpt}>
+                              {subOpt}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   ) : (isCompetitiveExamsCategory || isUpscExamItem) ? (
                     <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px' }}>
