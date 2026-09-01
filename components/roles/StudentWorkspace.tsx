@@ -142,6 +142,55 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('startup') || catCode === 'cat-startups' || catId === 'cat-startups' || catId === '7';
   }, [currentCategory]);
 
+  const isResearchCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('research') || catCode === 'cat-research' || catId === 'cat-research' || catId === '6';
+  }, [currentCategory]);
+
+  const availableResearchSubItems = React.useMemo(() => {
+    if (!isResearchCategory || !currentItem) return [];
+    const itemTitle = String(currentItem.title || '').toLowerCase().trim();
+
+    if (itemTitle.includes('publication') && !itemTitle.includes('book')) {
+      return [
+        'Scopus / Web of Science',
+        'Conference Proceeding / Peer reviewed article'
+      ];
+    }
+    if (itemTitle.includes('paper presentation') || itemTitle.includes('presentation')) {
+      return [
+        'Outside Marian College',
+        'Inside Marian College'
+      ];
+    }
+    if (itemTitle.includes('patent')) {
+      return [
+        'Utility',
+        'Design'
+      ];
+    }
+    if (itemTitle.includes('book')) {
+      return [
+        'Book',
+        'Book Chapter',
+        'Article'
+      ];
+    }
+    if (itemTitle.includes('funded project') || itemTitle.includes('project')) {
+      return [
+        'International',
+        'National',
+        'State',
+        'Any Other'
+      ];
+    }
+
+    return ['Option 1', 'Option 2'];
+  }, [isResearchCategory, currentItem]);
+
   const existingAcademicSubmission = React.useMemo(() => {
     if (!isAcademicCategory) return null;
     return submissions.find(
@@ -204,6 +253,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [startupName, setStartupName] = useState<string>('');
   const [startupDate, setStartupDate] = useState<string>('');
   const [startupGovtId, setStartupGovtId] = useState<string>('');
+  const [researchSubItem, setResearchSubItem] = useState<string>('');
+
+  React.useEffect(() => {
+    if (isResearchCategory && availableResearchSubItems.length > 0) {
+      if (!availableResearchSubItems.includes(researchSubItem)) {
+        setResearchSubItem(availableResearchSubItems[0]);
+      }
+    }
+  }, [isResearchCategory, availableResearchSubItems, researchSubItem]);
 
   const [submissionRemarksMap, setSubmissionRemarksMap] = useState<Record<number, string>>({});
 
@@ -243,6 +301,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         else setStartupDate('');
         if (sub.evidence?.startupGovtId) setStartupGovtId(sub.evidence.startupGovtId);
         else setStartupGovtId('');
+        if (sub.evidence?.subItem || sub.evidence?.researchSubItem) {
+          setResearchSubItem(sub.evidence.subItem || sub.evidence.researchSubItem);
+        }
 
         if (sub.eventId) {
           setEventId(sub.eventId);
@@ -552,6 +613,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       currentCategory?.code === 'cat-startups' ||
       currentCategory?.category.toLowerCase().trim().includes('startup');
 
+    const isResearch =
+      currentCategory?.id === 'cat-research' ||
+      currentCategory?.code === 'cat-research' ||
+      currentCategory?.category.toLowerCase().trim().includes('research');
+
     if (isAcademicCategory && existingAcademicSubmission && !editingSubId) {
       alert(`"${academicSubmissionType}" has already been updated for this evaluation cycle. Only one submission per type is allowed.`);
       return;
@@ -575,6 +641,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
 
+    if (isResearch && status === 'Submitted') {
+      if (!researchSubItem) {
+        alert("Please select a Sub Item for the Research activity before submitting.");
+        return;
+      }
+    }
+
     const totalStudents = count90Above + count80to90 + count70to80 + failCount;
     const passedStudents = totalStudents - failCount;
     const autoPassPercentage = totalStudents > 0 ? parseFloat(((passedStudents / totalStudents) * 100).toFixed(2)) : 0;
@@ -585,6 +658,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       finalDescription = `${academicSubmissionType} Mark Summary — ≥90%: ${count90Above}, 80-90%: ${count80to90}, 70-80%: ${count70to80}, Fail: ${failCount} (Pass: ${effectivePassPercentage}%, Total: ${totalStudents} students)`;
     } else if (isStartups && !finalDescription) {
       finalDescription = `Startup: ${startupName.trim()} | Reg. Date: ${startupDate} | Govt ID: ${startupGovtId.trim()}`;
+    } else if (isResearch && !finalDescription) {
+      finalDescription = `${currentItem?.title || 'Research'} — ${researchSubItem}`;
     }
 
     if (!finalDescription) {
@@ -636,7 +711,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
             startupGovtId: startupGovtId.trim(),
             count: countValue
           }
-          : { type: currentItem?.type || 'count', count: countValue };
+          : isResearch
+            ? {
+              type: 'research_subitem',
+              subItem: researchSubItem,
+              count: countValue || 1
+            }
+            : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
     if (status === 'Submitted') {
@@ -1238,6 +1319,24 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           required
                         />
                       </div>
+                    </div>
+                  ) : isResearchCategory ? (
+                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                      <label className="form-label" style={{ fontWeight: 800, color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        🔬 Sub Item / Category Type
+                      </label>
+                      <select
+                        className="select"
+                        value={researchSubItem}
+                        onChange={(e) => setResearchSubItem(e.target.value)}
+                        required
+                      >
+                        {availableResearchSubItems.map((subOpt) => (
+                          <option key={subOpt} value={subOpt}>
+                            {subOpt}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   ) : !isAcademicCategory && (
                     <div className="form-group">
