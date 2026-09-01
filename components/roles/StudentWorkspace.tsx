@@ -174,6 +174,38 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('internship') || catCode === 'cat-internships' || catId === 'cat-internships' || catId === '5';
   }, [currentCategory]);
 
+  const isScholarshipsCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('scholarship') || catCode === 'cat-scholarships' || catId === 'cat-scholarships';
+  }, [currentCategory]);
+
+  const isLeadershipCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('leadership') || catCode === 'cat-leadership' || catId === 'cat-leadership';
+  }, [currentCategory]);
+
+  const isSocialResponsibilityCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('social responsibility') || catCode === 'cat-social-responsibility' || catId === 'cat-social-responsibility';
+  }, [currentCategory]);
+
+  const isCareerAdvancementCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('career advancement') || catCode === 'cat-career-advancement' || catId === 'cat-career-advancement';
+  }, [currentCategory]);
+
   const availableResearchSubItems = React.useMemo(() => {
     if (!isResearchCategory || !currentItem) return [];
     const itemTitle = String(currentItem.title || '').toLowerCase().trim();
@@ -1627,7 +1659,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         />
                       </div>
                     </div>
-                  ) : !isAcademicCategory && !isResearchCategory && !isPrizesCategory && (
+                  ) : !isAcademicCategory && !isResearchCategory && !isPrizesCategory && !isScholarshipsCategory && !isLeadershipCategory && !isSocialResponsibilityCategory && !isCareerAdvancementCategory && (
                     <div className="form-group">
                       <label className="form-label">Count / Frequency</label>
                       <input
