@@ -221,24 +221,24 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
     if (itemTitle.includes('outside')) {
       return [
-        'Individual First',
-        'Individual Second',
-        'Individual Third',
-        'Group First',
-        'Group Second',
-        'Group Third',
+        '1st Prize (Individual)',
+        '2nd Prize (Individual)',
+        '3rd Prize (Individual)',
+        '1st Prize (Group)',
+        '2nd Prize (Group)',
+        '3rd Prize (Group)',
         'Participation (Individual)',
         'Participation (Group)'
       ];
     }
 
     return [
-      'Individual First',
-      'Individual Second',
-      'Individual Third',
-      'Group First',
-      'Group Second',
-      'Group Third'
+      '1st Prize (Individual)',
+      '2nd Prize (Individual)',
+      '3rd Prize (Individual)',
+      '1st Prize (Group)',
+      '2nd Prize (Group)',
+      '3rd Prize (Group)'
     ];
   }, [isPrizesCategory, currentItem]);
 
