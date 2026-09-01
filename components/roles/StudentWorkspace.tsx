@@ -60,10 +60,31 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     }
   }, [activeTab]);
 
-  // All 12 criteria categories available for selection
+  // Filter available categories based on role access (Normal Student: 10 student categories; Student Rep / DQC: All categories)
   const availableCriteriaCatalog = React.useMemo(() => {
-    return criteriaCatalog;
-  }, [criteriaCatalog]);
+    if (isStudentRep) {
+      return criteriaCatalog;
+    }
+
+    // Normal students get 10 student-level categories (excluding Academics & Documentation / class-wide audit categories)
+    return criteriaCatalog.filter((cat) => {
+      const name = String(cat.category || '').toLowerCase().trim();
+      const code = String(cat.code || '').toLowerCase().trim();
+      const id = String(cat.id || '').toLowerCase().trim();
+
+      const isRestrictedForNormalStudent =
+        name === 'academics' ||
+        code === 'cat-academics' ||
+        id === 'cat-academics' ||
+        id === '1' ||
+        name === 'documentation' ||
+        code === 'cat-documentation' ||
+        id === 'cat-documentation' ||
+        id === '12';
+
+      return !isRestrictedForNormalStudent;
+    });
+  }, [criteriaCatalog, isStudentRep]);
 
   const { activeAcademicYear } = useApp();
 
@@ -207,7 +228,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
   const [profileErrorMsg, setProfileErrorMsg] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
-  const [classList, setClassList] = useState<{name: string, department: string}[]>([]);
+  const [classList, setClassList] = useState<{ name: string, department: string }[]>([]);
 
   // Sync state if currentUserInfo changes
   React.useEffect(() => {
@@ -307,7 +328,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const filteredSubmissions = mySubmissions.filter((sub) => {
     const item = criteriaCatalog.flatMap((c) => c.items).find((i) => i.id === sub.criteriaId);
     const cat = criteriaCatalog.find((c) => c.items.some((i) => i.id === sub.criteriaId));
-    
+
     const matchesSearch =
       !searchQuery ||
       sub.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -494,25 +515,25 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
     const computedEvidence = isAcademicCategory
       ? {
-          type: 'academic_marks',
-          submissionType: academicSubmissionType,
-          markBreakdown: {
-            count90Above,
-            count80to90,
-            count70to80,
-            failCount
-          },
-          grades: { S: count90Above, APlus: count80to90, A: count70to80, Fail: failCount },
-          classPassPercentage: effectivePassPercentage,
-          totalStudents
-        }
+        type: 'academic_marks',
+        submissionType: academicSubmissionType,
+        markBreakdown: {
+          count90Above,
+          count80to90,
+          count70to80,
+          failCount
+        },
+        grades: { S: count90Above, APlus: count80to90, A: count70to80, Fail: failCount },
+        classPassPercentage: effectivePassPercentage,
+        totalStudents
+      }
       : isOnlineCourses
-      ? {
+        ? {
           type: 'online_course_dates',
           startDate,
           endDate
         }
-      : { type: currentItem?.type || 'count', count: countValue };
+        : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
     if (status === 'Submitted') {
@@ -788,11 +809,11 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 <div>
                   {isStudentRep ? (
                     <>
-                      <strong>⭐ Student Representative Access:</strong> All 12 evaluation categories (including <em>Academics</em> and <em>Documentation</em>) are fully unlocked for class submissions.
+                      <strong>⭐ Student Representative / DQC Access:</strong> All {availableCriteriaCatalog.length} evaluation categories (including <em>Academics</em> and <em>Documentation</em>) are fully unlocked for class submissions.
                     </>
                   ) : (
                     <>
-                      <strong>ℹ️ Student Access:</strong> All 12 evaluation categories are fully accessible for your claim submissions.
+                      <strong>ℹ️ Student Access:</strong> All {availableCriteriaCatalog.length} evaluation categories are fully accessible for your claim submissions.
                     </>
                   )}
                 </div>
@@ -1072,12 +1093,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           title="Open Google Drive to upload proof document"
                         >
                           <svg width="20" height="20" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
-                            <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
-                            <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/>
-                            <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 10.15z" fill="#ea4335"/>
-                            <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
-                            <path d="m59.8 53h27.5c0-1.55-.4-3.1-1.2-4.5l-25.4-44c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8z" fill="#ffba00"/>
-                            <path d="m73.55 76.8h-59.8c1.55.8 3.25 1.2 4.95 1.2h49.9c1.7 0 3.4-.4 4.95-1.2z" fill="#2684fc"/>
+                            <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da" />
+                            <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47" />
+                            <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 10.15z" fill="#ea4335" />
+                            <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" />
+                            <path d="m59.8 53h27.5c0-1.55-.4-3.1-1.2-4.5l-25.4-44c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8z" fill="#ffba00" />
+                            <path d="m73.55 76.8h-59.8c1.55.8 3.25 1.2 4.95 1.2h49.9c1.7 0 3.4-.4 4.95-1.2z" fill="#2684fc" />
                           </svg>
                           Upload Proof to Google Drive
                         </a>
@@ -1202,7 +1223,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       const isRepApproved = sub.status === 'Student Rep Verified' || ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status) || (sub.repVerifiedByName && !['Correction Requested', 'Correction', 'Rejected'].includes(sub.status));
                       const isRepCorrection = ['Correction Requested', 'Correction'].includes(sub.status) && (!!sub.repRemarks || (!!sub.repVerifiedByName && !sub.teacherVerifiedByName) || (!!sub.remarks && !sub.teacherRemarks && !sub.teacherVerifiedByName));
                       const isRepRejected = sub.status === 'Rejected' && (!!sub.repRemarks || (!!sub.repVerifiedByName && !sub.teacherVerifiedByName) || (!!sub.remarks && !sub.teacherRemarks && !sub.teacherVerifiedByName));
-                      
+
                       const isTeacherApproved = ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(sub.status);
                       const isTeacherCorrection = ['Correction Requested', 'Correction'].includes(sub.status) && !isRepCorrection;
                       const isTeacherRejected = sub.status === 'Rejected' && !isRepRejected;
@@ -1271,7 +1292,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                             </div>
                           </td>
                           <td style={{ maxWidth: '200px', fontSize: '0.84rem' }}>{sub.description}</td>
-                          
+
                           {/* Round 1: Student Representative Review */}
                           <td>
                             {isRepCorrection ? (
