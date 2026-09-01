@@ -209,6 +209,15 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
     ]
   },
   {
+    id: "cat-programs-organized",
+    category: "Programs Organized",
+    items: [
+      { id: 901, title: "Intercollegiate", marks: 10, type: "count" },
+      { id: 902, title: "Intra - Collegiate", marks: 5, type: "count" },
+      { id: 903, title: "Class Magazine", marks: 5, type: "count" }
+    ]
+  },
+  {
     id: "cat-leadership",
     category: "Leaderships",
     items: [

@@ -307,6 +307,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [startupGovtId, setStartupGovtId] = useState<string>('');
   const [researchSubItem, setResearchSubItem] = useState<string>('');
   const [prizesSubItem, setPrizesSubItem] = useState<string>('');
+  const [eventName, setEventName] = useState<string>('');
 
   React.useEffect(() => {
     if (isResearchCategory && availableResearchSubItems.length > 0) {
@@ -366,6 +367,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
           setResearchSubItem(sub.evidence.subItem || sub.evidence.researchSubItem || '');
           setPrizesSubItem(sub.evidence.subItem || sub.evidence.prizesSubItem || '');
         }
+        if (sub.evidence?.eventName) setEventName(sub.evidence.eventName);
+        else setEventName('');
         if (sub.startDate) setExamDate(sub.startDate);
         else if (sub.evidence?.examDate) setExamDate(sub.evidence.examDate);
         else if (sub.evidence?.startDate) setExamDate(sub.evidence.startDate);
@@ -758,6 +761,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
 
+    if (isProgramsOrganized && status === 'Submitted') {
+      if (!eventName.trim()) {
+        alert("Please enter the Name of Event before submitting.");
+        return;
+      }
+    }
+
     if (isCompetitiveExamsCategory || isUpscExamItem) {
       if (isUpscExamItem && upscExamSubmissionsCount >= 3 && !editingSubId) {
         alert("Maximum 3 submissions allowed for UPSC / PSC Exam Participation. You have reached the submission limit (3/3).");
@@ -783,6 +793,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       finalDescription = `${currentItem?.title || 'Research'} — ${researchSubItem}`;
     } else if (isPrizes && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Prizes'} — ${prizesSubItem}`;
+    } else if (isProgramsOrganized && !finalDescription) {
+      finalDescription = `${currentItem?.title || 'Program Organized'}: ${eventName.trim()}`;
     } else if ((isCompetitiveExamsCategory || isUpscExamItem) && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Competitive Exam'} — Exam Date: ${examDate}`;
     } else if (isInternshipsCategory && !finalDescription) {
@@ -856,10 +868,17 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                 subItem: prizesSubItem,
                 count: countValue || 1
               }
-              : (isCompetitiveExamsCategory || isUpscExamItem)
+              : isProgramsOrganized
                 ? {
-                  type: 'upsc_exam_date',
-                  examDate,
+                  type: 'program_organized',
+                  eventName: eventName.trim(),
+                  eventId: eventId.trim() || undefined,
+                  count: countValue || 1
+                }
+                : (isCompetitiveExamsCategory || isUpscExamItem)
+                  ? {
+                    type: 'upsc_exam_date',
+                    examDate,
                   startDate: examDate
                 }
               : { type: currentItem?.type || 'count', count: countValue };
@@ -1573,7 +1592,42 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         </select>
                       </div>
                     </div>
-                  ) : !isAcademicCategory && (
+                  ) : isProgramsOrganized ? (
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div
+                        style={{
+                          background: '#fff1f2',
+                          border: '1.5px solid #fecdd3',
+                          borderRadius: '12px',
+                          padding: '14px 18px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          color: '#9f1239',
+                          fontSize: '0.85rem',
+                          fontWeight: 700,
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+                        }}
+                      >
+                        <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+                        <span>There will NO marks awarded for any events conducted during the dates of SAHYA and CALIGO</span>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8' }}>
+                          Name of Event
+                        </label>
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="Enter the official Name of Event..."
+                          value={eventName}
+                          onChange={(e) => setEventName(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  ) : !isAcademicCategory && !isResearchCategory && !isPrizesCategory && (
                     <div className="form-group">
                       <label className="form-label">Count / Frequency</label>
                       <input
@@ -1805,6 +1859,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#be185d', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                   <span>Startup: {sub.evidence.startupName}</span>
                                   <span>Reg: {sub.evidence.startupDate} | ID: {sub.evidence.startupGovtId}</span>
+                                </div>
+                              ) : sub.evidence?.type === 'program_organized' || sub.evidence?.eventName ? (
+                                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1d4ed8', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  <span>Event: {sub.evidence.eventName}</span>
                                 </div>
                               ) : sub.evidence?.type === 'prizes_subitem' || sub.evidence?.type === 'research_subitem' || sub.evidence?.subItem ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#4f46e5', background: '#e0e7ff', border: '1px solid #c7d2fe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>

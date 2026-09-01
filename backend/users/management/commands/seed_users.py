@@ -293,6 +293,16 @@ class Command(BaseCommand):
                 ]
             },
             {
+                "code": "cat-programs-organized",
+                "category": "Programs Organized",
+                "access_level": "all_students",
+                "items": [
+                    {"title": "Intercollegiate", "type": "count", "marks": 10.0},
+                    {"title": "Intra - Collegiate", "type": "count", "marks": 5.0},
+                    {"title": "Class Magazine", "type": "count", "marks": 5.0},
+                ]
+            },
+            {
                 "code": "cat-leadership",
                 "category": "Leaderships",
                 "access_level": "all_students",
