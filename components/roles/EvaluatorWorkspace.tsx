@@ -80,10 +80,17 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
   };
 
   // --- REAL DATA BINDINGS ---
+  const assignedSubmissions = submissions.filter(s => isAssignedToEvaluator(s));
   const totalSubmissionsCount = submissions.length;
   const verifiedSubmissions = submissions.filter(s => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status) && isAssignedToEvaluator(s));
   const verifiedCount = verifiedSubmissions.length;
   const pendingCount = teacherApprovedSubmissions.length;
+  const rejectedCount = submissions.filter(s => (s.status === 'Rejected' || s.status === 'Disapproved') && isAssignedToEvaluator(s)).length;
+  const correctionCount = submissions.filter(s => (s.status === 'Correction' || s.status === 'Returned') && isAssignedToEvaluator(s)).length;
+
+  const totalEvaluatedDomainCount = assignedSubmissions.length > 0 ? assignedSubmissions.length : (verifiedCount + pendingCount + rejectedCount + correctionCount);
+
+  const getPct = (cnt: number) => totalEvaluatedDomainCount > 0 ? ((cnt / totalEvaluatedDomainCount) * 100).toFixed(1) : '0.0';
   
   const totalScore = verifiedSubmissions.reduce((sum, s) => {
     const item = criteriaCatalog.flatMap(c => c.items).find(it => String(it.id) === String(s.criteriaId));
@@ -261,9 +268,11 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
                 <span style={{ fontSize: '1.2rem' }}>📈</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#16a34a' }}>97.6%</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#16a34a' }}>
+                  {totalScore > 0 ? Math.min(100, Math.max(0, (totalScore / 11138.0) * 100)).toFixed(1) : '0.0'}%
+                </span>
                 <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: '97.6%', height: '100%', background: '#16a34a' }} />
+                  <div style={{ width: `${totalScore > 0 ? Math.min(100, Math.max(0, (totalScore / 11138.0) * 100)) : 0}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: '4px' }} />
                 </div>
               </div>
             </div>
@@ -391,44 +400,165 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
             </div>
           </div>
 
-          {/* PROGRESS SUMMARY BOX */}
-          <div className="card" style={{ padding: '24px', background: '#ffffff', border: '1.5px solid var(--glass-border)', borderRadius: '16px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '16px' }}>Evaluation Progress</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* CREATIVE & ELEGANT EVALUATION AUDIT PROGRESS PANEL */}
+          <div 
+            className="card" 
+            style={{ 
+              padding: '24px', 
+              background: '#ffffff', 
+              border: '1.5px solid var(--glass-border)', 
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px -2px rgba(0,0,0,0.03)'
+            }}
+          >
+            {/* Header Title + Stats Pill */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', fontWeight: 700, marginBottom: '4px' }}>
-                  <span>Verified</span>
-                  <span>{verifiedCount} | {((verifiedCount / (verifiedCount + pendingCount)) * 100).toFixed(1)}%</span>
-                </div>
-                <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: `${(verifiedCount / (verifiedCount + pendingCount)) * 100}%`, height: '100%', background: '#16a34a' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '1.1rem', boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}>
+                    📊
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.12rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                      Evaluation Progress & Analytics
+                    </h3>
+                    <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 500 }}>
+                      Real-time audit breakdown across assigned domain submissions
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', fontWeight: 700, marginBottom: '4px' }}>
-                  <span>Submitted / Draft</span>
-                  <span>{pendingCount} | {((pendingCount / (verifiedCount + pendingCount)) * 100).toFixed(1)}%</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#475569' }}>Audited:</span>
+                <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#2563eb' }}>{verifiedCount} / {totalEvaluatedDomainCount}</span>
+                <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', background: '#dbeafe', color: '#1d4ed8', borderRadius: '8px' }}>
+                  {getPct(verifiedCount)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Multi-Segment Gradient Bar */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', fontWeight: 700, color: '#64748b', marginBottom: '8px' }}>
+                <span>Overall Pipeline Visualizer</span>
+                <span>{totalEvaluatedDomainCount} Total Items</span>
+              </div>
+
+              <div style={{ height: '14px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden', display: 'flex', padding: '2px', boxSizing: 'border-box', border: '1px solid #e2e8f0' }}>
+                {totalEvaluatedDomainCount === 0 ? (
+                  <div style={{ width: '100%', height: '100%', background: '#cbd5e1', borderRadius: '6px' }} />
+                ) : (
+                  <>
+                    {verifiedCount > 0 && (
+                      <div 
+                        title={`Verified: ${verifiedCount}`} 
+                        style={{ width: `${getPct(verifiedCount)}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: '6px 0 0 6px', transition: 'width 0.4s ease' }} 
+                      />
+                    )}
+                    {pendingCount > 0 && (
+                      <div 
+                        title={`Pending: ${pendingCount}`} 
+                        style={{ width: `${getPct(pendingCount)}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #d97706)', transition: 'width 0.4s ease' }} 
+                      />
+                    )}
+                    {correctionCount > 0 && (
+                      <div 
+                        title={`Correction: ${correctionCount}`} 
+                        style={{ width: `${getPct(correctionCount)}%`, height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #7c3aed)', transition: 'width 0.4s ease' }} 
+                      />
+                    )}
+                    {rejectedCount > 0 && (
+                      <div 
+                        title={`Rejected: ${rejectedCount}`} 
+                        style={{ width: `${getPct(rejectedCount)}%`, height: '100%', background: 'linear-gradient(90deg, #f43f5e, #e11d48)', borderRadius: '0 6px 6px 0', transition: 'width 0.4s ease' }} 
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* 4 Creative Status Metric Cards (2x2 Grid) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+              {/* 1. Verified */}
+              <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '1px solid #bbf7d0', padding: '16px', borderRadius: '14px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '1rem' }}>🛡️</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#166534', letterSpacing: '0.02em' }}>Verified & Locked</span>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#15803d', background: '#ffffff', padding: '3px 8px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    {getPct(verifiedCount)}%
+                  </span>
                 </div>
-                <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: `${(pendingCount / (verifiedCount + pendingCount)) * 100}%`, height: '100%', background: '#eab308' }} />
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#15803d', lineHeight: 1 }}>{verifiedCount}</span>
+                  <span style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 600 }}>items</span>
+                </div>
+                <div style={{ height: '5px', background: '#bbf7d0', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${getPct(verifiedCount)}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: '4px' }} />
                 </div>
               </div>
 
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', fontWeight: 700, marginBottom: '4px', color: '#94a3b8' }}>
-                  <span>Rejected</span>
-                  <span>0 | 0.0%</span>
+              {/* 2. Submitted / Pending */}
+              <div style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)', border: '1px solid #fde68a', padding: '16px', borderRadius: '14px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '1rem' }}>⌛</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#92400e', letterSpacing: '0.02em' }}>Pending Audit</span>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#b45309', background: '#ffffff', padding: '3px 8px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    {getPct(pendingCount)}%
+                  </span>
                 </div>
-                <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px' }} />
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#b45309', lineHeight: 1 }}>{pendingCount}</span>
+                  <span style={{ fontSize: '0.74rem', color: '#92400e', fontWeight: 600 }}>awaiting review</span>
+                </div>
+                <div style={{ height: '5px', background: '#fde68a', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${getPct(pendingCount)}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #d97706)', borderRadius: '4px' }} />
+                </div>
               </div>
 
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', fontWeight: 700, marginBottom: '4px', color: '#94a3b8' }}>
-                  <span>Correction</span>
-                  <span>0 | 0.0%</span>
+              {/* 3. Needs Correction */}
+              <div style={{ background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', border: '1px solid #ddd6fe', padding: '16px', borderRadius: '14px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '1rem' }}>🛠️</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#5b21b6', letterSpacing: '0.02em' }}>Correction Req.</span>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#6d28d9', background: '#ffffff', padding: '3px 8px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    {getPct(correctionCount)}%
+                  </span>
                 </div>
-                <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px' }} />
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#6d28d9', lineHeight: 1 }}>{correctionCount}</span>
+                  <span style={{ fontSize: '0.74rem', color: '#5b21b6', fontWeight: 600 }}>in revision</span>
+                </div>
+                <div style={{ height: '5px', background: '#ddd6fe', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${getPct(correctionCount)}%`, height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #7c3aed)', borderRadius: '4px' }} />
+                </div>
+              </div>
+
+              {/* 4. Rejected */}
+              <div style={{ background: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)', border: '1px solid #fecdd3', padding: '16px', borderRadius: '14px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '1rem' }}>⛔</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#9f1239', letterSpacing: '0.02em' }}>Rejected</span>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#be123c', background: '#ffffff', padding: '3px 8px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    {getPct(rejectedCount)}%
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#be123c', lineHeight: 1 }}>{rejectedCount}</span>
+                  <span style={{ fontSize: '0.74rem', color: '#9f1239', fontWeight: 600 }}>disapproved</span>
+                </div>
+                <div style={{ height: '5px', background: '#fecdd3', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${getPct(rejectedCount)}%`, height: '100%', background: 'linear-gradient(90deg, #f43f5e, #e11d48)', borderRadius: '4px' }} />
+                </div>
               </div>
             </div>
           </div>
