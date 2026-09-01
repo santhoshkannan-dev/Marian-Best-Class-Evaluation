@@ -36,6 +36,17 @@ def get_online_courses_item_ids():
     return ids
 
 
+def get_upsc_psc_item_ids():
+    items = CriteriaItem.objects.filter(
+        Q(title__icontains='UPSC') |
+        Q(title__icontains='PSC') |
+        Q(title__icontains='Participation in Relevant Exam')
+    )
+    ids = set(items.values_list('id', flat=True))
+    ids.add(404)
+    return ids
+
+
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -887,6 +898,10 @@ class SubmissionListView(APIView):
                 "marks": s.marks,
                 "proof": s.proof,
                 "eventId": s.event_id,
+                "startDate": s.start_date,
+                "start_date": s.start_date,
+                "endDate": s.end_date,
+                "end_date": s.end_date,
                 "evaluatorVerified": s.evaluator_verified,
                 "evidence": s.evidence,
                 "verifiedByName": s.verified_by_name,
@@ -917,11 +932,13 @@ class SubmissionListView(APIView):
         proof = request.data.get('proof', '')
         event_id = request.data.get('eventId', '')
         evidence = request.data.get('evidence')
+        start_date = request.data.get('start_date') or request.data.get('startDate')
+        end_date = request.data.get('end_date') or request.data.get('endDate')
         
         if not criteria_id:
             return Response({"error": "criteriaId is required"}, status=status.HTTP_400_BAD_REQUEST)
             
-        # Check online courses max 3 limit
+        # Check submission limits for Online Courses and UPSC/PSC Exams
         try:
             criteria_id_int = int(criteria_id)
             online_item_ids = get_online_courses_item_ids()
@@ -933,6 +950,18 @@ class SubmissionListView(APIView):
                 if existing_count >= 3:
                     return Response(
                         {"error": "Maximum 3 online courses can be submitted per student. Limit of 3 reached."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            upsc_item_ids = get_upsc_psc_item_ids()
+            if criteria_id_int in upsc_item_ids:
+                existing_count = Submission.objects.filter(
+                    user=user,
+                    criteria_id__in=upsc_item_ids
+                ).exclude(status='Rejected').count()
+                if existing_count >= 3:
+                    return Response(
+                        {"error": "Maximum 3 submissions allowed for UPSC/PSC Exam Participation. Limit of 3 reached."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
         except (ValueError, TypeError):
@@ -948,7 +977,9 @@ class SubmissionListView(APIView):
             marks=marks,
             proof=proof,
             event_id=event_id,
-            evidence=evidence
+            evidence=evidence,
+            start_date=start_date,
+            end_date=end_date
         )
         
         # Sync relational models (AcademicGradeBreakdown & WorkflowAuditTrail)
@@ -1000,6 +1031,10 @@ class SubmissionListView(APIView):
             "marks": submission.marks,
             "proof": submission.proof,
             "eventId": submission.event_id,
+            "startDate": submission.start_date,
+            "start_date": submission.start_date,
+            "endDate": submission.end_date,
+            "end_date": submission.end_date,
             "evaluatorVerified": submission.evaluator_verified,
             "evidence": submission.evidence,
             "verifiedByName": submission.verified_by_name,
@@ -1028,7 +1063,7 @@ class SubmissionDetailView(APIView):
         except Submission.DoesNotExist:
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Check online courses limit on update if changing criteriaId or status
+        # Check online courses & UPSC/PSC limits on update if changing criteriaId or status
         target_criteria_id = int(request.data.get('criteriaId', submission.criteria_id))
         target_status = request.data.get('status', submission.status)
         online_item_ids = get_online_courses_item_ids()
@@ -1043,7 +1078,18 @@ class SubmissionDetailView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            
+        upsc_item_ids = get_upsc_psc_item_ids()
+        if target_criteria_id in upsc_item_ids and target_status != 'Rejected':
+            existing_count = Submission.objects.filter(
+                user=submission.user,
+                criteria_id__in=upsc_item_ids
+            ).exclude(id=submission.id).exclude(status='Rejected').count()
+            if existing_count >= 3:
+                return Response(
+                    {"error": "Maximum 3 submissions allowed for UPSC/PSC Exam Participation. Limit of 3 reached."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         if 'criteriaId' in request.data:
             submission.criteria_id = int(request.data.get('criteriaId'))
         if 'academicYear' in request.data:
@@ -1066,6 +1112,10 @@ class SubmissionDetailView(APIView):
             submission.event_id = request.data.get('eventId')
         if 'evidence' in request.data:
             submission.evidence = request.data.get('evidence')
+        if 'start_date' in request.data or 'startDate' in request.data:
+            submission.start_date = request.data.get('start_date') or request.data.get('startDate')
+        if 'end_date' in request.data or 'endDate' in request.data:
+            submission.end_date = request.data.get('end_date') or request.data.get('endDate')
         if 'repVerifiedByName' in request.data:
             submission.rep_verified_by_name = request.data.get('repVerifiedByName')
         if 'repRemarks' in request.data:
@@ -1092,6 +1142,10 @@ class SubmissionDetailView(APIView):
             "marks": submission.marks,
             "proof": submission.proof,
             "eventId": submission.event_id,
+            "startDate": submission.start_date,
+            "start_date": submission.start_date,
+            "endDate": submission.end_date,
+            "end_date": submission.end_date,
             "evaluatorVerified": submission.evaluator_verified,
             "evidence": submission.evidence,
             "verifiedByName": submission.verified_by_name,

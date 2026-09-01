@@ -247,6 +247,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
   const [countValue, setCountValue] = useState<number>(1);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [examDate, setExamDate] = useState<string>('');
   const [proofFile, setProofFile] = useState<string>('');
   const [eventId, setEventId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -304,6 +305,10 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         if (sub.evidence?.subItem || sub.evidence?.researchSubItem) {
           setResearchSubItem(sub.evidence.subItem || sub.evidence.researchSubItem);
         }
+        if (sub.startDate) setExamDate(sub.startDate);
+        else if (sub.evidence?.examDate) setExamDate(sub.evidence.examDate);
+        else if (sub.evidence?.startDate) setExamDate(sub.evidence.startDate);
+        else setExamDate('');
 
         if (sub.eventId) {
           setEventId(sub.eventId);
@@ -433,6 +438,31 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       if (s.status === 'Rejected') return false;
       if (editingSubId && s.id === editingSubId) return false;
       return onlineItemIds.has(String(s.criteriaId));
+    }).length;
+  }, [criteriaCatalog, mySubmissions, editingSubId]);
+
+  const isUpscExamItem = React.useMemo(() => {
+    if (!currentItem) return false;
+    const title = String(currentItem.title || '').toLowerCase();
+    const id = String(currentItem.id || '');
+    return id === '404' || title.includes('upsc') || title.includes('psc') || (title.includes('participation') && title.includes('exam'));
+  }, [currentItem]);
+
+  const upscExamSubmissionsCount = React.useMemo(() => {
+    const upscItemIds = new Set(['404']);
+    criteriaCatalog.forEach((cat) => {
+      cat.items.forEach((it) => {
+        const t = (it.title || '').toLowerCase();
+        if (t.includes('upsc') || t.includes('psc') || (t.includes('participation') && t.includes('exam'))) {
+          upscItemIds.add(String(it.id));
+        }
+      });
+    });
+
+    return mySubmissions.filter((s) => {
+      if (s.status === 'Rejected') return false;
+      if (editingSubId && s.id === editingSubId) return false;
+      return upscItemIds.has(String(s.criteriaId));
     }).length;
   }, [criteriaCatalog, mySubmissions, editingSubId]);
 
@@ -648,6 +678,17 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
 
+    if (isUpscExamItem) {
+      if (upscExamSubmissionsCount >= 3 && !editingSubId) {
+        alert("Maximum 3 submissions allowed for UPSC / PSC Exam Participation. You have reached the submission limit (3/3).");
+        return;
+      }
+      if (!examDate) {
+        alert("Please select the Exam Date for the competitive exam participation.");
+        return;
+      }
+    }
+
     const totalStudents = count90Above + count80to90 + count70to80 + failCount;
     const passedStudents = totalStudents - failCount;
     const autoPassPercentage = totalStudents > 0 ? parseFloat(((passedStudents / totalStudents) * 100).toFixed(2)) : 0;
@@ -717,6 +758,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
               subItem: researchSubItem,
               count: countValue || 1
             }
+            : isUpscExamItem
+              ? {
+                type: 'upsc_exam_date',
+                examDate,
+                startDate: examDate
+              }
+            }
             : { type: currentItem?.type || 'count', count: countValue };
 
     // Enforce Admin Settings: Submission Status & Submission Time Window
@@ -745,7 +793,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         description: finalDescription,
         proof: computedProof,
         eventId: computedEventId,
-        startDate: isOnlineCourses ? startDate : undefined,
+        startDate: isOnlineCourses ? startDate : isUpscExamItem ? examDate : undefined,
         endDate: isOnlineCourses ? endDate : undefined,
         status: initialStatus,
         evidence: computedEvidence
@@ -760,7 +808,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         remarks: status === 'Submitted' ? 'Awaiting Student Rep verification' : 'Saved as draft',
         proof: computedProof,
         eventId: computedEventId,
-        startDate: isOnlineCourses ? startDate : undefined,
+        startDate: isOnlineCourses ? startDate : isUpscExamItem ? examDate : undefined,
         endDate: isOnlineCourses ? endDate : undefined,
         evaluatorVerified: false,
         evidence: computedEvidence
@@ -772,6 +820,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     setEventId('');
     setStartDate('');
     setEndDate('');
+    setExamDate('');
     setCountValue(1);
     setCount90Above(0);
     setCount80to90(0);
@@ -1338,6 +1387,59 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         ))}
                       </select>
                     </div>
+                  ) : isUpscExamItem ? (
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div
+                        style={{
+                          background: upscExamSubmissionsCount >= 3 && !editingSubId ? '#fff1f2' : 'rgba(99, 102, 241, 0.06)',
+                          border: `1.5px solid ${upscExamSubmissionsCount >= 3 && !editingSubId ? '#fecdd3' : 'rgba(99, 102, 241, 0.25)'}`,
+                          borderRadius: '14px',
+                          padding: '14px 18px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '0.92rem', fontWeight: 800, color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#9f1239' : '#3730a3' }}>
+                            UPSC / PSC Exam Participation Limit: {upscExamSubmissionsCount} / 3 Submitted
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#4338ca', marginTop: '2px' }}>
+                            {upscExamSubmissionsCount >= 3 && !editingSubId
+                              ? 'Maximum limit reached (3 exam submissions). You cannot submit additional UPSC / PSC exam participations.'
+                              : 'Each student can submit a maximum of 3 UPSC / PSC exam participations per evaluation cycle.'}
+                          </div>
+                        </div>
+                        <span
+                          className="badge"
+                          style={{
+                            background: upscExamSubmissionsCount >= 3 && !editingSubId ? '#ffe4e6' : '#e0e7ff',
+                            color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#3730a3',
+                            fontWeight: 800,
+                            fontSize: '0.82rem',
+                            whiteSpace: 'nowrap',
+                            border: `1px solid ${upscExamSubmissionsCount >= 3 && !editingSubId ? '#fca5a5' : '#c7d2fe'}`
+                          }}
+                        >
+                          {upscExamSubmissionsCount} / 3 Max
+                        </span>
+                      </div>
+
+                      <div className="form-group" style={{ padding: '16px', background: 'rgba(59, 130, 246, 0.04)', border: '1.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px' }}>
+                        <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          📅 Exam Date
+                        </label>
+                        <input
+                          type="date"
+                          className="input"
+                          value={examDate}
+                          onChange={(e) => setExamDate(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    </div>
                   ) : !isAcademicCategory && (
                     <div className="form-group">
                       <label className="form-label">Count / Frequency</label>
@@ -1437,22 +1539,22 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => handleFormSubmit('Draft')}
-                    disabled={Boolean(isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId)}
+                    disabled={Boolean((isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId) || (isUpscExamItem && upscExamSubmissionsCount >= 3 && !editingSubId))}
                   >
                     Save Draft
                   </button>
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={Boolean(isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId)}
+                    disabled={Boolean((isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId) || (isUpscExamItem && upscExamSubmissionsCount >= 3 && !editingSubId))}
                     style={{
-                      opacity: isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId ? 0.5 : 1,
-                      cursor: isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId ? 'not-allowed' : 'pointer'
+                      opacity: ((isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3) || (isUpscExamItem && upscExamSubmissionsCount >= 3)) && !editingSubId ? 0.5 : 1,
+                      cursor: ((isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3) || (isUpscExamItem && upscExamSubmissionsCount >= 3)) && !editingSubId ? 'not-allowed' : 'pointer'
                     }}
                   >
                     {editingSubId
                       ? 'Update Submission'
-                      : isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3
+                      : (isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3) || (isUpscExamItem && upscExamSubmissionsCount >= 3)
                         ? 'Limit Reached (3/3 Max)'
                         : 'Submit Activity'}
                   </button>
@@ -1571,9 +1673,9 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                   <span>🚀 Startup: {sub.evidence.startupName}</span>
                                   <span>📅 Reg: {sub.evidence.startupDate} | 🏛️ ID: {sub.evidence.startupGovtId}</span>
                                 </div>
-                              ) : (sub.startDate || sub.evidence?.startDate) ? (
+                              ) : (sub.startDate || sub.evidence?.startDate || sub.evidence?.examDate) ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
-                                  📅 {sub.startDate || sub.evidence?.startDate} to {sub.endDate || sub.evidence?.endDate}
+                                  📅 {sub.startDate || sub.evidence?.startDate || sub.evidence?.examDate}{(sub.endDate || sub.evidence?.endDate) ? ` to ${sub.endDate || sub.evidence?.endDate}` : ''}
                                 </span>
                               ) : (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{sub.evidence?.count ? `Count: ${sub.evidence.count}` : ''}</span>
