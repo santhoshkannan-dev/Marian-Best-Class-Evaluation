@@ -933,7 +933,11 @@ class SubmissionListView(APIView):
         event_id = request.data.get('eventId', '')
         evidence = request.data.get('evidence')
         start_date = request.data.get('start_date') or request.data.get('startDate')
+        if not start_date and isinstance(evidence, dict):
+            start_date = evidence.get('startDate') or evidence.get('examDate')
         end_date = request.data.get('end_date') or request.data.get('endDate')
+        if not end_date and isinstance(evidence, dict):
+            end_date = evidence.get('endDate')
         
         if not criteria_id:
             return Response({"error": "criteriaId is required"}, status=status.HTTP_400_BAD_REQUEST)

@@ -150,6 +150,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return catName.includes('research') || catCode === 'cat-research' || catId === 'cat-research' || catId === '6';
   }, [currentCategory]);
 
+  const isCompetitiveExamsCategory = React.useMemo(() => {
+    if (!currentCategory) return false;
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    return catName.includes('competitive exam') || catCode === 'cat-competitive-exams' || catId === 'cat-competitive-exams' || catId === '3';
+  }, [currentCategory]);
+
   const availableResearchSubItems = React.useMemo(() => {
     if (!isResearchCategory || !currentItem) return [];
     const itemTitle = String(currentItem.title || '').toLowerCase().trim();
@@ -678,13 +686,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       }
     }
 
-    if (isUpscExamItem) {
-      if (upscExamSubmissionsCount >= 3 && !editingSubId) {
+    if (isCompetitiveExamsCategory || isUpscExamItem) {
+      if (isUpscExamItem && upscExamSubmissionsCount >= 3 && !editingSubId) {
         alert("Maximum 3 submissions allowed for UPSC / PSC Exam Participation. You have reached the submission limit (3/3).");
         return;
       }
       if (!examDate) {
-        alert("Please select the Exam Date for the competitive exam participation.");
+        alert("Please select the Exam Date for the competitive exam.");
         return;
       }
     }
@@ -701,6 +709,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       finalDescription = `Startup: ${startupName.trim()} | Reg. Date: ${startupDate} | Govt ID: ${startupGovtId.trim()}`;
     } else if (isResearch && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Research'} — ${researchSubItem}`;
+    } else if ((isCompetitiveExamsCategory || isUpscExamItem) && !finalDescription) {
+      finalDescription = `${currentItem?.title || 'Competitive Exam'} — Exam Date: ${examDate}`;
     }
 
     if (!finalDescription) {
@@ -758,7 +768,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
               subItem: researchSubItem,
               count: countValue || 1
             }
-            : isUpscExamItem
+            : (isCompetitiveExamsCategory || isUpscExamItem)
               ? {
                 type: 'upsc_exam_date',
                 examDate,
@@ -792,7 +802,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         description: finalDescription,
         proof: computedProof,
         eventId: computedEventId,
-        startDate: isOnlineCourses ? startDate : isUpscExamItem ? examDate : undefined,
+        startDate: isOnlineCourses ? startDate : (isCompetitiveExamsCategory || isUpscExamItem) ? examDate : undefined,
         endDate: isOnlineCourses ? endDate : undefined,
         status: initialStatus,
         evidence: computedEvidence
@@ -807,7 +817,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         remarks: status === 'Submitted' ? 'Awaiting Student Rep verification' : 'Saved as draft',
         proof: computedProof,
         eventId: computedEventId,
-        startDate: isOnlineCourses ? startDate : isUpscExamItem ? examDate : undefined,
+        startDate: isOnlineCourses ? startDate : (isCompetitiveExamsCategory || isUpscExamItem) ? examDate : undefined,
         endDate: isOnlineCourses ? endDate : undefined,
         evaluatorVerified: false,
         evidence: computedEvidence
@@ -1386,44 +1396,46 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         ))}
                       </select>
                     </div>
-                  ) : isUpscExamItem ? (
+                  ) : (isCompetitiveExamsCategory || isUpscExamItem) ? (
                     <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div
-                        style={{
-                          background: upscExamSubmissionsCount >= 3 && !editingSubId ? '#fff1f2' : 'rgba(99, 102, 241, 0.06)',
-                          border: `1.5px solid ${upscExamSubmissionsCount >= 3 && !editingSubId ? '#fecdd3' : 'rgba(99, 102, 241, 0.25)'}`,
-                          borderRadius: '14px',
-                          padding: '14px 18px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '12px'
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: '0.92rem', fontWeight: 800, color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#9f1239' : '#3730a3' }}>
-                            UPSC / PSC Exam Participation Limit: {upscExamSubmissionsCount} / 3 Submitted
-                          </div>
-                          <div style={{ fontSize: '0.78rem', color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#4338ca', marginTop: '2px' }}>
-                            {upscExamSubmissionsCount >= 3 && !editingSubId
-                              ? 'Maximum limit reached (3 exam submissions). You cannot submit additional UPSC / PSC exam participations.'
-                              : 'Each student can submit a maximum of 3 UPSC / PSC exam participations per evaluation cycle.'}
-                          </div>
-                        </div>
-                        <span
-                          className="badge"
+                      {isUpscExamItem && (
+                        <div
                           style={{
-                            background: upscExamSubmissionsCount >= 3 && !editingSubId ? '#ffe4e6' : '#e0e7ff',
-                            color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#3730a3',
-                            fontWeight: 800,
-                            fontSize: '0.82rem',
-                            whiteSpace: 'nowrap',
-                            border: `1px solid ${upscExamSubmissionsCount >= 3 && !editingSubId ? '#fca5a5' : '#c7d2fe'}`
+                            background: upscExamSubmissionsCount >= 3 && !editingSubId ? '#fff1f2' : 'rgba(99, 102, 241, 0.06)',
+                            border: `1.5px solid ${upscExamSubmissionsCount >= 3 && !editingSubId ? '#fecdd3' : 'rgba(99, 102, 241, 0.25)'}`,
+                            borderRadius: '14px',
+                            padding: '14px 18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px'
                           }}
                         >
-                          {upscExamSubmissionsCount} / 3 Max
-                        </span>
-                      </div>
+                          <div>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#9f1239' : '#3730a3' }}>
+                              UPSC / PSC Exam Participation Limit: {upscExamSubmissionsCount} / 3 Submitted
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#4338ca', marginTop: '2px' }}>
+                              {upscExamSubmissionsCount >= 3 && !editingSubId
+                                ? 'Maximum limit reached (3 exam submissions). You cannot submit additional UPSC / PSC exam participations.'
+                                : 'Each student can submit a maximum of 3 UPSC / PSC exam participations per evaluation cycle.'}
+                            </div>
+                          </div>
+                          <span
+                            className="badge"
+                            style={{
+                              background: upscExamSubmissionsCount >= 3 && !editingSubId ? '#ffe4e6' : '#e0e7ff',
+                              color: upscExamSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#3730a3',
+                              fontWeight: 800,
+                              fontSize: '0.82rem',
+                              whiteSpace: 'nowrap',
+                              border: `1px solid ${upscExamSubmissionsCount >= 3 && !editingSubId ? '#fca5a5' : '#c7d2fe'}`
+                            }}
+                          >
+                            {upscExamSubmissionsCount} / 3 Max
+                          </span>
+                        </div>
+                      )}
 
                       <div className="form-group" style={{ padding: '16px', background: 'rgba(59, 130, 246, 0.04)', border: '1.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px' }}>
                         <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>

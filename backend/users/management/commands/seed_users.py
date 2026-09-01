@@ -237,10 +237,10 @@ class Command(BaseCommand):
                 "category": "Competitive Exams",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "JRF Passed", "type": "fixed", "marks": 20.0},
-                    {"title": "NET Passed", "type": "fixed", "marks": 10.0},
-                    {"title": "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", "type": "fixed", "marks": 5.0},
-                    {"title": "Participation in Relevant Exam (UPSC / PSC Exams)", "type": "count", "marks": 3.0},
+                    {"title": "JRF Passed", "type": "date", "marks": 20.0},
+                    {"title": "NET Passed", "type": "date", "marks": 10.0},
+                    {"title": "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", "type": "date", "marks": 5.0},
+                    {"title": "Participation in Relevant Exam (UPSC / PSC Exams)", "type": "date", "marks": 3.0},
                 ]
             },
             {

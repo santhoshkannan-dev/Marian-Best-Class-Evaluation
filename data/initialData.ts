@@ -9,7 +9,7 @@ export interface CriteriaItem {
   title: string;
   category?: string;
   marks: number;
-  type: 'count' | 'range' | 'fixed' | 'negative' | 'boolean';
+  type: 'count' | 'range' | 'fixed' | 'negative' | 'boolean' | 'date';
   details?: string;
   rules?: CriteriaRule[];
 }
@@ -158,10 +158,10 @@ export const defaultCriteriaCatalog: CriteriaCategory[] = [
     id: "cat-competitive-exams",
     category: "Competitive Exams",
     items: [
-      { id: 401, title: "JRF Passed", marks: 20, type: "fixed" },
-      { id: 402, title: "NET Passed", marks: 10, type: "fixed" },
-      { id: 403, title: "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", marks: 5, type: "fixed" },
-      { id: 404, title: "Participation in Relevant Exam (UPSC / PSC Exams)", marks: 3, type: "count" }
+      { id: 401, title: "JRF Passed", marks: 20, type: "date" },
+      { id: 402, title: "NET Passed", marks: 10, type: "date" },
+      { id: 403, title: "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", marks: 5, type: "date" },
+      { id: 404, title: "Participation in Relevant Exam (UPSC / PSC Exams)", marks: 3, type: "date" }
     ]
   },
   {
