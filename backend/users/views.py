@@ -22,7 +22,18 @@ except ImportError:
     id_token = None
     google_requests = None
 
-from .models import User, Class, Department, Submission, AcademicYear, SystemSetting, UserGroupModel
+from django.db.models import Q
+from .models import User, Class, Department, Submission, AcademicYear, SystemSetting, UserGroupModel, CriteriaCategory, CriteriaItem
+
+
+def get_online_courses_item_ids():
+    items = CriteriaItem.objects.filter(
+        Q(category__code__iexact='cat-online-courses') |
+        Q(category__category__icontains='online course')
+    )
+    ids = set(items.values_list('id', flat=True))
+    ids.update([201, 202, 203])
+    return ids
 
 
 def get_tokens_for_user(user):
@@ -910,6 +921,23 @@ class SubmissionListView(APIView):
         if not criteria_id:
             return Response({"error": "criteriaId is required"}, status=status.HTTP_400_BAD_REQUEST)
             
+        # Check online courses max 3 limit
+        try:
+            criteria_id_int = int(criteria_id)
+            online_item_ids = get_online_courses_item_ids()
+            if criteria_id_int in online_item_ids:
+                existing_count = Submission.objects.filter(
+                    user=user,
+                    criteria_id__in=online_item_ids
+                ).exclude(status='Rejected').count()
+                if existing_count >= 3:
+                    return Response(
+                        {"error": "Maximum 3 online courses can be submitted per student. Limit of 3 reached."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+        except (ValueError, TypeError):
+            pass
+
         submission = Submission.objects.create(
             user=user,
             criteria_id=int(criteria_id),
@@ -999,6 +1027,22 @@ class SubmissionDetailView(APIView):
             submission = Submission.objects.get(pk=pk)
         except Submission.DoesNotExist:
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check online courses limit on update if changing criteriaId or status
+        target_criteria_id = int(request.data.get('criteriaId', submission.criteria_id))
+        target_status = request.data.get('status', submission.status)
+        online_item_ids = get_online_courses_item_ids()
+        if target_criteria_id in online_item_ids and target_status != 'Rejected':
+            existing_count = Submission.objects.filter(
+                user=submission.user,
+                criteria_id__in=online_item_ids
+            ).exclude(id=submission.id).exclude(status='Rejected').count()
+            if existing_count >= 3:
+                return Response(
+                    {"error": "Maximum 3 online courses can be submitted per student. Limit of 3 reached."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             
         if 'criteriaId' in request.data:
             submission.criteria_id = int(request.data.get('criteriaId'))

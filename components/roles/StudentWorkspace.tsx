@@ -356,6 +356,25 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return s.studentId === currentStudentId;
   });
 
+  const onlineCourseSubmissionsCount = React.useMemo(() => {
+    const onlineCategory = criteriaCatalog.find((c) => {
+      const name = (c.category || '').toLowerCase().trim();
+      const code = (c.code || '').toLowerCase().trim();
+      const id = String(c.id || '').toLowerCase().trim();
+      return name.includes('online course') || code === 'cat-online-courses' || id === 'cat-online-courses' || id === '2';
+    });
+
+    const onlineItemIds = new Set(
+      onlineCategory?.items.map((it) => String(it.id)) || ['201', '202', '203']
+    );
+
+    return mySubmissions.filter((s) => {
+      if (s.status === 'Rejected') return false;
+      if (editingSubId && s.id === editingSubId) return false;
+      return onlineItemIds.has(String(s.criteriaId));
+    }).length;
+  }, [criteriaCatalog, mySubmissions, editingSubId]);
+
   const totalChecklistPages = Math.ceil(availableCriteriaCatalog.length / checklistPageSize) || 1;
   const paginatedChecklist = availableCriteriaCatalog.slice((checklistPage - 1) * checklistPageSize, checklistPage * checklistPageSize);
 
@@ -538,9 +557,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return;
     }
 
-    if (isOnlineCourses && (!startDate || !endDate)) {
-      alert("Please select both a Starting Date and an End Date for the online course.");
-      return;
+    if (isOnlineCourses) {
+      if (onlineCourseSubmissionsCount >= 3 && !editingSubId) {
+        alert("A maximum of 3 online courses can be submitted per student. You have already reached the submission limit (3/3).");
+        return;
+      }
+      if (!startDate || !endDate) {
+        alert("Please select both a Starting Date and an End Date for the online course.");
+        return;
+      }
     }
 
     if (isStartups && status === 'Submitted') {
@@ -1099,30 +1124,69 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   {isOnlineCoursesCategory ? (
-                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', padding: '16px', background: 'rgba(59, 130, 246, 0.04)', border: '1.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px' }}>
-                      <div className="form-group">
-                        <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          📅 Starting Date
-                        </label>
-                        <input
-                          type="date"
-                          className="input"
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                          required
-                        />
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div
+                        style={{
+                          background: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fff1f2' : 'rgba(99, 102, 241, 0.06)',
+                          border: `1.5px solid ${onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fecdd3' : 'rgba(99, 102, 241, 0.25)'}`,
+                          borderRadius: '14px',
+                          padding: '14px 18px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '0.92rem', fontWeight: 800, color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#9f1239' : '#3730a3' }}>
+                            Online Course Limit: {onlineCourseSubmissionsCount} / 3 Submitted
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#4338ca', marginTop: '2px' }}>
+                            {onlineCourseSubmissionsCount >= 3 && !editingSubId
+                              ? 'Maximum limit reached (3 courses). You cannot submit additional online courses.'
+                              : 'Each student can submit a maximum of 3 online courses per evaluation cycle.'}
+                          </div>
+                        </div>
+                        <span
+                          className="badge"
+                          style={{
+                            background: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#ffe4e6' : '#e0e7ff',
+                            color: onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#e11d48' : '#3730a3',
+                            fontWeight: 800,
+                            fontSize: '0.82rem',
+                            whiteSpace: 'nowrap',
+                            border: `1px solid ${onlineCourseSubmissionsCount >= 3 && !editingSubId ? '#fca5a5' : '#c7d2fe'}`
+                          }}
+                        >
+                          {onlineCourseSubmissionsCount} / 3 Max
+                        </span>
                       </div>
-                      <div className="form-group">
-                        <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          📅 End Date
-                        </label>
-                        <input
-                          type="date"
-                          className="input"
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                          required
-                        />
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', padding: '16px', background: 'rgba(59, 130, 246, 0.04)', border: '1.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px' }}>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            📅 Starting Date
+                          </label>
+                          <input
+                            type="date"
+                            className="input"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            📅 End Date
+                          </label>
+                          <input
+                            type="date"
+                            className="input"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            required
+                          />
+                        </div>
                       </div>
                     </div>
                   ) : isStartupsCategory ? (
@@ -1274,11 +1338,24 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => handleFormSubmit('Draft')}
+                    disabled={Boolean(isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId)}
                   >
                     Save Draft
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingSubId ? 'Update Submission' : 'Submit Activity'}
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={Boolean(isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId)}
+                    style={{
+                      opacity: isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId ? 0.5 : 1,
+                      cursor: isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3 && !editingSubId ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {editingSubId
+                      ? 'Update Submission'
+                      : isOnlineCoursesCategory && onlineCourseSubmissionsCount >= 3
+                        ? 'Limit Reached (3/3 Max)'
+                        : 'Submit Activity'}
                   </button>
                 </div>
               </form>

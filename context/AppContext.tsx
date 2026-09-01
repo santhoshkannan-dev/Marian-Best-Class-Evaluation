@@ -856,6 +856,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setSubmissions((prev) =>
           prev.map((s) => (s.id === tempId ? normalizeSubmission(createdSub) : s))
         );
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || 'Failed to create submission.');
+        setSubmissions((prev) => prev.filter((s) => s.id !== tempId));
       }
     } catch (err: any) {
       console.error('Server connection failed during submission creation:', err);
@@ -902,8 +906,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (res.ok) {
           const updatedSub = await res.json();
           setSubmissions((prev) =>
-            prev.map((s) => (s.id === id ? updatedSub : s))
+            prev.map((s) => (s.id === id ? normalizeSubmission(updatedSub) : s))
           );
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          alert(errData.error || 'Failed to update submission.');
+          fetchSubmissions();
         }
       }
     } catch (err: any) {
