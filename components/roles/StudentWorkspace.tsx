@@ -1378,29 +1378,57 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       </div>
                     </div>
                   ) : isResearchCategory ? (
-                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr', gap: '16px', padding: '20px', background: 'rgba(79, 70, 229, 0.04)', border: '1.5px solid rgba(79, 70, 229, 0.2)', borderRadius: '16px' }}>
-                      <div style={{ marginBottom: '2px' }}>
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#4f46e5', margin: 0, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                          Research Sub Item Details
-                        </h4>
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '14px', padding: '22px', background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.03) 0%, rgba(99, 102, 241, 0.06) 100%)', border: '1.5px solid rgba(79, 70, 229, 0.2)', borderRadius: '16px', boxShadow: '0 4px 20px rgba(79, 70, 229, 0.04)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#4338ca', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            Research Sub Item / Classification
+                          </h4>
+                          <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '2px 0 0 0', fontWeight: 500 }}>
+                            Select the specific classification for your {currentItem?.title || 'research'} activity:
+                          </p>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4338ca', background: '#e0e7ff', border: '1px solid #c7d2fe', padding: '3px 10px', borderRadius: '12px' }}>
+                          Select One Option
+                        </span>
                       </div>
 
-                      <div className="form-group">
-                        <label className="form-label" style={{ fontWeight: 800, color: '#4f46e5' }}>
-                          Sub Item
-                        </label>
-                        <select
-                          className="select"
-                          value={researchSubItem}
-                          onChange={(e) => setResearchSubItem(e.target.value)}
-                          required
-                        >
-                          {availableResearchSubItems.map((subOpt) => (
-                            <option key={subOpt} value={subOpt}>
-                              {subOpt}
-                            </option>
-                          ))}
-                        </select>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginTop: '4px' }}>
+                        {availableResearchSubItems.map((subOpt) => {
+                          const isSelected = researchSubItem === subOpt;
+                          return (
+                            <button
+                              key={subOpt}
+                              type="button"
+                              onClick={() => setResearchSubItem(subOpt)}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '14px 18px',
+                                borderRadius: '12px',
+                                border: isSelected ? '2px solid #4f46e5' : '1.5px solid #e2e8f0',
+                                background: isSelected ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)' : '#ffffff',
+                                color: isSelected ? '#ffffff' : '#1e293b',
+                                fontWeight: isSelected ? 700 : 600,
+                                fontSize: '0.9rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: isSelected ? '0 4px 14px rgba(79, 70, 229, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.04)',
+                                textAlign: 'left'
+                              }}
+                            >
+                              <span>{subOpt}</span>
+                              {isSelected ? (
+                                <div style={{ minWidth: '22px', height: '22px', borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900, color: '#ffffff' }}>
+                                  ✓
+                                </div>
+                              ) : (
+                                <div style={{ minWidth: '18px', height: '18px', borderRadius: '50%', border: '1.5px solid #cbd5e1' }} />
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : (isCompetitiveExamsCategory || isUpscExamItem) ? (
