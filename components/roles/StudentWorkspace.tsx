@@ -1185,7 +1185,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
                       <div className="form-group">
                         <label className="form-label" style={{ color: '#0284c7', fontWeight: 800, fontSize: '0.8rem' }}>
-                          🌟 80% to 90%
+                          80% to 90%
                         </label>
                         <input
                           type="number"
@@ -1199,7 +1199,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
                       <div className="form-group">
                         <label className="form-label" style={{ color: '#059669', fontWeight: 800, fontSize: '0.8rem' }}>
-                          🥇 70% to 80%
+                          70% to 80%
                         </label>
                         <input
                           type="number"
@@ -1213,7 +1213,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
                       <div className="form-group">
                         <label className="form-label" style={{ color: '#dc2626', fontWeight: 800, fontSize: '0.8rem' }}>
-                          ❌ Fail
+                          Fail
                         </label>
                         <input
                           type="number"
@@ -1227,7 +1227,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
                       <div className="form-group">
                         <label className="form-label" style={{ color: '#7c3aed', fontWeight: 800, fontSize: '0.8rem' }}>
-                          📈 Class Pass %
+                          Class Pass %
                         </label>
                         <input
                           type="number"
@@ -1303,8 +1303,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', padding: '16px', background: 'rgba(59, 130, 246, 0.04)', border: '1.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px' }}>
                         <div className="form-group">
-                          <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            📅 Starting Date
+                          <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8' }}>
+                            Starting Date
                           </label>
                           <input
                             type="date"
@@ -1315,8 +1315,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                           />
                         </div>
                         <div className="form-group">
-                          <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            📅 End Date
+                          <label className="form-label" style={{ fontWeight: 800, color: '#1d4ed8' }}>
+                            End Date
                           </label>
                           <input
                             type="date"
@@ -1330,16 +1330,15 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     </div>
                   ) : isStartupsCategory ? (
                     <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', padding: '20px', background: 'rgba(236, 72, 153, 0.04)', border: '1.5px solid rgba(236, 72, 153, 0.2)', borderRadius: '16px' }}>
-                      <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                        <span style={{ fontSize: '1.2rem' }}>🚀</span>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#be185d', margin: 0 }}>
+                      <div style={{ gridColumn: '1 / -1', marginBottom: '2px' }}>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#be185d', margin: 0, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                           Government-Registered Startup Details
                         </h4>
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          🏷️ Startup Name
+                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d' }}>
+                          Startup Name
                         </label>
                         <input
                           type="text"
@@ -1352,8 +1351,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          📅 Registration Date
+                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d' }}>
+                          Registration Date
                         </label>
                         <input
                           type="date"
@@ -1365,8 +1364,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          🏛️ Government ID / Reg. No.
+                        <label className="form-label" style={{ fontWeight: 800, color: '#be185d' }}>
+                          Government ID / Reg. No.
                         </label>
                         <input
                           type="text"
@@ -1380,9 +1379,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     </div>
                   ) : isResearchCategory ? (
                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                      <label className="form-label" style={{ fontWeight: 800, color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        🔬 Sub Item / Category Type
-                      </label>
+                      <label className="form-label">Sub Item</label>
                       <select
                         className="select"
                         value={researchSubItem}
@@ -1680,12 +1677,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                                 </div>
                               ) : sub.evidence?.type === 'startup_details' || sub.evidence?.startupName ? (
                                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#be185d', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                  <span>🚀 Startup: {sub.evidence.startupName}</span>
-                                  <span>📅 Reg: {sub.evidence.startupDate} | 🏛️ ID: {sub.evidence.startupGovtId}</span>
+                                  <span>Startup: {sub.evidence.startupName}</span>
+                                  <span>Reg: {sub.evidence.startupDate} | ID: {sub.evidence.startupGovtId}</span>
                                 </div>
                               ) : (sub.startDate || sub.evidence?.startDate || sub.evidence?.examDate) ? (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
-                                  📅 {sub.startDate || sub.evidence?.startDate || sub.evidence?.examDate}{(sub.endDate || sub.evidence?.endDate) ? ` to ${sub.endDate || sub.evidence?.endDate}` : ''}
+                                  {sub.startDate || sub.evidence?.startDate || sub.evidence?.examDate}{(sub.endDate || sub.evidence?.endDate) ? ` to ${sub.endDate || sub.evidence?.endDate}` : ''}
                                 </span>
                               ) : (
                                 <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{sub.evidence?.count ? `Count: ${sub.evidence.count}` : ''}</span>
