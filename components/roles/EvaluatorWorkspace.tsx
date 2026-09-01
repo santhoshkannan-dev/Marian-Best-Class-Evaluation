@@ -85,8 +85,8 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
   const verifiedSubmissions = submissions.filter(s => ['Approved', 'Verified', 'Evaluated', 'Locked'].includes(s.status) && isAssignedToEvaluator(s));
   const verifiedCount = verifiedSubmissions.length;
   const pendingCount = teacherApprovedSubmissions.length;
-  const rejectedCount = submissions.filter(s => (s.status === 'Rejected' || s.status === 'Disapproved') && isAssignedToEvaluator(s)).length;
-  const correctionCount = submissions.filter(s => (s.status === 'Correction' || s.status === 'Returned') && isAssignedToEvaluator(s)).length;
+  const rejectedCount = submissions.filter(s => (s.status === 'Rejected' || (s.status as string) === 'Disapproved') && isAssignedToEvaluator(s)).length;
+  const correctionCount = submissions.filter(s => (s.status === 'Correction' || (s.status as string) === 'Returned') && isAssignedToEvaluator(s)).length;
 
   const totalEvaluatedDomainCount = assignedSubmissions.length > 0 ? assignedSubmissions.length : (verifiedCount + pendingCount + rejectedCount + correctionCount);
 
