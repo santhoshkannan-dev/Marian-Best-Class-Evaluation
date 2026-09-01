@@ -347,6 +347,7 @@ class Command(BaseCommand):
             }
         ]
 
+        CriteriaCategory.objects.all().delete()
         for cat_data in criteria_catalog_data:
             cat_obj = CriteriaCategory.objects.create(
                 code=cat_data["code"],

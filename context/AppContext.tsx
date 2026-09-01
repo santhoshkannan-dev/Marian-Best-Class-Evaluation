@@ -319,9 +319,18 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 setSubmissions(data.submissions);
               }
               if (data.users) setUsers(data.users);
-              // Only restore cached catalog if it is non-empty (empty means it was fetched from an unseeded backend)
+              // Only restore cached catalog if non-empty and up to date with latest category item structure
               if (data.criteriaCatalog && Array.isArray(data.criteriaCatalog) && data.criteriaCatalog.length > 0) {
-                setCriteriaCatalog(data.criteriaCatalog);
+                const researchCat = data.criteriaCatalog.find((c: any) => c.id === 'cat-research' || c.code === 'cat-research' || c.category === 'Research');
+                const isStaleResearch = researchCat && (
+                  researchCat.items.length > 5 ||
+                  researchCat.items.some((i: any) => i.title && (i.title.includes('Scopus') || i.title.includes('Outside Marian')))
+                );
+                if (isStaleResearch) {
+                  setCriteriaCatalog(defaultCriteriaCatalog);
+                } else {
+                  setCriteriaCatalog(data.criteriaCatalog);
+                }
               } else {
                 setCriteriaCatalog(defaultCriteriaCatalog);
               }
