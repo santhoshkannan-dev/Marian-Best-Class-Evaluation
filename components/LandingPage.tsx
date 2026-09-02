@@ -522,9 +522,12 @@ export const LandingPage: React.FC = () => {
                 </div>
               ) : (
                 <div>
-                  <div className="leaderboard-header">
+                  <div className="leaderboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
                     <div>
-                      <h2 className="chart-title">{`Top ${activeStandingsData.length} Standings`}</h2>
+                      <h2 className="chart-title" style={{ margin: 0 }}>{`Top ${activeStandingsData.length} Standings`}</h2>
+                    </div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#64748b', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                      Class Points
                     </div>
                   </div>
 
