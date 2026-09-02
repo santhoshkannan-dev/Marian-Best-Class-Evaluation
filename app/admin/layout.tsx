@@ -10,6 +10,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { loggedIn, logout, selectedAcademicYear, isInitialized } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -44,9 +45,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const headerTitle = currentNav ? currentNav.label : 'Academic Years';
 
   return (
-    <div className="portal-shell-grid">
+    <div className={`portal-shell-grid ${sidebarCollapsed ? "collapsed" : ""}`}>
       {/* Left Sidebar Navigation */}
-      <aside className={`portal-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`portal-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <button
           className="mobile-sidebar-close"
           onClick={() => setSidebarOpen(false)}
@@ -59,12 +60,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </button>
 
         <div>
-          <div className="portal-brand" style={{ marginBottom: '32px' }}>
-            <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Logo" style={{ width: '38px', height: '38px', objectFit: 'contain' }} />
-            <div>
-              <h2 className="portal-brand-title" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111827' }}>Excellence Grid</h2>
-              <p className="portal-brand-sub" style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF' }}>Evaluation Panel</p>
+          <div className="portal-brand" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Logo" style={{ width: '36px', height: '36px', objectFit: 'contain', flexShrink: 0 }} />
+              {!sidebarCollapsed && (
+                <div>
+                  <h2 className="portal-brand-title" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111827' }}>Excellence Grid</h2>
+                  <p className="portal-brand-sub" style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9CA3AF' }}>Evaluation Panel</p>
+                </div>
+              )}
             </div>
+            <button
+              className="sidebar-toggle-btn"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              aria-label="Toggle Sidebar"
+              style={{
+                background: '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#475569',
+                flexShrink: 0
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                {sidebarCollapsed ? (
+                  <path d="M13 17l5-5-5-5M6 17l5-5-5-5" />
+                ) : (
+                  <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" />
+                )}
+              </svg>
+            </button>
           </div>
 
           <nav>
@@ -89,8 +121,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         boxShadow: isActive ? '0 4px 12px rgba(79, 70, 229, 0.25)' : 'none'
                       }}
                       onClick={() => setSidebarOpen(false)}
+                      title={sidebarCollapsed ? item.label : undefined}
                     >
-                      {item.label}
+                      <span className="portal-nav-text">{item.label}</span>
                     </Link>
                   </li>
                 );
@@ -100,7 +133,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Footer Role Badge */}
-        <div style={{
+        <div className="portal-sidebar-footer" style={{
           border: '1px solid #E5E7EB',
           background: 'rgba(255, 255, 255, 0.9)',
           borderRadius: '16px',
@@ -110,11 +143,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           justifyContent: 'space-between',
           marginTop: 'auto'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.84rem', color: '#374151' }}>
+          <div className="portal-sidebar-footer-text" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.84rem', color: '#374151' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
             Role: Admin
           </div>
-          <span style={{
+          <span className="portal-sidebar-footer-text" style={{
             fontSize: '0.7rem',
             fontWeight: 800,
             textTransform: 'uppercase',
@@ -154,7 +187,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <button
               className="mobile-menu-toggle"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+                  setSidebarOpen(!sidebarOpen);
+                } else {
+                  setSidebarCollapsed(!sidebarCollapsed);
+                }
+              }}
+              title="Toggle Sidebar"
               aria-label="Toggle Navigation"
             >
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

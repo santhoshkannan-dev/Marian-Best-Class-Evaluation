@@ -310,6 +310,7 @@ class Command(BaseCommand):
                     {"title": "MCSC Executive Body Position", "type": "fixed", "marks": 10.0},
                     {"title": "SAHYA Executive Body Position", "type": "fixed", "marks": 10.0},
                     {"title": "Clubs & Associations Leadership Position", "type": "fixed", "marks": 8.0},
+                    {"title": "Any Other", "type": "fixed", "marks": 5.0},
                 ]
             },
             {

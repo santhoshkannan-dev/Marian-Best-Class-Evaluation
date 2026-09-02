@@ -827,6 +827,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       finalDescription = `${currentItem?.title || 'Prizes'} — ${prizesSubItem}`;
     } else if (isProgramsOrganized && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Program Organized'}: ${eventName.trim()}`;
+    } else if (isLeadershipCategory && String(currentItem?.title || '').toLowerCase().trim() === 'any other' && !finalDescription) {
+      finalDescription = `Leadership (Any Other): ${eventName.trim()}`;
     } else if ((isCompetitiveExamsCategory || isUpscExamItem) && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Competitive Exam'} — Exam Date: ${examDate}`;
     } else if (isInternshipsCategory && !finalDescription) {
@@ -907,6 +909,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                   eventId: eventId.trim() || undefined,
                   count: countValue || 1
                 }
+                : (isLeadershipCategory && String(currentItem?.title || '').toLowerCase().trim() === 'any other')
+                  ? {
+                    type: 'leadership_any_other',
+                    positionName: eventName.trim(),
+                    eventName: eventName.trim(),
+                    count: 1
+                  }
                 : (isCompetitiveExamsCategory || isUpscExamItem)
                   ? {
                     type: 'upsc_exam_date',
@@ -1668,6 +1677,22 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         min={1}
                         value={countValue}
                         onChange={(e) => setCountValue(Number(e.target.value))}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {isLeadershipCategory && currentItem && String(currentItem.title || '').toLowerCase().trim() === 'any other' && (
+                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                      <label className="form-label" style={{ fontWeight: 800, color: '#4f46e5' }}>
+                        Position / Activity Name
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="Enter the position or leadership activity details..."
+                        value={eventName}
+                        onChange={(e) => setEventName(e.target.value)}
                         required
                       />
                     </div>

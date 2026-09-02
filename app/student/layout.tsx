@@ -10,6 +10,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const router = useRouter();
   const { loggedIn, logout, selectedAcademicYear, isStudentRep, toggleStudentRepMode, isInitialized } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -44,8 +45,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const headerTitle = currentNav ? currentNav.label : 'Student Dashboard';
 
   return (
-    <div className="portal-shell-grid">
-      <aside className={`portal-sidebar ${sidebarOpen ? 'open' : ''}`}>
+    <div className={`portal-shell-grid ${sidebarCollapsed ? "collapsed" : ""}`}>
+      <aside className={`portal-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <button
           className="mobile-sidebar-close"
           onClick={() => setSidebarOpen(false)}
@@ -58,12 +59,43 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </button>
 
         <div>
-          <div className="portal-brand">
-            <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Logo" style={{ width: '38px', height: '38px', objectFit: 'contain' }} />
-            <div>
-              <h2 className="portal-brand-title">Excellence Grid</h2>
-              <p className="portal-brand-sub">Evaluation Panel</p>
+          <div className="portal-brand" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img src="/Assets/Images/marian-best-logo-removebg-preview.png" alt="Marian Logo" style={{ width: '36px', height: '36px', objectFit: 'contain', flexShrink: 0 }} />
+              {!sidebarCollapsed && (
+                <div>
+                  <h2 className="portal-brand-title">Excellence Grid</h2>
+                  <p className="portal-brand-sub">Evaluation Panel</p>
+                </div>
+              )}
             </div>
+            <button
+              className="sidebar-toggle-btn"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              aria-label="Toggle Sidebar"
+              style={{
+                background: '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#475569',
+                flexShrink: 0
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                {sidebarCollapsed ? (
+                  <path d="M13 17l5-5-5-5M6 17l5-5-5-5" />
+                ) : (
+                  <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" />
+                )}
+              </svg>
+            </button>
           </div>
 
           <nav>
@@ -77,8 +109,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                       className={`portal-nav-btn ${isActive ? 'active' : ''}`}
                       style={{ textDecoration: 'none' }}
                       onClick={() => setSidebarOpen(false)}
+                      title={sidebarCollapsed ? item.label : undefined}
                     >
-                      {item.label}
+                      <span className="portal-nav-text">{item.label}</span>
                     </Link>
                   </li>
                 );
@@ -88,7 +121,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </div>
 
         <div className="portal-sidebar-footer" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div>{isStudentRep ? 'Student Representative' : 'Student'}</div>
+          <div className="portal-sidebar-footer-text">{isStudentRep ? 'Student Representative' : 'Student'}</div>
           <button
             className="btn btn-secondary btn-sm mobile-logout-btn"
             style={{
@@ -137,7 +170,14 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               className="mobile-menu-toggle"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+                  setSidebarOpen(!sidebarOpen);
+                } else {
+                  setSidebarCollapsed(!sidebarCollapsed);
+                }
+              }}
+              title="Toggle Sidebar"
               aria-label="Toggle Navigation"
             >
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
