@@ -102,10 +102,32 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
     return currentCategory.code || String(currentCategory.id) || currentCategory.category;
   }, [currentCategory]);
 
+  const availableCategoryItems = React.useMemo(() => {
+    if (!currentCategory || !currentCategory.items) return [];
+    const catName = String(currentCategory.category || '').toLowerCase().trim();
+    const catCode = String(currentCategory.code || '').toLowerCase().trim();
+    const catId = String(currentCategory.id || '').toLowerCase().trim();
+    const isCareerAdvancement = catName.includes('career advancement') || catCode === 'cat-career-advancement' || catId === 'cat-career-advancement' || catId === '11';
+
+    if (isCareerAdvancement && !isStudentRep) {
+      return currentCategory.items.filter((i) =>
+        String(i.title || '').toLowerCase().includes('linkedin')
+      );
+    }
+
+    return currentCategory.items;
+  }, [currentCategory, isStudentRep]);
+
   const currentItem: CriteriaItem | undefined = React.useMemo(() => {
-    if (!currentCategory || !currentCategory.items) return undefined;
-    return currentCategory.items.find((i) => matchItem(i, selectedCriteriaId)) || currentCategory.items[0];
-  }, [currentCategory, selectedCriteriaId]);
+    if (!currentCategory || !availableCategoryItems || availableCategoryItems.length === 0) return undefined;
+    return availableCategoryItems.find((i) => matchItem(i, selectedCriteriaId)) || availableCategoryItems[0];
+  }, [currentCategory, availableCategoryItems, selectedCriteriaId]);
+
+  const isLinkedInItem = React.useMemo(() => {
+    if (!currentItem) return false;
+    const title = String(currentItem.title || '').toLowerCase().trim();
+    return title.includes('linkedin');
+  }, [currentItem]);
 
   // Academic Category State (Submission Types & Mark Breakdown)
   const [academicSubmissionType, setAcademicSubmissionType] = useState<'Sem Result' | 'SAVE Sem Result'>('Sem Result');
@@ -829,6 +851,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       finalDescription = `${currentItem?.title || 'Program Organized'}: ${eventName.trim()}`;
     } else if (isLeadershipCategory && String(currentItem?.title || '').toLowerCase().trim() === 'any other' && !finalDescription) {
       finalDescription = `Leadership (Any Other): ${eventName.trim()}`;
+    } else if (isLinkedInItem && !finalDescription) {
+      finalDescription = `${currentItem?.title || 'LinkedIn Advancement'}: ${proofFile.trim()}`;
     } else if ((isCompetitiveExamsCategory || isUpscExamItem) && !finalDescription) {
       finalDescription = `${currentItem?.title || 'Competitive Exam'} — Exam Date: ${examDate}`;
     } else if (isInternshipsCategory && !finalDescription) {
@@ -915,6 +939,12 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     positionName: eventName.trim(),
                     eventName: eventName.trim(),
                     count: 1
+                  }
+                : isLinkedInItem
+                  ? {
+                    type: 'linkedin_advancement',
+                    linkedinUrl: proofFile.trim(),
+                    count: countValue || 1
                   }
                 : (isCompetitiveExamsCategory || isUpscExamItem)
                   ? {
@@ -1272,7 +1302,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                         value={selectedCriteriaId}
                         onChange={(e) => setSelectedCriteriaId(Number(e.target.value))}
                       >
-                        {currentCategory?.items?.map((item) => (
+                        {availableCategoryItems.map((item) => (
                           <option key={item.id} value={item.id}>
                             {item.title}
                           </option>
@@ -1711,6 +1741,23 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                       />
                       <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
                         Include the official Event ID for this organized program instead of uploading a proof document.
+                      </p>
+                    </div>
+                  ) : isLinkedInItem ? (
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: 800, color: '#0077b5' }}>
+                        🔗 LinkedIn Profile / Activity URL
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="Paste your LinkedIn profile or activity post URL (e.g. https://www.linkedin.com/in/username)..."
+                        value={proofFile}
+                        onChange={(e) => setProofFile(e.target.value)}
+                        required
+                      />
+                      <p className="muted" style={{ fontSize: '0.78rem', marginTop: '6px' }}>
+                        Provide the direct LinkedIn URL (profile link, skill badge post, or micro-credential link) as proof.
                       </p>
                     </div>
                   ) : (
