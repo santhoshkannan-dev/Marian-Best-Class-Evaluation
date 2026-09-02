@@ -336,7 +336,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                   progCat.items.length !== 3 ||
                   !progCat.items.some((i: any) => i.title && i.title.includes('Class Magazine'))
                 );
-                if (isStaleResearch || isStalePrizes || isStaleProg || !progCat) {
+                const leadershipCat = data.criteriaCatalog.find((c: any) => c.id === 'cat-leadership' || c.code === 'cat-leadership' || c.category === 'Leaderships');
+                const isStaleLeadership = leadershipCat && (
+                  leadershipCat.items.length !== 4 ||
+                  !leadershipCat.items.some((i: any) => i.title && i.title.toLowerCase().includes('any other'))
+                );
+                if (isStaleResearch || isStalePrizes || isStaleProg || isStaleLeadership || !progCat || !leadershipCat) {
                   setCriteriaCatalog(defaultCriteriaCatalog);
                 } else {
                   setCriteriaCatalog(data.criteriaCatalog);
