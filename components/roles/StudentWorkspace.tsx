@@ -66,7 +66,7 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
       return criteriaCatalog;
     }
 
-    // Normal students get 10 student-level categories (excluding Academics & Documentation / class-wide audit categories)
+    // Normal students get student-level categories (excluding Academics, Documentation & Programs Organized / class-wide audit categories)
     return criteriaCatalog.filter((cat) => {
       const name = String(cat.category || '').toLowerCase().trim();
       const code = String(cat.code || '').toLowerCase().trim();
@@ -80,7 +80,13 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
         name === 'documentation' ||
         code === 'cat-documentation' ||
         id === 'cat-documentation' ||
-        id === '12';
+        id === '12' ||
+        name === 'programs organized' ||
+        code === 'cat-programs-organized' ||
+        id === 'cat-programs-organized' ||
+        id === '9' ||
+        id === '900' ||
+        id === 'cat-9';
 
       return !isRestrictedForNormalStudent;
     });
