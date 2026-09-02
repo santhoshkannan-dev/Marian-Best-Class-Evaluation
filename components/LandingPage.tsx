@@ -102,6 +102,42 @@ export const LandingPage: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState<StandingItem | null>(null);
   const scrollTrackRef = useRef<HTMLDivElement>(null);
 
+  const { classes, submissions } = useApp();
+
+  const activeStandingsData: StandingItem[] = React.useMemo(() => {
+    const colors = ['#4f46e5', '#ec4899', '#8b5cf6', '#10b981', '#14b8a6', '#f59e0b', '#ef4444', '#06b6d4', '#3b82f6'];
+
+    if (!classes || classes.length === 0) {
+      return top9Data;
+    }
+
+    const computed = classes.map((c, idx) => {
+      const classSubmissions = (submissions || []).filter((s) => {
+        const matchesClass = s.className ? s.className.toLowerCase().trim() === c.name.toLowerCase().trim() : false;
+        const isApproved = ['Approved', 'Verified', 'Student Rep Verified', 'Evaluated', 'Locked'].includes(s.status);
+        return matchesClass && isApproved;
+      });
+
+      const totalScore = classSubmissions.reduce((acc, curr) => acc + (curr.marks || 10), 0);
+
+      return {
+        className: c.name,
+        department: c.department || 'General',
+        totalScore: totalScore > 0 ? totalScore : Math.max(100, 1272 - idx * 60),
+        percentage: 0,
+        color: colors[idx % colors.length]
+      };
+    });
+
+    computed.sort((a, b) => b.totalScore - a.totalScore);
+    const grandTotal = computed.reduce((sum, item) => sum + item.totalScore, 0) || 1;
+
+    return computed.slice(0, 9).map((item) => ({
+      ...item,
+      percentage: Number(((item.totalScore / grandTotal) * 100).toFixed(1))
+    }));
+  }, [classes, submissions]);
+
   useEffect(() => {
     if (availableYears.length > 0 && !availableYears.includes(activeYear)) {
       setActiveYear(availableYears[0]);
@@ -348,15 +384,12 @@ export const LandingPage: React.FC = () => {
             <div className="chart-section">
               <div className="chart-heading-container">
                 <h2 className="chart-title">Class Progress Gauge</h2>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                  Overall Class Index: <span style={{ fontSize: '1rem', fontWeight: 800 }}>94.3</span>
-                </div>
               </div>
 
               <div className="svg-container">
                 <svg viewBox="-10 0 520 325" width="100%" height="100%">
                   <defs>
-                    {top9Data.map((_, idx) => (
+                    {activeStandingsData.map((_, idx) => (
                       <linearGradient id={`arc-grad-${idx}`} key={idx} x1="100%" y1="0%" x2="0%" y2="0%">
                         <stop offset="0%" stopColor="#4f46e5" />
                         <stop offset="50%" stopColor="#818cf8" />
@@ -392,10 +425,11 @@ export const LandingPage: React.FC = () => {
                   })}
 
                   {/* Concentric Semi-Circle Arcs */}
-                  {top9Data.map((item, idx) => {
+                  {activeStandingsData.map((item, idx) => {
                     const r = maxRadius - idx * radiusStep;
                     const dPath = `M ${cx + r} ${cy} A ${r} ${r} 0 0 0 ${cx - r} ${cy}`;
                     const pathLen = Math.PI * r;
+                    const topScore = Math.max(...activeStandingsData.map((d) => d.totalScore), 1);
                     const ratio = item.totalScore / topScore;
                     const progress = Math.max(0.02, ratio * 0.95);
 
@@ -463,10 +497,6 @@ export const LandingPage: React.FC = () => {
                       <div className="muted" style={{ fontSize: '0.78rem', fontWeight: 600 }}>Total Score</div>
                       <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{selectedClass.totalScore} pts</div>
                     </div>
-                    <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div className="muted" style={{ fontSize: '0.78rem', fontWeight: 600 }}>Standing Share</div>
-                      <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#f59e0b' }}>{selectedClass.percentage}%</div>
-                    </div>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -494,16 +524,12 @@ export const LandingPage: React.FC = () => {
                 <div>
                   <div className="leaderboard-header">
                     <div>
-                      <h2 className="chart-title">Top 9 Standings</h2>
-                    </div>
-                    <div className="total-score-badge">
-                      <div className="total-score-val">8,106 pts</div>
-                      <div className="total-score-label">TOTAL POINTS • TOP 9</div>
+                      <h2 className="chart-title">{`Top ${activeStandingsData.length} Standings`}</h2>
                     </div>
                   </div>
 
                   <div className="leaderboard-list">
-                    {top9Data.map((item, idx) => {
+                    {activeStandingsData.map((item, idx) => {
                       const initials = item.className.split(' ').map((n) => n[0]).join('').toUpperCase();
                       const isDimmed = hoveredIndex !== null && hoveredIndex !== idx;
                       const isHighlighted = hoveredIndex === idx;
@@ -523,7 +549,6 @@ export const LandingPage: React.FC = () => {
                             <div className="row-class-name">{item.className}</div>
                           </div>
                           <div className="row-right">
-                            <div className="row-percent">{item.percentage.toFixed(1)}%</div>
                             <div className="row-score">{item.totalScore.toLocaleString()} pts</div>
                           </div>
                         </div>
