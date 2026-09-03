@@ -76,29 +76,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'marian_backend.wsgi.application'
 
-# Database Setup (PostgreSQL with SQLite fallback)
-PG_HOST = os.environ.get('DATABASE_HOST', '')
-PG_DB = os.environ.get('DATABASE_NAME', 'marian_best_class')
-PG_USER = os.environ.get('DATABASE_USER', 'postgres')
-PG_PASSWORD = os.environ.get('DATABASE_PASSWORD', 'santhosh')
-PG_PORT = os.environ.get('DATABASE_PORT', '5432')
+# Database Setup (PostgreSQL primary)
+DB_ENGINE = os.environ.get('DATABASE_ENGINE', 'django.db.backends.postgresql')
 
-if PG_HOST:
+if DB_ENGINE in ('django.db.backends.sqlite3', 'sqlite'):
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': PG_DB,
-            'USER': PG_USER,
-            'PASSWORD': PG_PASSWORD,
-            'HOST': PG_HOST,
-            'PORT': PG_PORT,
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DATABASE_NAME', 'marian_best_class'),
+            'USER': os.environ.get('DATABASE_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'santhosh'),
+            'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
+            'PORT': os.environ.get('DATABASE_PORT', '5432'),
         }
     }
 
