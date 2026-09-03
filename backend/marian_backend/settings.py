@@ -25,7 +25,11 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-xc(hxu)1kad%7j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
+# SECURITY: Dev bypass login controls (Must be explicitly enabled AND in DEBUG mode)
+ENABLE_DEV_BYPASS = os.environ.get('ENABLE_DEV_BYPASS', 'False').lower() in ('true', '1', 't')
+
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+
 
 # Application definition
 

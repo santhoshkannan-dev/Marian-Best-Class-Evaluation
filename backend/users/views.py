@@ -379,9 +379,9 @@ class DevBypassLoginView(APIView):
 
     def post(self, request):
 
-        if not settings.DEBUG:
+        if not (settings.DEBUG and getattr(settings, 'ENABLE_DEV_BYPASS', False)):
             return Response(
-                {"error": "Disabled in production."},
+                {"error": "Developer bypass login is disabled in this environment."},
                 status=status.HTTP_403_FORBIDDEN
             )
 

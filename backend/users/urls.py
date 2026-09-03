@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import path
 from .views import (
     GoogleLoginView,
@@ -22,7 +23,6 @@ from .views import (
 
 urlpatterns = [
     path('auth/google/', GoogleLoginView.as_view(), name='google-login'),
-    path('auth/bypass/', DevBypassLoginView.as_view(), name='dev-bypass-login'),
     path('auth/profile/', UserProfileView.as_view(), name='user-profile'),
     path('auth/classes/', ClassListView.as_view(), name='class-list'),
     path('academic-years/', AcademicYearListView.as_view(), name='academic-years'),
@@ -40,3 +40,7 @@ urlpatterns = [
     path('champions/', ChampionListView.as_view(), name='champions-list'),
     path('champions/<int:pk>/', ChampionDetailView.as_view(), name='champions-detail'),
 ]
+
+if settings.DEBUG and getattr(settings, 'ENABLE_DEV_BYPASS', False):
+    urlpatterns.append(path('auth/bypass/', DevBypassLoginView.as_view(), name='dev-bypass-login'))
+
