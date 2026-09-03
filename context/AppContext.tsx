@@ -800,13 +800,54 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [loggedIn, jwtToken]);
 
-  const logout = () => {
+  const refreshAccessToken = async (): Promise<string | null> => {
+    try {
+      const refreshToken = localStorage.getItem('bc_refresh_token');
+      if (!refreshToken) return null;
+
+      const res = await fetch('http://localhost:8000/api/auth/token/refresh/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+
+      if (!res.ok) {
+        logout();
+        return null;
+      }
+
+      const data = await res.json();
+      if (data.access) {
+        setJwtToken(data.access);
+        localStorage.setItem('bc_access_token', data.access);
+        if (data.refresh) {
+          localStorage.setItem('bc_refresh_token', data.refresh);
+        }
+        return data.access;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('bc_refresh_token');
+      if (refreshToken) {
+        fetch('http://localhost:8000/api/auth/logout/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh: refreshToken }),
+        }).catch(() => {});
+      }
+    } catch {}
+
     setLoggedIn(false);
     setCurrentRole('');
     setCurrentUserId(null);
     setJwtToken(null);
     setCurrentUserInfo(null);
-    // Keep submissions state intact so student submissions permanently persist on logout and system restarts
     localStorage.removeItem('bc_access_token');
     localStorage.removeItem('bc_refresh_token');
   };
