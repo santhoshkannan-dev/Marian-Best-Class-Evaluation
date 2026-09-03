@@ -17,7 +17,7 @@ if env_path.exists():
             line = line.strip()
             if line and not line.startswith('#') and '=' in line:
                 key, val = line.split('=', 1)
-                os.environ.setdefault(key.strip(), val.strip())
+                os.environ[key.strip()] = val.strip()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-xc(hxu)1kad%7jrb!9s4_xq79cxq-@6nr@#35^i0z09n4h4p6%')
@@ -25,10 +25,14 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-xc(hxu)1kad%7j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-# SECURITY: Dev bypass login controls (Must be explicitly enabled AND in DEBUG mode)
-ENABLE_DEV_BYPASS = os.environ.get('ENABLE_DEV_BYPASS', 'False').lower() in ('true', '1', 't')
+# SECURITY: Dev bypass login controls (Enabled by default in DEBUG mode, strictly disabled in production)
+if DEBUG:
+    ENABLE_DEV_BYPASS = os.environ.get('ENABLE_DEV_BYPASS', 'True').lower() in ('true', '1', 't')
+else:
+    ENABLE_DEV_BYPASS = False
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+
 
 
 # Application definition
