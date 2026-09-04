@@ -1411,22 +1411,19 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
 
                       <div className="form-group">
                         <label className="form-label" style={{ color: '#7c3aed', fontWeight: 800, fontSize: '0.8rem' }}>
-                          Class Pass %
+                          Class Pass % (Auto-Calculated)
                         </label>
                         <input
                           type="number"
                           step="0.01"
                           className="input"
-                          min={0}
-                          max={100}
-                          placeholder="e.g. 95.5"
-                          value={passPercentage > 0 ? passPercentage : (
+                          readOnly
+                          style={{ background: 'rgba(124, 58, 237, 0.08)', color: '#7c3aed', fontWeight: 700, cursor: 'not-allowed' }}
+                          value={(
                             (count90Above + count80to90 + count70to80 + failCount) > 0
                               ? parseFloat(((((count90Above + count80to90 + count70to80) / (count90Above + count80to90 + count70to80 + failCount)) * 100)).toFixed(2))
                               : 0
                           )}
-                          onChange={(e) => setPassPercentage(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
-                          required
                         />
                       </div>
                     </div>

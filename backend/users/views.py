@@ -1084,6 +1084,31 @@ class SubmissionListView(APIView):
         except (ValueError, TypeError):
             pass
 
+        # Academic Grade Breakdown Validation & Auto-Calculation
+        if isinstance(evidence, dict) and "grades" in evidence:
+            grades_data = evidence.get("grades") or {}
+            s_cnt = int(grades_data.get("S", 0))
+            ap_cnt = int(grades_data.get("APlus", 0))
+            a_cnt = int(grades_data.get("A", 0))
+            fail_cnt = int(grades_data.get("Fail", 0))
+            t_students = int(evidence.get("totalStudents", 0))
+
+            if s_cnt < 0 or ap_cnt < 0 or a_cnt < 0 or fail_cnt < 0 or t_students < 0:
+                return Response({"error": "Grade counts and total students cannot be negative."}, status=status.HTTP_400_BAD_REQUEST)
+
+            g_sum = s_cnt + ap_cnt + a_cnt + fail_cnt
+            if t_students <= 0:
+                t_students = max(1, g_sum)
+                evidence["totalStudents"] = t_students
+
+            if g_sum > t_students:
+                return Response({"error": f"Sum of student grades ({g_sum}) exceeds total class students ({t_students})."}, status=status.HTTP_400_BAD_REQUEST)
+
+            passed = max(0, t_students - fail_cnt)
+            pass_pct = round((passed / float(t_students)) * 100.0, 2)
+            evidence["classPassPercentage"] = pass_pct
+            evidence["passCount"] = passed
+
         # Extract certificate ID and proof hash for duplicate detection
         cert_id = request.data.get('certificateId') or request.data.get('eventId')
         if not cert_id and isinstance(evidence, dict):
@@ -1256,8 +1281,31 @@ class SubmissionDetailView(APIView):
             description=request.data.get('description', submission.description),
             submission_id=submission.id
         )
-        if dup_err and target_status != 'Rejected':
-            return Response({"error": dup_err}, status=status.HTTP_400_BAD_REQUEST)
+        # Academic Grade Breakdown Validation on update
+        upd_ev = request.data.get('evidence', submission.evidence)
+        if isinstance(upd_ev, dict) and "grades" in upd_ev:
+            grades_data = upd_ev.get("grades") or {}
+            s_cnt = int(grades_data.get("S", 0))
+            ap_cnt = int(grades_data.get("APlus", 0))
+            a_cnt = int(grades_data.get("A", 0))
+            fail_cnt = int(grades_data.get("Fail", 0))
+            t_students = int(upd_ev.get("totalStudents", 0))
+
+            if s_cnt < 0 or ap_cnt < 0 or a_cnt < 0 or fail_cnt < 0 or t_students < 0:
+                return Response({"error": "Grade counts and total students cannot be negative."}, status=status.HTTP_400_BAD_REQUEST)
+
+            g_sum = s_cnt + ap_cnt + a_cnt + fail_cnt
+            if t_students <= 0:
+                t_students = max(1, g_sum)
+                upd_ev["totalStudents"] = t_students
+
+            if g_sum > t_students:
+                return Response({"error": f"Sum of student grades ({g_sum}) exceeds total class students ({t_students})."}, status=status.HTTP_400_BAD_REQUEST)
+
+            passed = max(0, t_students - fail_cnt)
+            pass_pct = round((passed / float(t_students)) * 100.0, 2)
+            upd_ev["classPassPercentage"] = pass_pct
+            upd_ev["passCount"] = passed
 
         # 1. Locked Record Guard
         if submission.status == 'Locked':

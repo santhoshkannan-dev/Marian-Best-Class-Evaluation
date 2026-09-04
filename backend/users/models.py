@@ -166,6 +166,16 @@ class AcademicGradeBreakdown(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        grade_sum = self.s_grade_count + self.a_plus_grade_count + self.a_grade_count + self.failed_count
+        if self.total_students <= 0:
+            self.total_students = max(1, grade_sum)
+        if grade_sum > self.total_students:
+            raise ValueError(f"Sum of grade counts ({grade_sum}) exceeds total students ({self.total_students}).")
+        passed = max(0, self.total_students - self.failed_count)
+        self.class_pass_percentage = round((passed / float(self.total_students)) * 100.0, 2)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Grade Breakdown for Submission #{self.submission_id}"
 
