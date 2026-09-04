@@ -27,6 +27,31 @@ from django.db.models import Q
 from .models import User, Class, Department, Submission, AcademicYear, SystemSetting, UserGroupModel, CriteriaCategory, CriteriaItem, CriteriaRule
 
 
+VALID_STATE_TRANSITIONS = {
+    'Draft': ['Submitted', 'Pending Rep Verification', 'Draft'],
+    'Submitted': ['Student Rep Verified', 'Teacher Verified', 'Correction Requested', 'Correction', 'Rejected', 'Submitted'],
+    'Pending Rep Verification': ['Student Rep Verified', 'Teacher Verified', 'Correction Requested', 'Correction', 'Rejected', 'Pending Rep Verification'],
+    'Student Rep Verified': ['Teacher Verified', 'Evaluated', 'Approved', 'Verified', 'Correction Requested', 'Correction', 'Rejected', 'Student Rep Verified'],
+    'Teacher Verified': ['Evaluated', 'Approved', 'Verified', 'Correction Requested', 'Correction', 'Rejected', 'Teacher Verified'],
+    'Correction Requested': ['Submitted', 'Pending Rep Verification', 'Draft', 'Correction Requested'],
+    'Correction': ['Submitted', 'Pending Rep Verification', 'Draft', 'Correction'],
+    'Evaluated': ['Locked', 'Evaluated'],
+    'Approved': ['Locked', 'Approved'],
+    'Verified': ['Locked', 'Verified'],
+    'Rejected': ['Draft', 'Rejected'],
+    'Locked': [] # Locked is terminal! Cannot transition to any state.
+}
+
+UNEDITABLE_BY_STUDENT_STATES = (
+    'Student Rep Verified',
+    'Teacher Verified',
+    'Evaluated',
+    'Approved',
+    'Verified',
+    'Locked'
+)
+
+
 def get_online_courses_item_ids():
     items = CriteriaItem.objects.filter(
         Q(category__code__iexact='cat-online-courses') |
@@ -1117,6 +1142,24 @@ class SubmissionDetailView(APIView):
                 {"error": "This submission record has been locked and cannot be modified."},
                 status=status.HTTP_403_FORBIDDEN
             )
+
+        # 1b. Workflow State Machine Transition Guard
+        if target_status != submission.status:
+            allowed_transitions = VALID_STATE_TRANSITIONS.get(submission.status, [])
+            if target_status not in allowed_transitions:
+                return Response(
+                    {"error": f"Invalid workflow state transition from '{submission.status}' to '{target_status}'."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # 1c. Student Evidence Locking Guard
+        if user and user.role == 'student' and submission.status in UNEDITABLE_BY_STUDENT_STATES:
+            evidence_fields = {'description', 'evidence', 'proof', 'criteriaId', 'start_date', 'startDate', 'end_date', 'endDate'}
+            if any(f in request.data for f in evidence_fields):
+                return Response(
+                    {"error": f"Submissions in '{submission.status}' state cannot have evidence edited by students."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
         # 2. Authorization Check: Students cannot assign marks or change evaluation/verification status
         if user and user.role == 'student':
