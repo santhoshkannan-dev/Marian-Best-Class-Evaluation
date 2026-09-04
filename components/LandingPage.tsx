@@ -188,20 +188,20 @@ export const LandingPage: React.FC = () => {
 
   const currentChampions = React.useMemo(() => {
     if (!filteredChampions || filteredChampions.length === 0) return [];
-    const sorted = [...filteredChampions].sort((a, b) => a.rank - b.rank);
+    const top3Only = filteredChampions.filter(c => c.rank <= 3);
+    const sorted = [...top3Only].sort((a, b) => a.rank - b.rank);
     if (sorted.length < 2) return sorted;
 
     const rank1 = sorted.find(c => c.rank === 1);
     const rank2 = sorted.find(c => c.rank === 2);
     const rank3 = sorted.find(c => c.rank === 3);
-    const others = sorted.filter(c => c.rank > 3);
 
     const podium = [];
     if (rank2) podium.push(rank2);
     if (rank1) podium.push(rank1);
     if (rank3) podium.push(rank3);
 
-    return [...podium, ...others];
+    return podium;
   }, [filteredChampions]);
 
   const carouselRef = useRef<HTMLDivElement>(null);

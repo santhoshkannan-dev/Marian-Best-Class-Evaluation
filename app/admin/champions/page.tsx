@@ -119,27 +119,27 @@ export default function ChampionsManagementPage() {
       ? champs
       : champs.filter(c => (c.category || 'UG').toUpperCase() === filterCategory.toUpperCase());
 
-    const sorted = [...filtered].sort((a, b) => a.rank - b.rank);
+    const top3Only = filtered.filter(c => c.rank <= 3);
+    const sorted = [...top3Only].sort((a, b) => a.rank - b.rank);
     if (sorted.length < 2) return sorted;
 
     const rank1 = sorted.find(c => c.rank === 1);
     const rank2 = sorted.find(c => c.rank === 2);
     const rank3 = sorted.find(c => c.rank === 3);
-    const others = sorted.filter(c => c.rank > 3);
 
     const podium = [];
     if (rank2) podium.push(rank2);
     if (rank1) podium.push(rank1);
     if (rank3) podium.push(rank3);
 
-    return [...podium, ...others];
+    return podium;
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       <div>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>Previous Champions Management</h1>
-        <p className="muted" style={{ fontSize: '0.88rem' }}>Add and manage previous year champions with PG / UG category filtering and theme-styled podium previews.</p>
+        <p className="muted" style={{ fontSize: '0.88rem' }}>Add and manage previous year champions with PG / UG category filtering.</p>
       </div>
 
       {/* Insert Champion Form Card */}
@@ -190,11 +190,9 @@ export default function ChampionsManagementPage() {
                 required
                 style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontWeight: 700, fontSize: '0.9rem', background: '#ffffff' }}
               >
-                <option value={1}>1st Place (Center — Light Gold Theme)</option>
-                <option value={2}>2nd Place (Left — Platinum Theme)</option>
-                <option value={3}>3rd Place (Right — Silver Theme)</option>
-                <option value={4}>4th Position</option>
-                <option value={5}>5th Position</option>
+                <option value={1}>1st Place</option>
+                <option value={2}>2nd Place</option>
+                <option value={3}>3rd Place</option>
               </select>
             </div>
           </div>
@@ -306,7 +304,6 @@ export default function ChampionsManagementPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Saved Champions Records</h2>
-            <p style={{ fontSize: '0.84rem', color: '#64748b', margin: '4px 0 0 0' }}>Displaying podium positions: 1st Center (Light Gold), 2nd Left (Platinum), 3rd Right (Silver).</p>
           </div>
 
           {/* PG / UG Filter Dropdown */}
