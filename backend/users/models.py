@@ -135,6 +135,23 @@ class CriteriaItem(models.Model):
         return f"{self.category.category} - {self.title}"
 
 
+class CriteriaRule(models.Model):
+    item = models.ForeignKey(CriteriaItem, on_delete=models.CASCADE, related_name='rules')
+    rule_type = models.CharField(max_length=50, default='standard') # e.g. count, range, fixed, negative, multiplier
+    maximum_marks = models.FloatField(blank=True, null=True)
+    min_count = models.IntegerField(blank=True, null=True)
+    max_count = models.IntegerField(blank=True, null=True)
+    is_negative = models.BooleanField(default=False)
+    multiplier = models.FloatField(default=1.0)
+    extra_config = models.JSONField(blank=True, null=True) # Flexible JSON metadata fallback
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Rule for {self.item.title} (Max Marks: {self.maximum_marks})"
+
+
+
 class AcademicGradeBreakdown(models.Model):
     submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name='grade_breakdown')
     s_grade_count = models.IntegerField(default=0)

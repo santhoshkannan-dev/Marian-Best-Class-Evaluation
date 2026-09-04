@@ -209,7 +209,8 @@ class Command(BaseCommand):
             self.stdout.write("Configured MCA Class Teacher and DQC member links")
 
         # 6. Seed Criteria Catalog (Wipe and recreate clean 12 categories)
-        from users.models import CriteriaCategory, CriteriaItem
+        from users.models import CriteriaCategory, CriteriaItem, CriteriaRule
+        CriteriaRule.objects.all().delete()
         CriteriaItem.objects.all().delete()
         CriteriaCategory.objects.all().delete()
 
@@ -354,11 +355,18 @@ class Command(BaseCommand):
                 access_level=cat_data["access_level"]
             )
             for item_data in cat_data["items"]:
-                CriteriaItem.objects.create(
+                item_obj = CriteriaItem.objects.create(
                     category=cat_obj,
                     title=item_data["title"],
                     type=item_data["type"],
                     marks=item_data["marks"]
+                )
+                CriteriaRule.objects.create(
+                    item=item_obj,
+                    rule_type=item_data["type"],
+                    maximum_marks=item_data["marks"],
+                    min_count=1 if item_data["type"] == 'count' else None,
+                    is_negative=True if item_data["type"] == 'negative' else False
                 )
 
         self.stdout.write(self.style.SUCCESS("Database seeding completed successfully!"))

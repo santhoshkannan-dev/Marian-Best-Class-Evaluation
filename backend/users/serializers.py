@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Department, AcademicYear, Class, User,
-    CriteriaCategory, CriteriaItem, Submission,
+    CriteriaCategory, CriteriaItem, CriteriaRule, Submission,
     AcademicGradeBreakdown, WorkflowAuditTrail, ClassIndexResult,
     Champion
 )
@@ -25,10 +25,18 @@ class DepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = ['id', 'name', 'code', 'classes', 'created_at']
 
+class CriteriaRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CriteriaRule
+        fields = '__all__'
+
 class CriteriaItemSerializer(serializers.ModelSerializer):
+    rules = CriteriaRuleSerializer(many=True, read_only=True)
+
     class Meta:
         model = CriteriaItem
-        fields = '__all__'
+        fields = ['id', 'category', 'title', 'type', 'marks', 'rules_json', 'rules', 'created_at', 'updated_at']
+
 
 class CriteriaCategorySerializer(serializers.ModelSerializer):
     items = CriteriaItemSerializer(many=True, read_only=True)
