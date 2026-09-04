@@ -177,7 +177,33 @@ export const LandingPage: React.FC = () => {
   // Achievements Auto Slide
   const [activeAchIndex, setActiveAchIndex] = useState(0);
 
-  const currentChampions = championsData[activeYear] || [];
+  // Champions Filter & Podium Reordering
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'All' | 'UG' | 'PG'>('All');
+
+  const filteredChampions = React.useMemo(() => {
+    const rawList = championsData[activeYear] || [];
+    if (selectedCategoryFilter === 'All') return rawList;
+    return rawList.filter(c => (c.category || 'UG').toUpperCase() === selectedCategoryFilter.toUpperCase());
+  }, [championsData, activeYear, selectedCategoryFilter]);
+
+  const currentChampions = React.useMemo(() => {
+    if (!filteredChampions || filteredChampions.length === 0) return [];
+    const sorted = [...filteredChampions].sort((a, b) => a.rank - b.rank);
+    if (sorted.length < 2) return sorted;
+
+    const rank1 = sorted.find(c => c.rank === 1);
+    const rank2 = sorted.find(c => c.rank === 2);
+    const rank3 = sorted.find(c => c.rank === 3);
+    const others = sorted.filter(c => c.rank > 3);
+
+    const podium = [];
+    if (rank2) podium.push(rank2);
+    if (rank1) podium.push(rank1);
+    if (rank3) podium.push(rank3);
+
+    return [...podium, ...others];
+  }, [filteredChampions]);
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
 
@@ -609,7 +635,26 @@ export const LandingPage: React.FC = () => {
               <p>Celebrating the best minds and outstanding achievements.</p>
             </div>
 
-            <div className="champions-header-right">
+            <div className="champions-header-right" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              {/* Program Level Dropdown (PG / UG) */}
+              <select
+                className="champions-year-select"
+                value={selectedCategoryFilter}
+                onChange={(e) => setSelectedCategoryFilter(e.target.value as 'All' | 'UG' | 'PG')}
+                style={{
+                  border: '2px solid #3b82f6',
+                  background: '#eff6ff',
+                  color: '#1e40af',
+                  fontWeight: 800,
+                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+                }}
+              >
+                <option value="All">All Programs (UG & PG)</option>
+                <option value="UG">UG (Undergraduate)</option>
+                <option value="PG">PG (Postgraduate)</option>
+              </select>
+
+              {/* Year Select Dropdown */}
               <select
                 className="champions-year-select"
                 value={activeYear}
@@ -631,58 +676,83 @@ export const LandingPage: React.FC = () => {
             style={{
               display: 'flex',
               gap: '24px',
-              padding: '24px 12px',
+              padding: '32px 16px',
               overflowX: 'auto',
               scrollSnapType: 'x mandatory',
               scrollBehavior: 'smooth',
-              alignItems: 'stretch'
+              alignItems: 'flex-end',
+              justifyContent: currentChampions.length <= 3 ? 'center' : 'flex-start'
             }}
           >
-            {currentChampions.map((champ, idx) => (
-              <div
-                key={idx}
-                className={`champion-card rank-${champ.rank}`}
-                style={{
-                  minWidth: '280px',
-                  maxWidth: '280px',
-                  scrollSnapAlign: 'center',
-                  flexShrink: 0
-                }}
-              >
-                <div className="card-top-row">
-                  <div className={`medal-badge rank-${champ.rank}`}>
-                    <div className="medal-circle">{champ.rank}</div>
-                  </div>
-                  <div className={`rank-pill rank-${champ.rank}`}>
-                    {champ.rankLabel}
-                  </div>
-                </div>
-
-                <div className="champion-avatar-frame">
-                  <img 
-                    src={champ.image?.startsWith('http') ? champ.image : (champ.image?.startsWith('/') ? `http://localhost:8000${champ.image}` : champ.image)} 
-                    alt={champ.teamName} 
-                    className="champion-avatar-img" 
-                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150'; }}
-                  />
-                </div>
-
-                <h3 className="champion-team-name">{champ.teamName}</h3>
-                <div className="champion-event-name">{champ.eventName}</div>
-
-                <div className={`champion-score-row rank-${champ.rank}`}>
-                  <span className="star-icon">★</span>
-                  <span>{champ.score}</span>
-                  <span className="score-max">/ 100</span>
-                </div>
-
-                <div className="champion-footer-pill">
-                  <div className="pill-item">
-                    <span>🏫 {champ.institution}</span>
-                  </div>
-                </div>
+            {currentChampions.length === 0 ? (
+              <div style={{ padding: '30px', textAlign: 'center', width: '100%', color: 'var(--text-muted)', fontWeight: 600 }}>
+                No champion records found for {selectedCategoryFilter === 'All' ? 'the selected year' : `${selectedCategoryFilter} in ${activeYear}`}.
               </div>
-            ))}
+            ) : (
+              currentChampions.map((champ, idx) => {
+                const themeClass = champ.rank === 1 ? 'theme-gold rank-1' : champ.rank === 2 ? 'theme-platinum rank-2' : champ.rank === 3 ? 'theme-silver rank-3' : `rank-${champ.rank}`;
+                const iconSymbol = champ.rank === 1 ? '👑' : champ.rank === 2 ? '🥈' : champ.rank === 3 ? '🥉' : champ.rank;
+
+                return (
+                  <div
+                    key={idx}
+                    className={`champion-card ${themeClass}`}
+                    style={{
+                      minWidth: '280px',
+                      maxWidth: '300px',
+                      scrollSnapAlign: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <div className="card-top-row">
+                      <div className={`medal-badge rank-${champ.rank}`}>
+                        <div className="medal-circle">{iconSymbol}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.7rem',
+                          fontWeight: 800,
+                          background: (champ.category || 'UG').toUpperCase() === 'PG' ? '#f3e8ff' : '#e0f2fe',
+                          color: (champ.category || 'UG').toUpperCase() === 'PG' ? '#7e22ce' : '#0369a1',
+                          border: `1px solid ${(champ.category || 'UG').toUpperCase() === 'PG' ? '#d8b4fe' : '#bae6fd'}`
+                        }}>
+                          {(champ.category || 'UG').toUpperCase()}
+                        </span>
+                        <div className={`rank-pill rank-${champ.rank}`}>
+                          {champ.rankLabel}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="champion-avatar-frame">
+                      <img 
+                        src={champ.image?.startsWith('http') ? champ.image : (champ.image?.startsWith('/') ? `http://localhost:8000${champ.image}` : champ.image)} 
+                        alt={champ.teamName} 
+                        className="champion-avatar-img" 
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150'; }}
+                      />
+                    </div>
+
+                    <h3 className="champion-team-name">{champ.teamName}</h3>
+                    <div className="champion-event-name">{champ.eventName}</div>
+
+                    <div className={`champion-score-row rank-${champ.rank}`}>
+                      <span className="star-icon">★</span>
+                      <span>{champ.score}</span>
+                      <span className="score-max">/ 100</span>
+                    </div>
+
+                    <div className="champion-footer-pill">
+                      <div className="pill-item">
+                        <span>🏫 {champ.institution}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* Bottom Bar */}

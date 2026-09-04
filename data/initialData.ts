@@ -107,6 +107,7 @@ export interface AppUser {
 export interface Champion {
   id?: number;
   year: string;
+  category?: 'UG' | 'PG' | string;
   rank: number;
   rankLabel: string;
   teamName: string;
