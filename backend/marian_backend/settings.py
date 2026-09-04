@@ -85,8 +85,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'marian_backend.wsgi.application'
 
-# Database Setup (PostgreSQL primary)
-DB_ENGINE = os.environ.get('DATABASE_ENGINE', 'django.db.backends.postgresql')
+# Database Setup (SQLite by default for local dev)
+DB_ENGINE = os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3')
 
 if DB_ENGINE in ('django.db.backends.sqlite3', 'sqlite'):
     DATABASES = {
