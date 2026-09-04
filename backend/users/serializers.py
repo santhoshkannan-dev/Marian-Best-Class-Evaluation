@@ -83,7 +83,12 @@ class WorkflowAuditTrailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkflowAuditTrail
-        fields = ['id', 'submission', 'actor', 'actor_email', 'stage', 'stage_name', 'previous_status', 'new_status', 'comments', 'created_at']
+        fields = [
+            'id', 'submission', 'actor', 'actor_email', 'stage',
+            'stage_name', 'previous_status', 'new_status', 'comments',
+            'ip_address', 'user_agent', 'request_id', 'previous_hash',
+            'record_hash', 'created_at'
+        ]
 
 class ClassIndexResultSerializer(serializers.ModelSerializer):
     class_name_display = serializers.CharField(source='class_name.name', read_only=True)

@@ -1,3 +1,4 @@
+import hashlib
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -175,7 +176,25 @@ class WorkflowAuditTrail(models.Model):
     previous_status = models.CharField(max_length=50)
     new_status = models.CharField(max_length=50)
     comments = models.TextField(blank=True, null=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    request_id = models.CharField(max_length=100, null=True, blank=True)
+    previous_hash = models.CharField(max_length=64, null=True, blank=True)
+    record_hash = models.CharField(max_length=64, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise PermissionError("WorkflowAuditTrail records are immutable and cannot be updated.")
+        last_record = WorkflowAuditTrail.objects.filter(submission=self.submission).order_by('-id').first()
+        prev_h = last_record.record_hash if (last_record and last_record.record_hash) else ("0" * 64)
+        self.previous_hash = prev_h
+        data_to_hash = f"{prev_h}:{self.submission_id}:{self.actor_id}:{self.previous_status}:{self.new_status}:{self.comments}"
+        self.record_hash = hashlib.sha256(data_to_hash.encode('utf-8')).hexdigest()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise PermissionError("WorkflowAuditTrail records are immutable and cannot be deleted.")
 
     def __str__(self):
         return f"Audit Log #{self.id} - Sub #{self.submission_id} Stage {self.stage}"

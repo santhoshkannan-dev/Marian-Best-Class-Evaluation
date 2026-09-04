@@ -52,6 +52,38 @@ UNEDITABLE_BY_STUDENT_STATES = (
 )
 
 
+def get_client_ip(request):
+    if not request:
+        return None
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def create_audit_entry(submission, actor, stage, stage_name, prev_status, new_status, comments, request=None):
+    try:
+        from users.models import WorkflowAuditTrail
+        ip_addr = get_client_ip(request) if request else None
+        user_agent = request.META.get('HTTP_USER_AGENT') if request else None
+        req_id = request.META.get('HTTP_X_REQUEST_ID') if request else None
+
+        WorkflowAuditTrail.objects.create(
+            submission=submission,
+            actor=actor if actor and actor.is_authenticated else None,
+            stage=stage,
+            stage_name=stage_name,
+            previous_status=prev_status,
+            new_status=new_status,
+            comments=comments or "",
+            ip_address=ip_addr,
+            user_agent=user_agent,
+            request_id=req_id
+        )
+    except Exception as e:
+        logger.warning(f"Failed to create audit entry for submission #{submission.id}: {e}")
+
+
 def get_online_courses_item_ids():
     items = CriteriaItem.objects.filter(
         Q(category__code__iexact='cat-online-courses') |
@@ -1049,14 +1081,15 @@ class SubmissionListView(APIView):
                         "total_students": sub_evidence.get("totalStudents", 0)
                     }
                 )
-            WorkflowAuditTrail.objects.create(
+            create_audit_entry(
                 submission=submission,
                 actor=user,
                 stage=1,
                 stage_name="Student Claims",
-                previous_status="Initial",
+                prev_status="Initial",
                 new_status=submission.status,
-                comments=remarks or ""
+                comments=remarks or "",
+                request=request
             )
         except Exception as e:
             logger.warning(f"Error syncing relational models for submission #{submission.id}: {e}")
@@ -1257,19 +1290,16 @@ class SubmissionDetailView(APIView):
             submission.save()
 
             if prev_status != submission.status:
-                try:
-                    from users.models import WorkflowAuditTrail
-                    WorkflowAuditTrail.objects.create(
-                        submission=submission,
-                        actor=user if user and user.is_authenticated else None,
-                        stage=3 if user and user.role == 'evaluation' else 2,
-                        stage_name="Evaluation Update",
-                        previous_status=prev_status,
-                        new_status=submission.status,
-                        comments=submission.remarks or "Status updated by evaluator/admin"
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to record audit trail on update for sub #{submission.id}: {e}")
+                create_audit_entry(
+                    submission=submission,
+                    actor=user,
+                    stage=3 if user and user.role == 'evaluation' else 2,
+                    stage_name="Evaluation Update",
+                    prev_status=prev_status,
+                    new_status=submission.status,
+                    comments=submission.remarks or "Status updated by evaluator/admin",
+                    request=request
+                )
 
         return Response({
             "id": submission.id,
