@@ -22,8 +22,9 @@ except ImportError:
     id_token = None
     google_requests = None
 
+from django.db import transaction
 from django.db.models import Q
-from .models import User, Class, Department, Submission, AcademicYear, SystemSetting, UserGroupModel, CriteriaCategory, CriteriaItem
+from .models import User, Class, Department, Submission, AcademicYear, SystemSetting, UserGroupModel, CriteriaCategory, CriteriaItem, CriteriaRule
 
 
 def get_online_courses_item_ids():
@@ -1110,55 +1111,122 @@ class SubmissionDetailView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        if 'criteriaId' in request.data:
-            submission.criteria_id = int(request.data.get('criteriaId'))
-        if 'academicYear' in request.data:
-            submission.academic_year = request.data.get('academicYear')
-        if 'description' in request.data:
-            submission.description = request.data.get('description')
-        if 'status' in request.data:
-            submission.status = request.data.get('status')
-            if user and user.role != 'student':
-                submission.verified_by_name = user.get_full_name() or user.username
-        if 'verifiedByName' in request.data and request.data.get('verifiedByName'):
-            submission.verified_by_name = request.data.get('verifiedByName')
-        if 'remarks' in request.data:
-            submission.remarks = request.data.get('remarks')
-        if 'marks' in request.data:
-            submission.marks = request.data.get('marks')
-        if 'proof' in request.data:
-            submission.proof = request.data.get('proof')
-        if 'eventId' in request.data:
-            submission.event_id = request.data.get('eventId')
-        if 'evidence' in request.data:
-            submission.evidence = request.data.get('evidence')
-        if 'start_date' in request.data or 'startDate' in request.data:
-            submission.start_date = request.data.get('start_date') or request.data.get('startDate')
-        elif 'evidence' in request.data and isinstance(request.data.get('evidence'), dict):
-            ev = request.data.get('evidence')
-            if ev.get('startDate') or ev.get('examDate'):
-                submission.start_date = ev.get('startDate') or ev.get('examDate')
+        # 1. Locked Record Guard
+        if submission.status == 'Locked':
+            return Response(
+                {"error": "This submission record has been locked and cannot be modified."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-        if 'end_date' in request.data or 'endDate' in request.data:
-            submission.end_date = request.data.get('end_date') or request.data.get('endDate')
-        elif 'evidence' in request.data and isinstance(request.data.get('evidence'), dict):
-            ev = request.data.get('evidence')
-            if ev.get('endDate'):
-                submission.end_date = ev.get('endDate')
-        if 'repVerifiedByName' in request.data:
-            submission.rep_verified_by_name = request.data.get('repVerifiedByName')
-        if 'repRemarks' in request.data:
-            submission.rep_remarks = request.data.get('repRemarks')
-        if 'teacherVerifiedByName' in request.data:
-            submission.teacher_verified_by_name = request.data.get('teacherVerifiedByName')
-        if 'teacherRemarks' in request.data:
-            submission.teacher_remarks = request.data.get('teacherRemarks')
-        if 'evaluatorVerifiedByName' in request.data:
-            submission.evaluator_verified_by_name = request.data.get('evaluatorVerifiedByName')
-        if 'evaluatorRemarks' in request.data:
-            submission.evaluator_remarks = request.data.get('evaluatorRemarks')
+        # 2. Authorization Check: Students cannot assign marks or change evaluation/verification status
+        if user and user.role == 'student':
+            if 'marks' in request.data and request.data.get('marks') is not None:
+                return Response(
+                    {"error": "Unauthorized: Students cannot assign evaluation marks."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            if 'status' in request.data and request.data.get('status') in ('Approved', 'Verified', 'Teacher Verified', 'Student Rep Verified', 'Evaluated', 'Locked'):
+                return Response(
+                    {"error": "Unauthorized: Students cannot alter verification or evaluation status."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
-        submission.save()
+        # 3. Score Range & Type Bounds Verification
+        if 'marks' in request.data and request.data.get('marks') is not None:
+            try:
+                req_marks = float(request.data.get('marks'))
+            except (ValueError, TypeError):
+                return Response(
+                    {"error": "Invalid marks value provided."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            criteria_item = CriteriaItem.objects.filter(pk=target_criteria_id).first()
+            if criteria_item:
+                allowed_max = criteria_item.marks
+                rule = CriteriaRule.objects.filter(item=criteria_item).first()
+                if rule and rule.maximum_marks is not None:
+                    allowed_max = rule.maximum_marks
+
+                is_negative = (criteria_item.type == 'negative') or (rule and rule.is_negative)
+                if req_marks < 0 and not is_negative:
+                    return Response(
+                        {"error": f"Score ({req_marks}) cannot be negative for non-penalty criteria."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                if req_marks > allowed_max:
+                    return Response(
+                        {"error": f"Requested score ({req_marks}) exceeds the maximum allowed limit ({allowed_max}) for criteria '{criteria_item.title}'."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+        # 4. Save updates and record audit log inside atomic transaction
+        with transaction.atomic():
+            if 'criteriaId' in request.data:
+                submission.criteria_id = int(request.data.get('criteriaId'))
+            if 'academicYear' in request.data:
+                submission.academic_year = request.data.get('academicYear')
+            if 'description' in request.data:
+                submission.description = request.data.get('description')
+            prev_status = submission.status
+            if 'status' in request.data:
+                submission.status = request.data.get('status')
+                if user and user.role != 'student':
+                    submission.verified_by_name = user.get_full_name() or user.username
+            if 'verifiedByName' in request.data and request.data.get('verifiedByName'):
+                submission.verified_by_name = request.data.get('verifiedByName')
+            if 'remarks' in request.data:
+                submission.remarks = request.data.get('remarks')
+            if 'marks' in request.data:
+                submission.marks = request.data.get('marks')
+            if 'proof' in request.data:
+                submission.proof = request.data.get('proof')
+            if 'eventId' in request.data:
+                submission.event_id = request.data.get('eventId')
+            if 'evidence' in request.data:
+                submission.evidence = request.data.get('evidence')
+            if 'start_date' in request.data or 'startDate' in request.data:
+                submission.start_date = request.data.get('start_date') or request.data.get('startDate')
+            elif 'evidence' in request.data and isinstance(request.data.get('evidence'), dict):
+                ev = request.data.get('evidence')
+                if ev.get('startDate') or ev.get('examDate'):
+                    submission.start_date = ev.get('startDate') or ev.get('examDate')
+
+            if 'end_date' in request.data or 'endDate' in request.data:
+                submission.end_date = request.data.get('end_date') or request.data.get('endDate')
+            elif 'evidence' in request.data and isinstance(request.data.get('evidence'), dict):
+                ev = request.data.get('evidence')
+                if ev.get('endDate'):
+                    submission.end_date = ev.get('endDate')
+            if 'repVerifiedByName' in request.data:
+                submission.rep_verified_by_name = request.data.get('repVerifiedByName')
+            if 'repRemarks' in request.data:
+                submission.rep_remarks = request.data.get('repRemarks')
+            if 'teacherVerifiedByName' in request.data:
+                submission.teacher_verified_by_name = request.data.get('teacherVerifiedByName')
+            if 'teacherRemarks' in request.data:
+                submission.teacher_remarks = request.data.get('teacherRemarks')
+            if 'evaluatorVerifiedByName' in request.data:
+                submission.evaluator_verified_by_name = request.data.get('evaluatorVerifiedByName')
+            if 'evaluatorRemarks' in request.data:
+                submission.evaluator_remarks = request.data.get('evaluatorRemarks')
+
+            submission.save()
+
+            if prev_status != submission.status:
+                try:
+                    from users.models import WorkflowAuditTrail
+                    WorkflowAuditTrail.objects.create(
+                        submission=submission,
+                        actor=user if user and user.is_authenticated else None,
+                        stage=3 if user and user.role == 'evaluation' else 2,
+                        stage_name="Evaluation Update",
+                        previous_status=prev_status,
+                        new_status=submission.status,
+                        comments=submission.remarks or "Status updated by evaluator/admin"
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to record audit trail on update for sub #{submission.id}: {e}")
 
         return Response({
             "id": submission.id,
