@@ -3,6 +3,7 @@ from .models import Champion
 from .serializers import ChampionSerializer
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 import logging
+import hashlib
 from datetime import datetime
 from django.conf import settings
 
@@ -130,9 +131,14 @@ def check_duplicate_submission(user, criteria_id, academic_year, certificate_id,
     # 3. Exact Criteria + Description Activity Fingerprint Match
     if description and str(description).strip() and criteria_id:
         desc_clean = str(description).strip()
+        try:
+            c_id = int(criteria_id)
+        except (ValueError, TypeError):
+            c_id = abs(int(hashlib.md5(str(criteria_id).encode()).hexdigest(), 16)) % 1000000
+
         qs = Submission.objects.filter(
             user=user,
-            criteria_id=int(criteria_id),
+            criteria_id=c_id,
             academic_year=academic_year,
             description__iexact=desc_clean
         ).exclude(status='Rejected')
@@ -1132,22 +1138,30 @@ class SubmissionListView(APIView):
         if dup_err:
             return Response({"error": dup_err}, status=status.HTTP_400_BAD_REQUEST)
 
-        submission = Submission.objects.create(
-            user=user,
-            criteria_id=int(criteria_id),
-            academic_year=academic_year,
-            description=description,
-            status=status_val,
-            remarks=remarks,
-            marks=marks,
-            proof=proof,
-            proof_hash=proof_h,
-            certificate_id=cert_id,
-            event_id=event_id,
-            evidence=evidence,
-            start_date=start_date,
-            end_date=end_date
-        )
+        try:
+            criteria_id_int = int(criteria_id)
+        except (ValueError, TypeError):
+            criteria_id_int = abs(int(hashlib.md5(str(criteria_id).encode()).hexdigest(), 16)) % 1000000
+
+        try:
+            submission = Submission.objects.create(
+                user=user,
+                criteria_id=criteria_id_int,
+                academic_year=academic_year,
+                description=description,
+                status=status_val,
+                remarks=remarks,
+                marks=marks,
+                proof=proof,
+                proof_hash=proof_h,
+                certificate_id=cert_id,
+                event_id=event_id,
+                evidence=evidence,
+                start_date=start_date,
+                end_date=end_date
+            )
+        except Exception as e:
+            return Response({"error": f"Failed to create submission: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
         
         # Sync relational models (AcademicGradeBreakdown & WorkflowAuditTrail)
         try:

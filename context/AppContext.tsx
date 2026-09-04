@@ -914,7 +914,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         );
       } else {
         const errData = await res.json().catch(() => ({}));
-        alert(errData.error || 'Failed to create submission.');
+        const errMsg = errData.error || errData.detail || (typeof errData === 'object' && Object.keys(errData).length ? JSON.stringify(errData) : 'Failed to create submission.');
+        alert(errMsg);
         setSubmissions((prev) => prev.filter((s) => s.id !== tempId));
       }
     } catch (err: any) {
