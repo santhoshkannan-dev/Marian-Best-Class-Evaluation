@@ -92,6 +92,8 @@ class Submission(models.Model):
     remarks = models.TextField(blank=True, null=True)
     marks = models.IntegerField(blank=True, null=True)
     proof = models.CharField(max_length=255, blank=True, null=True)
+    proof_hash = models.CharField(max_length=64, blank=True, null=True, db_index=True)
+    certificate_id = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     event_id = models.CharField(max_length=100, blank=True, null=True)
     start_date = models.CharField(max_length=50, blank=True, null=True)
     end_date = models.CharField(max_length=50, blank=True, null=True)

@@ -105,6 +105,45 @@ def get_upsc_psc_item_ids():
     return ids
 
 
+def check_duplicate_submission(user, criteria_id, academic_year, certificate_id, proof_hash, description, submission_id=None):
+    if not user:
+        return None
+
+    # 1. Certificate ID / Event ID Match
+    if certificate_id and str(certificate_id).strip():
+        cert_clean = str(certificate_id).strip()
+        qs = Submission.objects.filter(user=user, certificate_id__iexact=cert_clean).exclude(status='Rejected')
+        if submission_id:
+            qs = qs.exclude(id=submission_id)
+        if qs.exists():
+            return f"⚠️ Duplicate detected: Certificate / Identifier '{cert_clean}' has already been submitted for evaluation."
+
+    # 2. SHA-256 Proof File Hash Match
+    if proof_hash and str(proof_hash).strip():
+        p_clean = str(proof_hash).strip()
+        qs = Submission.objects.filter(user=user, proof_hash=p_clean).exclude(status='Rejected')
+        if submission_id:
+            qs = qs.exclude(id=submission_id)
+        if qs.exists():
+            return "⚠️ Duplicate detected: An identical proof document has already been submitted for evaluation."
+
+    # 3. Exact Criteria + Description Activity Fingerprint Match
+    if description and str(description).strip() and criteria_id:
+        desc_clean = str(description).strip()
+        qs = Submission.objects.filter(
+            user=user,
+            criteria_id=int(criteria_id),
+            academic_year=academic_year,
+            description__iexact=desc_clean
+        ).exclude(status='Rejected')
+        if submission_id:
+            qs = qs.exclude(id=submission_id)
+        if qs.exists():
+            return f"⚠️ Duplicate detected: A submission with identical activity description has already been submitted for this criteria in {academic_year}."
+
+    return None
+
+
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -1045,6 +1084,29 @@ class SubmissionListView(APIView):
         except (ValueError, TypeError):
             pass
 
+        # Extract certificate ID and proof hash for duplicate detection
+        cert_id = request.data.get('certificateId') or request.data.get('eventId')
+        if not cert_id and isinstance(evidence, dict):
+            cert_id = evidence.get('certificateId') or evidence.get('certId') or evidence.get('startupGovtId') or evidence.get('eventId')
+        
+        proof_h = request.data.get('proofHash')
+        if not proof_h and isinstance(evidence, dict):
+            proof_h = evidence.get('proofHash')
+        if not proof_h and proof:
+            proof_h = hashlib.sha256(str(proof).encode('utf-8')).hexdigest()
+
+        # Check duplicate submission
+        dup_err = check_duplicate_submission(
+            user=user,
+            criteria_id=criteria_id,
+            academic_year=academic_year,
+            certificate_id=cert_id,
+            proof_hash=proof_h,
+            description=description
+        )
+        if dup_err:
+            return Response({"error": dup_err}, status=status.HTTP_400_BAD_REQUEST)
+
         submission = Submission.objects.create(
             user=user,
             criteria_id=int(criteria_id),
@@ -1054,6 +1116,8 @@ class SubmissionListView(APIView):
             remarks=remarks,
             marks=marks,
             proof=proof,
+            proof_hash=proof_h,
+            certificate_id=cert_id,
             event_id=event_id,
             evidence=evidence,
             start_date=start_date,
@@ -1168,6 +1232,32 @@ class SubmissionDetailView(APIView):
                     {"error": "Maximum 3 submissions allowed for UPSC/PSC Exam Participation. Limit of 3 reached."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+        # Duplicate detection check on update
+        target_cert_id = request.data.get('certificateId') or request.data.get('eventId', submission.certificate_id or submission.event_id)
+        if not target_cert_id and isinstance(request.data.get('evidence'), dict):
+            ev = request.data.get('evidence')
+            target_cert_id = ev.get('certificateId') or ev.get('certId') or ev.get('startupGovtId') or ev.get('eventId')
+        
+        target_proof_h = request.data.get('proofHash')
+        if not target_proof_h and isinstance(request.data.get('evidence'), dict):
+            target_proof_h = request.data.get('evidence').get('proofHash')
+        if not target_proof_h and 'proof' in request.data and request.data.get('proof'):
+            target_proof_h = hashlib.sha256(str(request.data.get('proof')).encode('utf-8')).hexdigest()
+        if not target_proof_h:
+            target_proof_h = submission.proof_hash
+
+        dup_err = check_duplicate_submission(
+            user=submission.user,
+            criteria_id=target_criteria_id,
+            academic_year=request.data.get('academicYear', submission.academic_year),
+            certificate_id=target_cert_id,
+            proof_hash=target_proof_h,
+            description=request.data.get('description', submission.description),
+            submission_id=submission.id
+        )
+        if dup_err and target_status != 'Rejected':
+            return Response({"error": dup_err}, status=status.HTTP_400_BAD_REQUEST)
 
         # 1. Locked Record Guard
         if submission.status == 'Locked':
