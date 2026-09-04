@@ -248,6 +248,7 @@ class UserGroupModel(models.Model):
 
 class Champion(models.Model):
     year = models.CharField(max_length=20)
+    category = models.CharField(max_length=20, default='UG')
     rank = models.IntegerField()
     rankLabel = models.CharField(max_length=50)
     teamName = models.CharField(max_length=100)

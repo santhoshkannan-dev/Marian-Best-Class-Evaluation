@@ -86,7 +86,9 @@ export default function ChampionsManagementPage() {
         setImageFile(null);
         await fetchChampions();
       } else {
-        alert('Failed to add champion.');
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = typeof errData === 'object' ? JSON.stringify(errData) : 'Failed to add champion.';
+        alert(`Failed to add champion: ${errMsg}`);
       }
     } catch (err) {
       console.error(err);
