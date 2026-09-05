@@ -94,9 +94,31 @@ interface AppContextType {
   championsData: Record<string, Champion[]>;
   fetchChampions: () => Promise<void>;
   isInitialized: boolean;
+  // Mark moderation & rankings
+  classIndexData: ClassIndexEntry[] | null;
+  smallestClassSize: number;
+  fetchClassIndex: (year?: string) => Promise<void>;
+  updateClassModeration: (classId: number, numStudents: number, negativePoints: number) => Promise<void>;
+  updateSmallestClassSize: (n: number) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// -------------------------------------------------------
+// ClassIndexEntry — shape returned by GET /api/class-index/
+// -------------------------------------------------------
+export interface ClassIndexEntry {
+  rank: number | null;
+  class_name: string;
+  department: string;
+  department_code: string;
+  N: number;
+  S: number;
+  P: number;
+  n: number;
+  M: number | null;
+}
+
 
 const LOCAL_STORAGE_KEY = 'bc_persistent_state_v2';
 
@@ -236,6 +258,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [departments, setDepartments] = useState<any[]>(defaultDepartments);
   const [championsData, setChampionsData] = useState<Record<string, Champion[]>>({});
 
+  // Mark moderation & class rankings state
+  const [classIndexData, setClassIndexData] = useState<ClassIndexEntry[] | null>(null);
+  const [smallestClassSize, setSmallestClassSize] = useState<number>(0);
+
   const fetchChampions = async () => {
     try {
       const res = await fetch('http://localhost:8000/api/champions/');
@@ -361,6 +387,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               }
               if (settingsData.submissionWindowStart !== undefined) setSubmissionWindowStart(settingsData.submissionWindowStart);
               if (settingsData.submissionWindowEnd !== undefined) setSubmissionWindowEnd(settingsData.submissionWindowEnd);
+              if (settingsData.smallest_class_size !== undefined) {
+                const val = parseFloat(settingsData.smallest_class_size);
+                if (!isNaN(val)) setSmallestClassSize(val);
+              }
             }
           })
           .catch(err => console.warn('Failed to fetch backend settings:', err));
@@ -904,45 +934,50 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     try {
       const token = jwtToken || localStorage.getItem('bc_access_token');
+      const userEmail = currentUserInfo?.email || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('marian_best_class_state') || '{}')?.currentUserInfo?.email : '');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
       if (token) {
-        const res = await fetch(`http://localhost:8000/api/submissions/${id}/`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            criteriaId: updates.criteriaId,
-            academicYear: updates.academicYear,
-            description: updates.description,
-            status: updates.status,
-            remarks: updates.remarks,
-            marks: updates.marks,
-            proof: updates.proof,
-            eventId: updates.eventId,
-            start_date: updates.startDate,
-            end_date: updates.endDate,
-            evidence: updates.evidence,
-            evaluatorVerified: updates.evaluatorVerified,
-            verifiedByName: updates.verifiedByName,
-            teacherVerifiedByName: updates.teacherVerifiedByName,
-            teacherRemarks: updates.teacherRemarks,
-            repVerifiedByName: updates.repVerifiedByName,
-            repRemarks: updates.repRemarks,
-            evaluatorVerifiedByName: updates.evaluatorVerifiedByName,
-            evaluatorRemarks: updates.evaluatorRemarks
-          })
-        });
-        if (res.ok) {
-          const updatedSub = await res.json();
-          setSubmissions((prev) =>
-            prev.map((s) => (s.id === id ? normalizeSubmission(updatedSub) : s))
-          );
-        } else {
-          const errData = await res.json().catch(() => ({}));
-          alert(errData.error || 'Failed to update submission.');
-          fetchSubmissions();
-        }
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`http://localhost:8000/api/submissions/${id}/`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          email: userEmail,
+          criteriaId: updates.criteriaId,
+          academicYear: updates.academicYear,
+          description: updates.description,
+          status: updates.status,
+          remarks: updates.remarks,
+          marks: updates.marks,
+          proof: updates.proof,
+          eventId: updates.eventId,
+          start_date: updates.startDate,
+          end_date: updates.endDate,
+          evidence: updates.evidence,
+          evaluatorVerified: updates.evaluatorVerified,
+          verifiedByName: updates.verifiedByName,
+          teacherVerifiedByName: updates.teacherVerifiedByName,
+          teacherRemarks: updates.teacherRemarks,
+          repVerifiedByName: updates.repVerifiedByName,
+          repRemarks: updates.repRemarks,
+          evaluatorVerifiedByName: updates.evaluatorVerifiedByName,
+          evaluatorRemarks: updates.evaluatorRemarks
+        })
+      });
+      if (res.ok) {
+        const updatedSub = await res.json();
+        setSubmissions((prev) =>
+          prev.map((s) => (s.id === id ? normalizeSubmission(updatedSub) : s))
+        );
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData.error || errData.detail || errData.message || (typeof errData === 'string' ? errData : null);
+        alert(errMsg || 'Failed to update submission.');
+        fetchSubmissions();
       }
     } catch (err: any) {
       console.error('Server connection failed during submission update:', err);
@@ -1627,6 +1662,55 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  // -------------------------------------------------------
+  // MARK MODERATION & CLASS RANKING FUNCTIONS
+  // -------------------------------------------------------
+
+  const updateClassModeration = async (classId: number, numStudents: number, negativePoints: number) => {
+    // Optimistic update in local classes state
+    setClasses(prev =>
+      prev.map(c => c.id === classId ? { ...c, num_students: numStudents, negative_points: negativePoints } : c)
+    );
+    try {
+      await fetch(`http://localhost:8000/api/auth/classes/${classId}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ num_students: numStudents, negative_points: negativePoints }),
+      });
+    } catch (e) {
+      console.error('Failed to update class moderation fields:', e);
+    }
+  };
+
+  const fetchClassIndex = async (year?: string) => {
+    try {
+      const url = year
+        ? `http://localhost:8000/api/class-index/?year=${encodeURIComponent(year)}`
+        : 'http://localhost:8000/api/class-index/';
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setClassIndexData(data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch class index:', e);
+    }
+  };
+
+  const updateSmallestClassSize = async (n: number) => {
+    setSmallestClassSize(n);
+    try {
+      await fetch('http://localhost:8000/api/settings/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ smallest_class_size: n }),
+      });
+    } catch (e) {
+      console.error('Failed to save smallest_class_size:', e);
+    }
+  };
+
+
   return (
     <AppContext.Provider
       value={{
@@ -1697,6 +1781,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         championsData,
         fetchChampions,
         isInitialized,
+        // Mark moderation & rankings
+        classIndexData,
+        smallestClassSize,
+        fetchClassIndex,
+        updateClassModeration,
+        updateSmallestClassSize,
       }}
     >
       {children}

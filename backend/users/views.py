@@ -24,7 +24,7 @@ except ImportError:
     google_requests = None
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
 from .models import User, Class, Department, Submission, AcademicYear, SystemSetting, UserGroupModel, CriteriaCategory, CriteriaItem, CriteriaRule
 
 
@@ -35,12 +35,12 @@ VALID_STATE_TRANSITIONS = {
     'Pending Verification': ['Student Rep Verified', 'Teacher Verified', 'Correction Requested', 'Correction', 'Rejected', 'Pending Verification'],
     'Pending': ['Student Rep Verified', 'Teacher Verified', 'Correction Requested', 'Correction', 'Rejected', 'Pending'],
     'Student Rep Verified': ['Teacher Verified', 'Evaluated', 'Approved', 'Verified', 'Correction Requested', 'Correction', 'Rejected', 'Student Rep Verified'],
-    'Teacher Verified': ['Evaluated', 'Approved', 'Verified', 'Correction Requested', 'Correction', 'Rejected', 'Teacher Verified'],
+    'Teacher Verified': ['Evaluated', 'Approved', 'Verified', 'Locked', 'Correction Requested', 'Correction', 'Rejected', 'Teacher Verified'],
     'Correction Requested': ['Submitted', 'Pending Rep Verification', 'Pending Verification', 'Draft', 'Correction Requested'],
     'Correction': ['Submitted', 'Pending Rep Verification', 'Pending Verification', 'Draft', 'Correction'],
-    'Evaluated': ['Locked', 'Evaluated'],
-    'Approved': ['Locked', 'Approved'],
-    'Verified': ['Locked', 'Verified'],
+    'Evaluated': ['Locked', 'Evaluated', 'Correction Requested', 'Correction', 'Rejected'],
+    'Approved': ['Evaluated', 'Locked', 'Verified', 'Teacher Verified', 'Correction Requested', 'Correction', 'Rejected', 'Approved'],
+    'Verified': ['Evaluated', 'Locked', 'Approved', 'Teacher Verified', 'Correction Requested', 'Correction', 'Rejected', 'Verified'],
     'Rejected': ['Draft', 'Rejected'],
     'Locked': [] # Locked is terminal! Cannot transition to any state.
 }
@@ -109,18 +109,20 @@ def get_upsc_psc_item_ids():
 
 
 def is_user_student_rep(user):
-    if not user or not user.is_authenticated:
+    if not user or not getattr(user, 'is_authenticated', False):
         return False
     if getattr(user, 'is_student_rep', False) or getattr(user, 'is_dqc_member', False):
         return True
     if Class.objects.filter(dqc_member=user).exists():
         return True
-    user_email = (user.email or '').strip().lower()
+    user_email = (getattr(user, 'email', '') or '').strip().lower()
     if user_email:
         if user_email in ('santhosh.25pmc152@mariancollege.org', 'santhosh.25ubc154@mariancollege.org'):
             return True
+        if Class.objects.filter(dqc_member__email__iexact=user_email).exists():
+            return True
         rep_group = UserGroupModel.objects.filter(
-            Q(id='grp-student-reps') | Q(name__icontains='student rep') | Q(name__icontains='dqc')
+            Q(group_id='grp-student-reps') | Q(name__icontains='student rep') | Q(name__icontains='dqc')
         ).first()
         if rep_group and rep_group.members and any(isinstance(e, str) and e.strip().lower() == user_email for e in rep_group.members):
             return True
@@ -819,6 +821,8 @@ class ClassListView(APIView):
                 "classTeacherName": c.class_teacher.get_full_name() or c.class_teacher.username if c.class_teacher else None,
                 "dqcMember": c.dqc_member.email if c.dqc_member else None,
                 "dqcMemberName": c.dqc_member.get_full_name() or c.dqc_member.username if c.dqc_member else None,
+                "num_students": c.num_students,
+                "negative_points": c.negative_points,
             }
             for c in classes
         ])
@@ -927,6 +931,135 @@ class ClassListView(APIView):
             "dqcMember": cls.dqc_member.email if cls.dqc_member else None,
             "dqcMemberName": cls.dqc_member.get_full_name() or cls.dqc_member.username if cls.dqc_member else None,
         })
+
+
+class ClassDetailView(APIView):
+    """GET and PATCH a single Class by primary key.
+    Supports updating num_students and negative_points for mark moderation.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        try:
+            cls = Class.objects.select_related('department', 'class_teacher', 'dqc_member').get(pk=pk)
+        except Class.DoesNotExist:
+            return Response({"error": "Class not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            "id": cls.id,
+            "name": cls.name,
+            "department": cls.department.name,
+            "department_code": cls.department.code,
+            "classTeacher": cls.class_teacher.email if cls.class_teacher else None,
+            "dqcMember": cls.dqc_member.email if cls.dqc_member else None,
+            "num_students": cls.num_students,
+            "negative_points": cls.negative_points,
+        })
+
+    def patch(self, request, pk):
+        try:
+            cls = Class.objects.get(pk=pk)
+        except Class.DoesNotExist:
+            return Response({"error": "Class not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        update_fields = []
+        if 'num_students' in request.data:
+            try:
+                cls.num_students = int(request.data['num_students'])
+                update_fields.append('num_students')
+            except (ValueError, TypeError):
+                return Response({"error": "num_students must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+        if 'negative_points' in request.data:
+            try:
+                cls.negative_points = float(request.data['negative_points'])
+                update_fields.append('negative_points')
+            except (ValueError, TypeError):
+                return Response({"error": "negative_points must be a number"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if update_fields:
+            cls.save(update_fields=update_fields)
+
+        return Response({
+            "id": cls.id,
+            "name": cls.name,
+            "num_students": cls.num_students,
+            "negative_points": cls.negative_points,
+        })
+
+
+class ClassIndexView(APIView):
+    """Compute and return the moderated class index M for all classes.
+
+    Formula: M = (S - P) / (N^2) * (1 + 100 * (N - n))
+      S = sum of marks on Locked submissions for the class
+      P = Class.negative_points
+      N = Class.num_students
+      n = SystemSetting['smallest_class_size']
+
+    Query param: ?year=2025-2026 (optional, filters by submission academic_year)
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        year = request.query_params.get('year', None)
+
+        # Fetch n (smallest class size) from system settings
+        try:
+            n_setting = SystemSetting.objects.get(key='smallest_class_size')
+            n = float(n_setting.value) if n_setting.value else 0.0
+        except SystemSetting.DoesNotExist:
+            n = 0.0
+
+        all_classes = Class.objects.select_related('department').all()
+        ranked = []
+        unranked = []  # classes with N=0
+
+        for cls in all_classes:
+            N = cls.num_students
+            P = cls.negative_points
+
+            # Build submission queryset for this class
+            sub_qs = Submission.objects.filter(
+                status__in=['Locked', 'Evaluated'],
+                user__class_name=cls,
+                marks__isnull=False
+            )
+            if year:
+                sub_qs = sub_qs.filter(academic_year=year)
+
+            S = sub_qs.aggregate(total=Sum('marks'))['total'] or 0.0
+
+            if N > 0:
+                M = (S - P) / (N * N) * (1 + 100 * (N - n))
+                ranked.append({
+                    "class_name": cls.name,
+                    "department": cls.department.name,
+                    "department_code": cls.department.code,
+                    "N": N,
+                    "S": round(float(S), 2),
+                    "P": round(float(P), 2),
+                    "n": n,
+                    "M": round(float(M), 4),
+                })
+            else:
+                unranked.append({
+                    "class_name": cls.name,
+                    "department": cls.department.name,
+                    "department_code": cls.department.code,
+                    "N": 0,
+                    "S": round(float(S), 2),
+                    "P": round(float(P), 2),
+                    "n": n,
+                    "M": None,
+                    "rank": None,
+                })
+
+        # Sort by M descending and assign ranks
+        ranked.sort(key=lambda x: x['M'], reverse=True)
+        for i, entry in enumerate(ranked):
+            entry['rank'] = i + 1
+
+        return Response(ranked + unranked, status=status.HTTP_200_OK)
+
 
 class UserManagementView(APIView):
     permission_classes = [AllowAny]
@@ -1254,11 +1387,10 @@ class SubmissionDetailView(APIView):
 
     def put(self, request, pk):
         user = request.user
-        if not user.is_authenticated:
+        if not user or not getattr(user, 'is_authenticated', False):
             email = request.data.get('email')
-            if email:
-                user = User.objects.filter(email=email).first()
-            if not user:
+            user = User.objects.filter(email=email).first() if email else None
+            if not user or not getattr(user, 'is_authenticated', False):
                 user = User.objects.first()
 
         try:
@@ -1359,7 +1491,8 @@ class SubmissionDetailView(APIView):
                 )
 
         # 1c. Student Evidence Locking Guard
-        if user and user.role == 'student' and submission.status in UNEDITABLE_BY_STUDENT_STATES:
+        user_role = getattr(user, 'role', None)
+        if user and user_role == 'student' and submission.status in UNEDITABLE_BY_STUDENT_STATES:
             evidence_fields = {'description', 'evidence', 'proof', 'criteriaId', 'start_date', 'startDate', 'end_date', 'endDate'}
             if any(f in request.data for f in evidence_fields):
                 return Response(
@@ -1369,7 +1502,7 @@ class SubmissionDetailView(APIView):
 
         # 2. Authorization Check: Students cannot assign marks. Regular students cannot alter verification/evaluation status.
         # Class Representatives (Student Reps) are authorized to transition status to: 'Student Rep Verified', 'Correction Requested', 'Rejected', 'Pending Rep Verification'.
-        if user and user.role == 'student':
+        if user and user_role == 'student':
             if 'marks' in request.data and request.data.get('marks') is not None:
                 return Response(
                     {"error": "Unauthorized: Students cannot assign evaluation marks."},

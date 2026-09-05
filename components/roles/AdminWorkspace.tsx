@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
@@ -65,7 +65,10 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     addCriteriaItem,
     updateCriteriaItem,
     deleteCriteriaItem,
-    deleteCriteriaCategory
+    deleteCriteriaCategory,
+    updateClassModeration,
+    updateSmallestClassSize,
+    smallestClassSize,
   } = useApp();
 
   const [confirmSubmissionModal, setConfirmSubmissionModal] = useState<boolean>(false);
@@ -318,6 +321,18 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     setStartTimeWindow(submissionWindowStart || '');
     setEndTimeWindow(submissionWindowEnd || '');
   }, [submissionWindowStart, submissionWindowEnd]);
+
+  // ----------------------------------------------------
+  // DATASET 6: MODERATION SETTINGS (per-class N/P edits)
+  // ----------------------------------------------------
+  // Local state to track unsaved edits for each class's N and P
+  const [classModerationEdits, setClassModerationEdits] = useState<
+    Record<number, { num_students: number; negative_points: number }>
+  >({});
+  const [localSmallestClassSize, setLocalSmallestClassSize] = useState<number>(smallestClassSize);
+  React.useEffect(() => {
+    setLocalSmallestClassSize(smallestClassSize);
+  }, [smallestClassSize]);
 
 
   return (
@@ -1000,6 +1015,39 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
               <p className="muted" style={{ fontSize: '0.88rem' }}>Manage departments and their associated classes.</p>
             </div>
 
+            {/* ── Moderation Settings Card ── */}
+            <div className="card" style={{ padding: '24px', border: '1.5px solid #6366f122', background: 'linear-gradient(135deg, #f0f4ff 0%, #fafafe 100%)' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 6px 0', color: '#4338CA' }}>📐 Mark Moderation Settings</h3>
+              <p className="muted" style={{ fontSize: '0.8rem', margin: '0 0 18px 0' }}>
+                Set the global <strong>n</strong> (smallest class size) used in the moderation formula&nbsp;
+                <code style={{ background: '#e0e7ff', padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem' }}>M = (S−P) / N² × (1 + 100×(N−n))</code>.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>n — Smallest Class Size</label>
+                  <input
+                    type="number"
+                    className="input"
+                    min={0}
+                    value={localSmallestClassSize}
+                    onChange={(e) => setLocalSmallestClassSize(Number(e.target.value))}
+                    onBlur={() => { if (localSmallestClassSize !== smallestClassSize) updateSmallestClassSize(localSmallestClassSize); }}
+                    style={{ width: '120px' }}
+                  />
+                </div>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: '#4F46E5', color: '#fff', fontWeight: 700, alignSelf: 'flex-end' }}
+                  onClick={() => updateSmallestClassSize(localSmallestClassSize)}
+                >
+                  Save n
+                </button>
+                <span className="muted" style={{ fontSize: '0.78rem', alignSelf: 'flex-end', paddingBottom: '2px' }}>
+                  Currently: <strong>{smallestClassSize}</strong> students
+                </span>
+              </div>
+            </div>
+
             {/* Add Department Form */}
             <div className="card">
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>Add Department</h3>
@@ -1117,6 +1165,92 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                              className="class-advisor-mapping-row"
                            >
                              <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1e293b' }}>{className}</span>
+
+                             {/* Per-class N & P moderation fields */}
+                             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '4px' }}>
+                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                 <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7c3aed' }}>N — STUDENTS</span>
+                                 <input
+                                   type="number"
+                                   min={0}
+                                   style={{
+                                     padding: '5px 8px',
+                                     width: '80px',
+                                     fontSize: '0.82rem',
+                                     borderRadius: '6px',
+                                     border: '1px solid #c4b5fd',
+                                     background: '#faf5ff',
+                                     color: '#4c1d95',
+                                     fontWeight: 700,
+                                   }}
+                                   value={
+                                     classModerationEdits[classObj?.id]?.num_students !== undefined
+                                       ? classModerationEdits[classObj?.id].num_students
+                                       : (classObj?.num_students ?? 0)
+                                   }
+                                   onChange={(e) => {
+                                     if (!classObj?.id) return;
+                                     setClassModerationEdits(prev => ({
+                                       ...prev,
+                                       [classObj.id]: {
+                                         num_students: Number(e.target.value),
+                                         negative_points: prev[classObj.id]?.negative_points ?? (classObj?.negative_points ?? 0),
+                                       }
+                                     }));
+                                   }}
+                                 />
+                               </div>
+                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                 <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#dc2626' }}>P — PENALTY PTS</span>
+                                 <input
+                                   type="number"
+                                   min={0}
+                                   step={0.1}
+                                   style={{
+                                     padding: '5px 8px',
+                                     width: '90px',
+                                     fontSize: '0.82rem',
+                                     borderRadius: '6px',
+                                     border: '1px solid #fca5a5',
+                                     background: '#fff5f5',
+                                     color: '#7f1d1d',
+                                     fontWeight: 700,
+                                   }}
+                                   value={
+                                     classModerationEdits[classObj?.id]?.negative_points !== undefined
+                                       ? classModerationEdits[classObj?.id].negative_points
+                                       : (classObj?.negative_points ?? 0)
+                                   }
+                                   onChange={(e) => {
+                                     if (!classObj?.id) return;
+                                     setClassModerationEdits(prev => ({
+                                       ...prev,
+                                        [classObj.id]: {
+                                          num_students: prev[classObj.id]?.num_students ?? (classObj?.num_students ?? 0),
+                                          negative_points: Number(e.target.value),
+                                         }
+                                      }));
+                                    }}
+                                  />
+                               </div>
+                               {classObj?.id && classModerationEdits[classObj.id] !== undefined && (
+                                 <button
+                                   className="btn btn-sm"
+                                   style={{ background: '#7c3aed', color: '#fff', fontWeight: 700, height: '30px', alignSelf: 'flex-end' }}
+                                   onClick={() => {
+                                     const edit = classModerationEdits[classObj.id];
+                                     updateClassModeration(classObj.id, edit.num_students, edit.negative_points);
+                                     setClassModerationEdits(prev => {
+                                       const next = { ...prev };
+                                       delete next[classObj.id];
+                                       return next;
+                                     });
+                                   }}
+                                 >
+                                   Save
+                                 </button>
+                               )}
+                             </div>
 
                              {/* Class Teacher Select */}
                              <div className="mapping-select-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

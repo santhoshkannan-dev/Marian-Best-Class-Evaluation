@@ -38,6 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: 'evaluators', label: 'Evaluator Management', href: '/admin/evaluators' },
     { id: 'champions', label: 'Previous Champions', href: '/admin/champions' },
     { id: 'departments', label: 'Department Management', href: '/admin/departments' },
+    { id: 'rankings', label: 'Class Rankings', href: '/admin/rankings' },
     { id: 'settings', label: 'Settings', href: '/admin/settings' },
   ];
 
