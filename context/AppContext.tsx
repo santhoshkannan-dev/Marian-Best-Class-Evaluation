@@ -57,6 +57,7 @@ interface AppContextType {
   addCriteriaCategory: (category: Omit<CriteriaCategory, 'id' | 'items'>) => void;
   updateCriteriaCategory: (categoryId: string | number, category: Partial<CriteriaCategory>) => void;
   deleteCriteriaCategory: (categoryId: string | number) => void;
+  fetchCriteriaCatalog: () => Promise<void>;
   addUser: (user: Omit<AppUser, 'id'>) => void;
   toggleUserApproval: (userId: number) => void;
   toggleSubmissionOpen: () => void;
@@ -97,7 +98,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY = 'bc_persistent_state';
+const LOCAL_STORAGE_KEY = 'bc_persistent_state_v2';
 
 // Role helper to map Django backend roles to frontend route slugs
 const mapBackendRoleToFrontend = (backendRole: string): string => {
@@ -319,36 +320,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 setSubmissions(data.submissions);
               }
               if (data.users) setUsers(data.users);
-              // Only restore cached catalog if non-empty and up to date with latest category item structure
-              if (data.criteriaCatalog && Array.isArray(data.criteriaCatalog) && data.criteriaCatalog.length > 0) {
-                const researchCat = data.criteriaCatalog.find((c: any) => c.id === 'cat-research' || c.code === 'cat-research' || c.category === 'Research');
-                const isStaleResearch = researchCat && (
-                  researchCat.items.length > 5 ||
-                  researchCat.items.some((i: any) => i.title && (i.title.includes('Scopus') || i.title.includes('Outside Marian')))
-                );
-                const prizesCat = data.criteriaCatalog.find((c: any) => c.id === 'cat-prizes' || c.code === 'cat-prizes' || c.category === 'Prizes');
-                const isStalePrizes = prizesCat && (
-                  prizesCat.items.length > 2 ||
-                  prizesCat.items.some((i: any) => i.title && (i.title.includes('1st Prize') || i.title.includes('2nd Prize')))
-                );
-                const progCat = data.criteriaCatalog.find((c: any) => c.id === 'cat-programs-organized' || c.code === 'cat-programs-organized' || c.category === 'Programs Organized');
-                const isStaleProg = progCat && (
-                  progCat.items.length !== 3 ||
-                  !progCat.items.some((i: any) => i.title && i.title.includes('Class Magazine'))
-                );
-                const leadershipCat = data.criteriaCatalog.find((c: any) => c.id === 'cat-leadership' || c.code === 'cat-leadership' || c.category === 'Leaderships');
-                const isStaleLeadership = leadershipCat && (
-                  leadershipCat.items.length !== 4 ||
-                  !leadershipCat.items.some((i: any) => i.title && i.title.toLowerCase().includes('any other'))
-                );
-                if (isStaleResearch || isStalePrizes || isStaleProg || isStaleLeadership || !progCat || !leadershipCat) {
-                  setCriteriaCatalog(defaultCriteriaCatalog);
-                } else {
-                  setCriteriaCatalog(data.criteriaCatalog);
-                }
-              } else {
-                setCriteriaCatalog(defaultCriteriaCatalog);
-              }
+              // Never restore criteriaCatalog from cache — always fetch fresh from DB
+              // (so admin changes reflect immediately for all roles)
               if (data.academicYears) setAcademicYears(data.academicYears);
               if (data.students) setStudents(data.students);
               // Only restore cached user groups if non-empty
@@ -408,7 +381,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           evaluationOpen,
           submissions,
           users,
-          criteriaCatalog,
+          // criteriaCatalog intentionally NOT cached — always fetched fresh from DB
           academicYears,
           activeAcademicYear,
           students,
@@ -688,9 +661,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const merged = data.map((cat: any) => {
             const defCat = defaultCriteriaCatalog.find(
               (d) =>
-                (d.code && cat.code && d.code.toLowerCase() === cat.code.toLowerCase()) ||
-                (d.id && cat.id && d.id.toLowerCase() === cat.id.toLowerCase()) ||
-                (d.category && cat.category && d.category.toLowerCase().trim() === cat.category.toLowerCase().trim())
+                (d.code && cat.code && String(d.code).toLowerCase() === String(cat.code).toLowerCase()) ||
+                (d.id && cat.id && String(d.id).toLowerCase() === String(cat.id).toLowerCase()) ||
+                (d.category && cat.category && String(d.category).toLowerCase().trim() === String(cat.category).toLowerCase().trim())
             );
             const items = cat.items && Array.isArray(cat.items) && cat.items.length > 0
               ? cat.items
@@ -1025,6 +998,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             return cat;
           })
         );
+        // Re-fetch from DB so ALL roles see the updated catalog immediately
+        await fetchCriteriaCatalog();
       }
     } catch (e) {
       console.error('Failed to add criteria item', e);
@@ -1063,6 +1038,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             return cat;
           })
         );
+        // Re-fetch from DB so ALL roles see the updated catalog immediately
+        await fetchCriteriaCatalog();
       }
     } catch (e) {
       console.error('Failed to update criteria item', e);
@@ -1086,6 +1063,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
+      // Re-fetch from DB so ALL roles see the updated catalog immediately
+      await fetchCriteriaCatalog();
     } catch (e) {
       console.error('Failed to delete criteria item', e);
     }
@@ -1104,6 +1083,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (res.ok) {
         const createdCategory = await res.json();
         setCriteriaCatalog((prev) => prev.map(c => c.id === tempId ? createdCategory : c));
+        // Re-fetch from DB so ALL roles see the updated catalog immediately
+        await fetchCriteriaCatalog();
       }
     } catch (e) {
       console.error('Failed to add criteria category', e);
@@ -1121,6 +1102,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (res.ok) {
         const updatedCategory = await res.json();
         setCriteriaCatalog((prev) => prev.map((cat) => (cat.id == categoryId ? updatedCategory : cat)));
+        // Re-fetch from DB so ALL roles see the updated catalog immediately
+        await fetchCriteriaCatalog();
       }
     } catch (e) {
       console.error('Failed to update criteria category', e);
@@ -1134,6 +1117,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
+      // Re-fetch from DB so ALL roles see the updated catalog immediately
+      await fetchCriteriaCatalog();
     } catch (e) {
       console.error('Failed to delete criteria category', e);
     }
@@ -1675,6 +1660,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         addCriteriaCategory,
         updateCriteriaCategory,
         deleteCriteriaCategory,
+        fetchCriteriaCatalog,
         addUser,
         toggleUserApproval,
         toggleSubmissionOpen,

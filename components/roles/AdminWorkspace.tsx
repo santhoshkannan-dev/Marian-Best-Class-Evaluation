@@ -70,6 +70,8 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
 
   const [confirmSubmissionModal, setConfirmSubmissionModal] = useState<boolean>(false);
   const [confirmEvaluationModal, setConfirmEvaluationModal] = useState<boolean>(false);
+  const [editItemModal, setEditItemModal] = useState<any>(null);
+  const [newSubKey, setNewSubKey] = useState<string>('');
 
   // ----------------------------------------------------
   // DATASET 1: ACADEMIC YEARS
@@ -176,14 +178,14 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
     const item = cat.items.find((i: any) => String(i.id) === String(itemId));
     if (!item) return;
 
-    const newTitle = prompt('Edit Title:', item.title);
-    if (newTitle === null) return;
-    const newMarksStr = prompt('Edit Marks:', item.marks.toString());
-    if (newMarksStr === null) return;
-    const newDetails = prompt('Edit Details:', item.details);
-    if (newDetails === null) return;
-
-    updateCriteriaItem(catId, parseInt(itemId, 10), { title: newTitle || item.title, marks: Number(newMarksStr) || 0, details: newDetails || item.details });
+    setEditItemModal({
+      catId,
+      itemId,
+      title: item.title,
+      marks: item.marks,
+      details: item.details,
+      rules_json: item.rules_json ? JSON.stringify(item.rules_json, null, 2) : ''
+    });
   };
 
   // ----------------------------------------------------
@@ -664,11 +666,39 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
                             Type: {item.type} | Marks: {item.marks} {item.type === 'Count Based' ? '/ count' : ''}
                           </p>
                           <p className="muted" style={{ fontSize: '0.78rem', margin: 0, fontWeight: 600 }}>{item.details}</p>
+                          {item.rules_json && item.rules_json.subItems && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+                              {Object.entries(item.rules_json.subItems).map(([subKey, subMarks]) => (
+                                <span key={subKey} style={{
+                                  background: '#f1f5f9',
+                                  border: '1px solid #e2e8f0',
+                                  color: '#334155',
+                                  padding: '4px 10px',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px'
+                                }}>
+                                  {subKey}
+                                  <span style={{
+                                    background: '#ffffff',
+                                    color: '#ea580c',
+                                    padding: '2px 6px',
+                                    borderRadius: '9999px',
+                                    fontSize: '0.7rem',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                  }}>{String(subMarks)} marks</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
-                            className="btn btn-secondary btn-sm"
+                            className="btn btn-sm btn-secondary"
                             style={{ fontWeight: 700 }}
                             onClick={() => handleEditCriteriaItemPrompt(selectedCategory.id, item.id)}
                           >
@@ -1511,6 +1541,188 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ view }) => {
           </div>
         )}
       </div>
+
+      {/* ============================================================
+          ROOT-LEVEL EDIT ITEM MODAL — always overlays everything
+          ============================================================ */}
+      {editItemModal && (() => {
+        // Parse rules_json safely
+        let parsedRules: any = {};
+        try { parsedRules = editItemModal.rules_json ? JSON.parse(editItemModal.rules_json) : {}; } catch(e) {}
+        const subItems: Record<string, number> = parsedRules.subItems || {};
+        const subEntries = Object.entries(subItems) as [string, number][];
+
+        const handleSubChange = (key: string, val: number) => {
+          const next = { ...parsedRules, subItems: { ...subItems, [key]: val } };
+          setEditItemModal({ ...editItemModal, rules_json: JSON.stringify(next, null, 2) });
+        };
+
+        const handleSubRemove = (key: string) => {
+          const nextSubs = { ...subItems };
+          delete nextSubs[key];
+          const next = Object.keys(nextSubs).length > 0
+            ? { ...parsedRules, subItems: nextSubs }
+            : { ...parsedRules };
+          if (!Object.keys(nextSubs).length) delete next.subItems;
+          setEditItemModal({ ...editItemModal, rules_json: Object.keys(next).length ? JSON.stringify(next, null, 2) : '' });
+        };
+
+        const handleSubAdd = () => {
+          if (!newSubKey.trim()) return;
+          handleSubChange(newSubKey.trim(), 0);
+          setNewSubKey('');
+        };
+
+        const handleSave = () => {
+          let finalRules = null;
+          if (editItemModal.rules_json && editItemModal.rules_json.trim()) {
+            try { finalRules = JSON.parse(editItemModal.rules_json); }
+            catch { return; } // silently block save on bad JSON
+          }
+          updateCriteriaItem(editItemModal.catId, parseInt(editItemModal.itemId, 10), {
+            title: editItemModal.title,
+            marks: editItemModal.marks,
+            details: editItemModal.details,
+            rules_json: finalRules
+          });
+          setEditItemModal(null);
+          setNewSubKey('');
+        };
+
+        return (
+          <div
+            style={{
+              position: 'fixed', inset: 0,
+              background: 'rgba(15,23,42,0.65)',
+              backdropFilter: 'blur(6px)',
+              zIndex: 99999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '20px'
+            }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setEditItemModal(null); setNewSubKey(''); } }}
+          >
+            <div style={{
+              background: '#fff',
+              width: '100%', maxWidth: '560px',
+              borderRadius: '20px',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+              overflow: 'hidden',
+              display: 'flex', flexDirection: 'column',
+              maxHeight: '90vh'
+            }}>
+              {/* Header */}
+              <div style={{ padding: '24px 28px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>Edit Criteria Item</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>Modify title, marks, sub-categories, then save.</p>
+                </div>
+                <button
+                  onClick={() => { setEditItemModal(null); setNewSubKey(''); }}
+                  style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '36px', height: '36px', fontSize: '1.1rem', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >✕</button>
+              </div>
+
+              {/* Scrollable Body */}
+              <div style={{ padding: '24px 28px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+                {/* Title */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Title</label>
+                  <input
+                    type="text" className="input"
+                    value={editItemModal.title}
+                    onChange={(e) => setEditItemModal({ ...editItemModal, title: e.target.value })}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Marks */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Marks</label>
+                  <input
+                    type="number" className="input"
+                    value={editItemModal.marks}
+                    onChange={(e) => setEditItemModal({ ...editItemModal, marks: Number(e.target.value) })}
+                    style={{ width: '160px' }}
+                  />
+                </div>
+
+                {/* Details */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Details / Description</label>
+                  <input
+                    type="text" className="input"
+                    value={editItemModal.details || ''}
+                    onChange={(e) => setEditItemModal({ ...editItemModal, details: e.target.value })}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Sub-Categories */}
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sub-Categories</label>
+
+                  {subEntries.length === 0 && (
+                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 12px' }}>No sub-categories — this item uses its base marks directly.</p>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {subEntries.map(([key, val]) => (
+                      <div key={key} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="text" className="input"
+                          value={key} readOnly
+                          style={{ flex: 1, background: '#f1f5f9', color: '#334155', fontWeight: 600 }}
+                        />
+                        <input
+                          type="number" className="input"
+                          value={val}
+                          onChange={(e) => handleSubChange(key, Number(e.target.value))}
+                          style={{ width: '80px', textAlign: 'center' }}
+                        />
+                        <button
+                          onClick={() => handleSubRemove(key)}
+                          style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontWeight: 700 }}
+                        >✕</button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add new sub-category row */}
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                    <input
+                      type="text" className="input"
+                      placeholder="New sub-category name…"
+                      value={newSubKey}
+                      onChange={(e) => setNewSubKey(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleSubAdd(); }}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      onClick={handleSubAdd}
+                      style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: '10px', padding: '8px 16px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >+ Add</button>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Footer */}
+              <div style={{ padding: '16px 28px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '12px', justifyContent: 'flex-end', background: '#f8fafc' }}>
+                <button
+                  onClick={() => { setEditItemModal(null); setNewSubKey(''); }}
+                  style={{ background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '10px', padding: '10px 24px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}
+                >Cancel</button>
+                <button
+                  onClick={handleSave}
+                  style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 28px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem', boxShadow: '0 4px 12px rgba(99,102,241,0.35)' }}
+                >💾 Save Changes</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
     </div>
   );
 };

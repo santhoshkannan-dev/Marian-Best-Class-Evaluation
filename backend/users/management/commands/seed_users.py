@@ -220,8 +220,44 @@ class Command(BaseCommand):
                 "category": "Academics",
                 "access_level": "student_rep_only",
                 "items": [
-                    {"title": "Sem Result Academic Grades", "type": "academic_grades", "marks": 5.0},
-                    {"title": "SAVE Sem Result Academic Grades", "type": "academic_grades", "marks": 5.0},
+                    {
+                        "title": "Sem Result",
+                        "type": "academic_grades",
+                        "marks": 0.0,
+                        "rules_json": {
+                            "90_above": 5.0,
+                            "80_90": 4.0,
+                            "70_80": 3.0,
+                            "fail": -2.0,
+                            "pass_percentage_ranges": [
+                                {"min": 90.01, "max": 100.0, "marks": 5.0},
+                                {"min": 80.01, "max": 90.0, "marks": 4.0},
+                                {"min": 70.01, "max": 80.0, "marks": 3.0},
+                                {"min": 60.01, "max": 70.0, "marks": 2.0},
+                                {"min": 50.01, "max": 60.0, "marks": 1.0},
+                                {"min": 0.0, "max": 50.0, "marks": 0.0}
+                            ]
+                        }
+                    },
+                    {
+                        "title": "SAVE Sem Result",
+                        "type": "academic_grades",
+                        "marks": 0.0,
+                        "rules_json": {
+                            "90_above": 5.0,
+                            "80_90": 4.0,
+                            "70_80": 3.0,
+                            "fail": -2.0,
+                            "pass_percentage_ranges": [
+                                {"min": 90.01, "max": 100.0, "marks": 5.0},
+                                {"min": 80.01, "max": 90.0, "marks": 4.0},
+                                {"min": 70.01, "max": 80.0, "marks": 3.0},
+                                {"min": 60.01, "max": 70.0, "marks": 2.0},
+                                {"min": 50.01, "max": 60.0, "marks": 1.0},
+                                {"min": 0.0, "max": 50.0, "marks": 0.0}
+                            ]
+                        }
+                    },
                 ]
             },
             {
@@ -229,8 +265,8 @@ class Command(BaseCommand):
                 "category": "Online Courses",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Swayam / NPTEL Course", "type": "count", "marks": 10.0},
-                    {"title": "MOOC Course", "type": "count", "marks": 5.0},
+                    {"title": "Swayam / NPTEL Course", "type": "count", "marks": 5.0},
+                    {"title": "MOOC Course", "type": "count", "marks": 2.0},
                 ]
             },
             {
@@ -240,8 +276,8 @@ class Command(BaseCommand):
                 "items": [
                     {"title": "JRF Passed", "type": "date", "marks": 20.0},
                     {"title": "NET Passed", "type": "date", "marks": 10.0},
-                    {"title": "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", "type": "date", "marks": 5.0},
-                    {"title": "Participation in Relevant Exam (UPSC / PSC Exams)", "type": "date", "marks": 3.0},
+                    {"title": "Any Other Relevant Exam (IELTS, PET, Language Specific, etc.)", "type": "date", "marks": 3.0},
+                    {"title": "Participation in Relevant Exam (UPSC / PSC Exams)", "type": "date", "marks": 1.0},
                 ]
             },
             {
@@ -261,7 +297,7 @@ class Command(BaseCommand):
                     {"title": "International Level Scholarship", "type": "fixed", "marks": 20.0},
                     {"title": "National Level Scholarship", "type": "fixed", "marks": 10.0},
                     {"title": "State Level Scholarship", "type": "fixed", "marks": 5.0},
-                    {"title": "District Level Scholarship", "type": "fixed", "marks": 3.0},
+                    {"title": "District Level Scholarship", "type": "fixed", "marks": 2.0},
                 ]
             },
             {
@@ -269,11 +305,64 @@ class Command(BaseCommand):
                 "category": "Research",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Publications", "type": "count", "marks": 15.0},
-                    {"title": "Paper Presentation", "type": "count", "marks": 10.0},
-                    {"title": "Patents", "type": "count", "marks": 20.0},
-                    {"title": "Book Publications", "type": "count", "marks": 15.0},
-                    {"title": "Funded Projects", "type": "count", "marks": 20.0},
+                    {
+                        "title": "Publications", 
+                        "type": "count", 
+                        "marks": 0.0,
+                        "rules_json": {
+                            "subItems": {
+                                "Scopus / Web of Science": 10.0,
+                                "Conference Proceeding / Peer reviewed article": 5.0
+                            }
+                        }
+                    },
+                    {
+                        "title": "Paper Presentation", 
+                        "type": "count", 
+                        "marks": 0.0,
+                        "rules_json": {
+                            "subItems": {
+                                "Outside Marian College": 5.0,
+                                "Inside Marian College": 3.0
+                            }
+                        }
+                    },
+                    {
+                        "title": "Patents", 
+                        "type": "count", 
+                        "marks": 0.0,
+                        "rules_json": {
+                            "subItems": {
+                                "Utility": 10.0,
+                                "Design": 5.0
+                            }
+                        }
+                    },
+                    {
+                        "title": "Book Publications", 
+                        "type": "count", 
+                        "marks": 0.0,
+                        "rules_json": {
+                            "subItems": {
+                                "Book": 10.0,
+                                "Book Chapter": 5.0,
+                                "Article": 2.0
+                            }
+                        }
+                    },
+                    {
+                        "title": "Funded Projects", 
+                        "type": "count", 
+                        "marks": 0.0,
+                        "rules_json": {
+                            "subItems": {
+                                "International": 20.0,
+                                "National": 10.0,
+                                "State": 5.0,
+                                "Any Other": 3.0
+                            }
+                        }
+                    }
                 ]
             },
             {
@@ -281,7 +370,7 @@ class Command(BaseCommand):
                 "category": "Startups",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Government-Registered Start-up", "type": "count", "marks": 20.0},
+                    {"title": "Government-Registered Start-up", "type": "count", "marks": 10.0},
                 ]
             },
             {
@@ -289,8 +378,38 @@ class Command(BaseCommand):
                 "category": "Prizes",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "From Marian College", "type": "count", "marks": 5.0},
-                    {"title": "Outside Marian College", "type": "count", "marks": 10.0},
+                    {
+                        "title": "From Marian College", 
+                        "type": "count", 
+                        "marks": 0.0,
+                        "rules_json": {
+                            "subItems": {
+                                "1st Prize (Individual)": 10.0,
+                                "2nd Prize (Individual)": 5.0,
+                                "3rd Prize (Individual)": 3.0,
+                                "1st Prize (Group)": 5.0,
+                                "2nd Prize (Group)": 3.0,
+                                "3rd Prize (Group)": 2.0
+                            }
+                        }
+                    },
+                    {
+                        "title": "Outside Marian College", 
+                        "type": "count", 
+                        "marks": 0.0,
+                        "rules_json": {
+                            "subItems": {
+                                "1st Prize (Individual)": 15.0,
+                                "2nd Prize (Individual)": 10.0,
+                                "3rd Prize (Individual)": 5.0,
+                                "1st Prize (Group)": 10.0,
+                                "2nd Prize (Group)": 5.0,
+                                "3rd Prize (Group)": 3.0,
+                                "Participation (Individual)": 3.0,
+                                "Participation (Group)": 2.0
+                            }
+                        }
+                    }
                 ]
             },
             {
@@ -298,8 +417,8 @@ class Command(BaseCommand):
                 "category": "Programs Organized",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "Intercollegiate", "type": "count", "marks": 10.0},
-                    {"title": "Intra - Collegiate", "type": "count", "marks": 5.0},
+                    {"title": "Intercollegiate", "type": "count", "marks": 5.0},
+                    {"title": "Intra - Collegiate", "type": "count", "marks": 3.0},
                     {"title": "Class Magazine", "type": "count", "marks": 5.0},
                 ]
             },
@@ -308,9 +427,9 @@ class Command(BaseCommand):
                 "category": "Leaderships",
                 "access_level": "all_students",
                 "items": [
-                    {"title": "MCSC Executive Body Position", "type": "fixed", "marks": 10.0},
-                    {"title": "SAHYA Executive Body Position", "type": "fixed", "marks": 10.0},
-                    {"title": "Clubs & Associations Leadership Position", "type": "fixed", "marks": 8.0},
+                    {"title": "MCSC Executive Body Position", "type": "fixed", "marks": 5.0},
+                    {"title": "SAHYA Executive Body Position", "type": "fixed", "marks": 5.0},
+                    {"title": "Clubs & Associations Leadership Position", "type": "fixed", "marks": 5.0},
                     {"title": "Any Other", "type": "fixed", "marks": 5.0},
                 ]
             },
@@ -321,7 +440,7 @@ class Command(BaseCommand):
                 "items": [
                     {"title": "Coordination of Event (Community Action / Outreach)", "type": "count", "marks": 5.0},
                     {"title": "Participation in Event", "type": "count", "marks": 3.0},
-                    {"title": "News Media Coverage (Excluding Social Media)", "type": "count", "marks": 5.0},
+                    {"title": "News Media Coverage (Excluding Social Media)", "type": "count", "marks": 3.0},
                 ]
             },
             {
@@ -331,10 +450,10 @@ class Command(BaseCommand):
                 "items": [
                     {"title": "Library - Regular Footfall (Biometric / Entry)", "type": "count", "marks": 5.0},
                     {"title": "Library - Academic & Career Books Issued/Read", "type": "count", "marks": 5.0},
-                    {"title": "LinkedIn - Profile Completion (Active Profile)", "type": "fixed", "marks": 5.0},
-                    {"title": "LinkedIn - Skill Badges Earned", "type": "count", "marks": 5.0},
-                    {"title": "LinkedIn - Micro-credentials / Learning Certifications", "type": "count", "marks": 5.0},
-                    {"title": "Repository Creation (Drive / GitHub / LMS / Website)", "type": "fixed", "marks": 10.0},
+                    {"title": "Repository Creation (Drive / GitHub / LMS / Website)", "type": "fixed", "marks": 5.0},
+                    {"title": "LinkedIn - Profile Completion (Active Profile)", "type": "fixed", "marks": 3.0},
+                    {"title": "LinkedIn - Skill Badges Earned", "type": "count", "marks": 1.0},
+                    {"title": "LinkedIn - Micro-credentials / Learning Certifications", "type": "count", "marks": 1.0},
                 ]
             },
             {
@@ -359,7 +478,8 @@ class Command(BaseCommand):
                     category=cat_obj,
                     title=item_data["title"],
                     type=item_data["type"],
-                    marks=item_data["marks"]
+                    marks=item_data["marks"],
+                    rules_json=item_data.get("rules_json", None)
                 )
                 CriteriaRule.objects.create(
                     item=item_obj,
@@ -370,3 +490,4 @@ class Command(BaseCommand):
                 )
 
         self.stdout.write(self.style.SUCCESS("Database seeding completed successfully!"))
+

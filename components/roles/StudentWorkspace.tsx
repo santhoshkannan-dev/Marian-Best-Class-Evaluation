@@ -1353,79 +1353,108 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({ view }) => {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
-                      <div className="form-group">
-                        <label className="form-label" style={{ color: '#4f46e5', fontWeight: 800, fontSize: '0.8rem' }}>
-                          ⭐ 90% and Above
-                        </label>
-                        <input
-                          type="number"
-                          className="input"
-                          min={0}
-                          value={count90Above}
-                          onChange={(e) => setCount90Above(Math.max(0, parseInt(e.target.value) || 0))}
-                          required
-                        />
-                      </div>
+                      {(() => {
+                        // Dynamically read labels from criteriaCatalog Academics items
+                        const academicsCat = criteriaCatalog.find((c) =>
+                          String(c.category).toLowerCase() === 'academics' ||
+                          String(c.code).toLowerCase() === 'cat-academics' ||
+                          String(c.id).toLowerCase() === 'cat-academics'
+                        );
+                        const acItems = academicsCat?.items || [];
+                        // Match items by type — order: count items by marks desc, then negative, then academic_grades
+                        const countItems = acItems
+                          .filter((i: any) => i.type === 'count')
+                          .sort((a: any, b: any) => (b.marks || 0) - (a.marks || 0));
+                        const failItem = acItems.find((i: any) => i.type === 'negative');
+                        const passItem = acItems.find((i: any) => i.type === 'academic_grades');
 
-                      <div className="form-group">
-                        <label className="form-label" style={{ color: '#0284c7', fontWeight: 800, fontSize: '0.8rem' }}>
-                          80% to 90%
-                        </label>
-                        <input
-                          type="number"
-                          className="input"
-                          min={0}
-                          value={count80to90}
-                          onChange={(e) => setCount80to90(Math.max(0, parseInt(e.target.value) || 0))}
-                          required
-                        />
-                      </div>
+                        const label90 = countItems[0]?.title || '90% and Above';
+                        const label80 = countItems[1]?.title || '80% to 90%';
+                        const label70 = countItems[2]?.title || '70% to 80%';
+                        const labelFail = failItem?.title || 'Fail';
+                        const labelPass = passItem?.title || 'Class Pass %';
 
-                      <div className="form-group">
-                        <label className="form-label" style={{ color: '#059669', fontWeight: 800, fontSize: '0.8rem' }}>
-                          70% to 80%
-                        </label>
-                        <input
-                          type="number"
-                          className="input"
-                          min={0}
-                          value={count70to80}
-                          onChange={(e) => setCount70to80(Math.max(0, parseInt(e.target.value) || 0))}
-                          required
-                        />
-                      </div>
+                        return (
+                          <>
+                            <div className="form-group">
+                              <label className="form-label" style={{ color: '#4f46e5', fontWeight: 800, fontSize: '0.8rem' }}>
+                                ⭐ {label90}
+                              </label>
+                              <input
+                                type="number"
+                                className="input"
+                                min={0}
+                                value={count90Above}
+                                onChange={(e) => setCount90Above(Math.max(0, parseInt(e.target.value) || 0))}
+                                required
+                              />
+                            </div>
 
-                      <div className="form-group">
-                        <label className="form-label" style={{ color: '#dc2626', fontWeight: 800, fontSize: '0.8rem' }}>
-                          Fail
-                        </label>
-                        <input
-                          type="number"
-                          className="input"
-                          min={0}
-                          value={failCount}
-                          onChange={(e) => setFailCount(Math.max(0, parseInt(e.target.value) || 0))}
-                          required
-                        />
-                      </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ color: '#0284c7', fontWeight: 800, fontSize: '0.8rem' }}>
+                                {label80}
+                              </label>
+                              <input
+                                type="number"
+                                className="input"
+                                min={0}
+                                value={count80to90}
+                                onChange={(e) => setCount80to90(Math.max(0, parseInt(e.target.value) || 0))}
+                                required
+                              />
+                            </div>
 
-                      <div className="form-group">
-                        <label className="form-label" style={{ color: '#7c3aed', fontWeight: 800, fontSize: '0.8rem' }}>
-                          Class Pass % (Auto-Calculated)
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="input"
-                          readOnly
-                          style={{ background: 'rgba(124, 58, 237, 0.08)', color: '#7c3aed', fontWeight: 700, cursor: 'not-allowed' }}
-                          value={(
-                            (count90Above + count80to90 + count70to80 + failCount) > 0
-                              ? parseFloat(((((count90Above + count80to90 + count70to80) / (count90Above + count80to90 + count70to80 + failCount)) * 100)).toFixed(2))
-                              : 0
-                          )}
-                        />
-                      </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ color: '#059669', fontWeight: 800, fontSize: '0.8rem' }}>
+                                {label70}
+                              </label>
+                              <input
+                                type="number"
+                                className="input"
+                                min={0}
+                                value={count70to80}
+                                onChange={(e) => setCount70to80(Math.max(0, parseInt(e.target.value) || 0))}
+                                required
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label className="form-label" style={{ color: '#dc2626', fontWeight: 800, fontSize: '0.8rem' }}>
+                                {labelFail}
+                              </label>
+                              <input
+                                type="number"
+                                className="input"
+                                min={0}
+                                value={failCount}
+                                onChange={(e) => setFailCount(Math.max(0, parseInt(e.target.value) || 0))}
+                                required
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label className="form-label" style={{ color: '#7c3aed', fontWeight: 800, fontSize: '0.8rem' }}>
+                                {labelPass}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="input"
+                                min={0}
+                                max={100}
+                                placeholder="e.g. 95.5"
+                                value={passPercentage > 0 ? passPercentage : (
+                                  (count90Above + count80to90 + count70to80 + failCount) > 0
+                                    ? parseFloat(((((count90Above + count80to90 + count70to80) / (count90Above + count80to90 + count70to80 + failCount)) * 100)).toFixed(2))
+                                    : 0
+                                )}
+                                onChange={(e) => setPassPercentage(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                required
+                              />
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 ) : (

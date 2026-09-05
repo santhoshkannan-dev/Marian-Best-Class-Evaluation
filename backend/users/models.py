@@ -25,6 +25,9 @@ class Class(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='classes')
     class_teacher = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='advisor_classes')
     dqc_member = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='rep_classes')
+    # Mark moderation fields
+    num_students = models.IntegerField(default=0)       # N — total students in this class
+    negative_points = models.FloatField(default=0.0)    # P — penalty points for this class
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 

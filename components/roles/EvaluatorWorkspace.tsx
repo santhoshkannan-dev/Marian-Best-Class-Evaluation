@@ -64,19 +64,78 @@ export const EvaluatorWorkspace: React.FC<EvaluatorWorkspaceProps> = ({ view = '
       return;
     }
 
-    const evaluatorName = currentUserInfo?.name || 'Dr. Allen George';
-    const assignedMarksStr = prompt('Enter evaluated marks for this submission:', '10') || '10';
-    const numMarks = parseFloat(assignedMarksStr) || 10;
+    const sub = submissions.find(s => s.id === subId);
+    if (!sub) return;
+
+    const item = criteriaCatalog.flatMap(c => c.items).find(it => String(it.id) === String(sub.criteriaId));
+    if (!item) {
+      alert("Criteria item not found in catalog!");
+      return;
+    }
+
+    let calculatedMarks = item.marks || 0;
+
+    // Academic Grades (Bulk)
+    if (item.type === 'academic_grades') {
+      const ev = (sub.evidence as any) || {};
+      const count90 = Number(ev.count90Above) || 0;
+      const count80 = Number(ev.count80to90) || 0;
+      const count70 = Number(ev.count70to80) || 0;
+      const countFail = Number(ev.failCount) || 0;
+      const passPerc = Number(ev.effectivePassPercentage) || 0;
+
+      const rules = item.rules_json || {};
+      const m90 = rules['90_above'] !== undefined ? rules['90_above'] : 5;
+      const m80 = rules['80_90'] !== undefined ? rules['80_90'] : 4;
+      const m70 = rules['70_80'] !== undefined ? rules['70_80'] : 3;
+      const mFail = rules['fail'] !== undefined ? rules['fail'] : -2;
+      
+      let passMarks = 0;
+      const ranges = rules['pass_percentage_ranges'] || [];
+      for (const range of ranges) {
+        if (passPerc >= range.min && passPerc <= range.max) {
+          passMarks = range.marks;
+          break;
+        }
+      }
+
+      calculatedMarks = (count90 * m90) + (count80 * m80) + (count70 * m70) + (countFail * mFail) + passMarks;
+    } 
+    // SubItem mapping (Research, Prizes)
+    else if (item.rules_json && item.rules_json.subItems) {
+      const ev = (sub.evidence as any) || {};
+      const submittedSubItem = ev.subItem || ev.researchSubItem || ev.prizesSubItem;
+      if (submittedSubItem) {
+         const mapping = item.rules_json.subItems;
+         if (mapping[submittedSubItem] !== undefined) {
+             calculatedMarks = mapping[submittedSubItem];
+             
+             // Check if it's count-based as well (e.g. multiple publications of same type)
+             if (item.type === 'count') {
+                 const count = Number(ev.count) || 1;
+                 calculatedMarks = calculatedMarks * count;
+             }
+         }
+      }
+    }
+    // Default count multiplier
+    else if (item.type === 'count') {
+      const ev = (sub.evidence as any) || {};
+      const count = Number(ev.count) || 1;
+      calculatedMarks = count * item.marks;
+    }
+
+    const evaluatorName = currentUserInfo?.name || 'Evaluation Team';
 
     updateSubmission(subId, {
       status: 'Evaluated',
       evaluatorVerified: true,
       evaluatorVerifiedByName: evaluatorName,
-      evaluatorRemarks: 'Verified, Evaluated, and Locked by Evaluation Team.',
-      marks: numMarks
+      evaluatorRemarks: 'Verified and auto-evaluated based on dynamic criteria rules.',
+      marks: calculatedMarks
     });
 
-    alert('Submission successfully verified, evaluated, and locked by Evaluation Team!');
+    alert(`Submission successfully verified and assigned ${calculatedMarks} marks!`);
   };
 
   // --- REAL DATA BINDINGS ---
